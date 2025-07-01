@@ -42,7 +42,7 @@ public class SecurityConfig {
 //
                     .requestMatchers(
 
-                            "/user/**").permitAll()   // 추후에 token이 필요한 요청 url 들은 여기에 추가해야함.
+                            "/user/login", "/user/create", "/user/templogin", "/user/temp").permitAll()   // 추후에 token이 필요한 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });
 

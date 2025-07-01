@@ -1,10 +1,13 @@
 package com.playdata.userservice.user.entity;
 
+import com.playdata.userservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -13,14 +16,39 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
 
+    private String userName;
+
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String password;
+
+    private String profileImage;
+
+    private String nickname;
+
+    private String phone;
+
+    private String socialId;
+
+    private Long grade;   // 회원의 커뮤니티 활동을 기반으로 점수를 매길 것임.
+
+    private String socialProvider;
+
+    private boolean active;
+
+    private int reportCount;
+
+    private LocalDateTime passwordUpdatedAt;
+
+    private int passwordFaultCount;
+
+    private int pauseCount;
 
 }
