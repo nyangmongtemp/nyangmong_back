@@ -1,6 +1,6 @@
 package com.playdata.schedulerservice.crawling.repository;
 
-import com.playdata.schedulerservice.crawling.entity.PetEvent;
+import com.playdata.schedulerservice.crawling.entity.festival;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * JpaRepository를 상속받아 기본 CRUD 기능 제공
  * 커스텀 리포지토리 인터페이스 PetRepositoryCustom도 함께 상속
  */
-public interface PetRepository extends JpaRepository<PetEvent, Long> {
+public interface PetRepository extends JpaRepository<festival, Long> {
 
     /**
      * 주어진 해시 값을 가진 PetEvent를 조회한다.
@@ -18,6 +18,6 @@ public interface PetRepository extends JpaRepository<PetEvent, Long> {
      * @param hash 이벤트의 고유 해시 값
      * @return Optional로 감싼 PetEvent, 존재하지 않으면 Optional.empty()
      */
-    Optional<PetEvent> findByHash(String hash);
+    Optional<festival> findByHash(String hash);
 
 }
