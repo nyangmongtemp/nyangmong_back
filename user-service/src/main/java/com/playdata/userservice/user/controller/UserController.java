@@ -43,6 +43,17 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> sendVerifyEmail(@RequestParam("email") String email){
+
+        CommonResDto resDto = userService.sendVerifyEmailCode(email);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+//////////////////////////////////////////////////////////////////////////////
+/// 임시 테스트용 메소드들입니다. 추후에 삭제할 예정이니 보지 않으셔도 됩니다.
+
     // 임시로 토큰 발급 과정을 보기 위한 메소드입니다.
     @PostMapping("/templogin")
     public ResponseEntity<?> userTempLogin(@RequestBody UserLoginReqDto userLoginReqDto) {
@@ -53,12 +64,12 @@ public class UserController {
         if(result == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        
+
         // 입력한 비밀번호가 일치하지 않는 경우
         if(!result.isLogged()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        
+
         // 로그인을 성공한 경우
         // 토큰 발급 시작
         String token
