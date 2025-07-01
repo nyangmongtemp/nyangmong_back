@@ -40,6 +40,7 @@ public class CommonExceptionHandler {
         return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
     }
 
+
     // 파일 저장 중에 발생한 오류를 처리하는 메소드
     @ExceptionHandler(IOException.class)
     public ResponseEntity<?> ioExceptionHandler(IOException e) {

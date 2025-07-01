@@ -1,6 +1,7 @@
 package com.playdata.userservice.user.service;
 
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.user.dto.UserEmailAuthResDto;
 import com.playdata.userservice.user.dto.UserLoginReqDto;
 import com.playdata.userservice.user.dto.UserLoginResDto;
 import com.playdata.userservice.user.dto.UserSaveReqDto;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -170,7 +172,7 @@ public class UserService {
 
         // 인증 코드를 redis에 저장하자
         String key = VERIFICATION_CODE_KEY + email;
-        redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(2));
+        redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
@@ -202,5 +204,42 @@ public class UserService {
         redisTemplate.opsForValue().set(key, String.valueOf(count), Duration.ofMinutes(1));
 
         return count;
+    }
+
+    // 이메일로 발송된 인증코드 검증 로직
+    public CommonResDto verifyEmailCode(UserEmailAuthResDto authResDto) {
+
+        String email = authResDto.getEmail();
+        String authCode = authResDto.getAuthCode();
+
+        // redis에 저장된 인증 코드 조회
+        String key = VERIFICATION_CODE_KEY + email;
+        Object foundCode = redisTemplate.opsForValue().get(key);
+        // 인증 코드 유효시간이 만료된 경우
+        if(foundCode == null) {
+            throw new IllegalArgumentException("인증 코드 유효시간이 만료되었습니다.");
+        }
+
+        // 인증 시도 횟수 증가
+        int attemptCount = incrementAttemptCount(email);
+
+        // 조회한 코드와 사용자가 입력한 코드가 일치한 지 검증
+        if(!foundCode.toString().equals(authCode)) {
+            // 인증 코드를 틀린 경우
+            if(attemptCount >= 3){
+                // 최대 시도 횟수 초과 시 해당 이메일 인증 차단
+                blockUser(email);
+                throw new IllegalArgumentException("30분동안 인증 코드 발송이 제한되었습니다.");
+            }
+            int remainingAttempt = 3 - attemptCount;
+            throw new IllegalArgumentException(String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt));
+        }
+
+        log.info("이메일 인증 성공!, email: {}", email);
+
+        // 인증 완료 했기 때문에, redis에 있는 인증 관련 데이터를 삭제하자.
+        redisTemplate.delete(key);
+
+        return new CommonResDto(HttpStatus.OK, "인증되었습니다.", true);
     }
 }

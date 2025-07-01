@@ -3,6 +3,7 @@ package com.playdata.userservice.user.controller;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.user.dto.UserEmailAuthResDto;
 import com.playdata.userservice.user.dto.UserLoginReqDto;
 import com.playdata.userservice.user.dto.UserLoginResDto;
 import com.playdata.userservice.user.dto.UserSaveReqDto;
@@ -27,6 +28,7 @@ public class UserController {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 회원가입
     @PostMapping("/create")
     public ResponseEntity<?> userCreate(@ModelAttribute UserSaveReqDto userSaveReqDto){
         CommonResDto resDto = userService.userCreate(userSaveReqDto);
@@ -35,18 +37,28 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
 
     }
-
+    
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@RequestBody UserLoginReqDto userLoginReqDto){
         CommonResDto resDto = userService.login(userLoginReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
-
+    
+    // 회원가입 시 인증코드 발송
     @GetMapping("/verify-email")
     public ResponseEntity<?> sendVerifyEmail(@RequestParam("email") String email){
 
         CommonResDto resDto = userService.sendVerifyEmailCode(email);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 인증 코드 검증 
+    @PostMapping("/verify-code")
+    public ResponseEntity<?> verifyUserEmailCode(@RequestBody UserEmailAuthResDto authResDto){
+        CommonResDto resDto = userService.verifyEmailCode(authResDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
