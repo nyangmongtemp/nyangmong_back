@@ -9,6 +9,8 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 @RestControllerAdvice
 public class CommonExceptionHandler {
     // 옳지 않은 입력값 전달 시 호출되는 메서드
@@ -36,6 +38,15 @@ public class CommonExceptionHandler {
         CommonErrorDto errorDto
                 = new CommonErrorDto(HttpStatus.FORBIDDEN, e.getMessage());
         return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
+    }
+
+    // 파일 저장 중에 발생한 오류를 처리하는 메소드
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<?> ioExceptionHandler(IOException e) {
+        e.printStackTrace();
+        CommonErrorDto errorDto
+                = new CommonErrorDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 미처 준비하지 못한 타입의 예외가 발생했을 시 처리할 메서드

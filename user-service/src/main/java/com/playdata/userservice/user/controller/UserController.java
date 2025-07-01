@@ -29,27 +29,18 @@ public class UserController {
 
     @PostMapping("/create")
     public ResponseEntity<?> userCreate(@ModelAttribute UserSaveReqDto userSaveReqDto){
-        Object isCraeted = userService.userCreate(userSaveReqDto);
-        
-        // 파일 저장 간에 오류가 발생한 경우
-        if(isCraeted == null){
-            CommonResDto resDto = new CommonResDto(HttpStatus.INTERNAL_SERVER_ERROR, "회원가입에 실패하였습니다", false);
-            return new ResponseEntity<>(resDto, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        // 이미 존재하는 이메일인 경우
-        else if(isCraeted instanceof Boolean && !((Boolean) isCraeted)){
-            CommonResDto resDto = new CommonResDto(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다.", false);
-            return new ResponseEntity<>(resDto, HttpStatus.BAD_REQUEST);
-        }
-        // 회원가입에 성공한 경우
-        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
+        CommonResDto resDto = userService.userCreate(userSaveReqDto);
+
+        // 회원 가입에 성공한 경우
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
 
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@RequestBody UserLoginReqDto userLoginReqDto){
-        userService.login(userLoginReqDto);
+        CommonResDto resDto = userService.login(userLoginReqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     // 임시로 토큰 발급 과정을 보기 위한 메소드입니다.

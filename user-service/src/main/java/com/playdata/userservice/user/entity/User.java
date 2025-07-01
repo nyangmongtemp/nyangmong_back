@@ -2,6 +2,8 @@ package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,8 +27,10 @@ public class User extends BaseTimeEntity {
     private String userName;
 
     @Column(unique = true, nullable = false)
+    @Email
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
     private String profileImage;
