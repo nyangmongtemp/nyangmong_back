@@ -112,7 +112,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private Claims validateJwt(String token, String secretKey) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                    .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();

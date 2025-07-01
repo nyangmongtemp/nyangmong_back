@@ -1,20 +1,19 @@
 package com.playdata.userservice.user.service;
 
+import com.playdata.userservice.common.auth.JwtTokenProvider;
+import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.user.dto.UserEmailAuthResDto;
-import com.playdata.userservice.user.dto.UserLoginReqDto;
-import com.playdata.userservice.user.dto.UserLoginResDto;
-import com.playdata.userservice.user.dto.UserSaveReqDto;
+import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,7 +28,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-
+    
+    // 이메일 전송 서비스
     private final MailSenderService mailSenderService;
 
     // 비밀번호 인코딩용
@@ -38,6 +37,10 @@ public class UserService {
     
     private final UserRepository userRepository;
 
+    // 로그인 토큰 발급용
+    private final JwtTokenProvider jwtTokenProvider;
+
+    // Redis 저장용 redisTemplate
     private final RedisTemplate<String, Object> redisTemplate;
 
     // Redis key 상수
@@ -49,34 +52,6 @@ public class UserService {
     @Value("${imagePath.url}")
     private String profileImageSaveUrl;
 
-    // 임시 로그인 확인  --> 추후 삭제 예정
-    public UserLoginResDto tempLogin(UserLoginReqDto userLoginReqDto) {
-
-        Optional<User> byEmail =
-                userRepository.findByEmail(userLoginReqDto.getEmail());
-        
-        // 해당 이메일이 DB에 없는 경우
-        if (!byEmail.isPresent()) {
-            return null;
-        }
-        
-        // 입력한 비밀번호가 틀린 경우
-        if(!byEmail.get().getPassword().equals(userLoginReqDto.getPassword())) {
-            return UserLoginResDto.builder()
-                    .email(userLoginReqDto.getEmail())
-                    // 로그인 결과를 false로
-                    .Logged(false)
-                    .build();
-        }
-
-        // 로그인 성공
-        return UserLoginResDto.builder()
-                .email(userLoginReqDto.getEmail())
-                // 로그인 결과를 true로
-                .role("USER")
-                .Logged(true)
-                .build();
-    }
     
     // 회원 가입
     public CommonResDto userCreate(UserSaveReqDto userSaveReqDto) {
@@ -93,10 +68,24 @@ public class UserService {
 
         // DB에 저장하기 위해 비밀번호 인코딩
         String password = userSaveReqDto.getPassword();
+
+        // 이미지를 지정한 경로에 저장
+        String profileImagePath = setProfileImage(userSaveReqDto.getProfileImage());
         
-        MultipartFile imageFile = userSaveReqDto.getProfileImage();
+        // DB에 저장을 위해 패스워드 인코딩
+        String encodedPassword = passwordEncoder.encode(password);
+        // 부가적인 정보를 담아서 User를 DB에 저장
+        User createdUser = userSaveReqDto.toEntity(encodedPassword, profileImagePath);
+        userRepository.save(createdUser);
+
+        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
+        return resDto;
+    }
+
+    // 프로필 이미지를 저장하는 로직
+    private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
-        
+
         // profile image 저장 경로
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
@@ -114,16 +103,10 @@ public class UserService {
             } catch (IOException e) {
                 // 저장 실패 처리
                 e.printStackTrace();
+                throw new RuntimeException("이미지 저장 중 오류가 발생하였습니다.");
             }
         }
-        // DB에 저장을 위해 패스워드 인코딩
-        String encodedPassword = passwordEncoder.encode(password);
-        // 부가적인 정보를 담아서 User를 DB에 저장
-        User createdUser = userSaveReqDto.toEntity(encodedPassword, profileImagePath);
-        User saved = userRepository.save(createdUser);
-
-        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
-        return resDto;
+        return profileImagePath;
     }
 
     // 로그인 로직
@@ -141,9 +124,13 @@ public class UserService {
             if(!passwordEncoder.matches(userLoginReqDto.getPassword(), pw)) {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
+            else{
+                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER");
+                // 로그인 성공
+                return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", token);
+            }
         }
-        // 로그인 성공
-        return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", true);
+
     }
 
     // 이메일 인증번호 발송 로직
@@ -161,6 +148,16 @@ public class UserService {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
 
+        String authNum = sendEmailAuthCode(email);
+
+        // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
+        // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
+        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 이메일로 발송되었습니다.", authNum);
+
+    }
+
+    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
+    private String sendEmailAuthCode(String email) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
         try {
@@ -173,11 +170,7 @@ public class UserService {
         // 인증 코드를 redis에 저장하자
         String key = VERIFICATION_CODE_KEY + email;
         redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
-
-        // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
-        // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
-        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 이메일로 발송되었습니다.", authNum);
-
+        return authNum;
     }
 
     // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
@@ -241,5 +234,50 @@ public class UserService {
         redisTemplate.delete(key);
 
         return new CommonResDto(HttpStatus.OK, "인증되었습니다.", true);
+    }
+
+    // 프사, 닉네임, 주소, 전화번호를 변경하는 로직
+    public void modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto) {
+
+        String email = userInfo.getEmail();
+
+        User foundUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자입니다."));
+
+        String newProfileImage = setProfileImage(modiDto.getProfileImage());
+
+        foundUser.modifyCommonUserInfo(modiDto, newProfileImage);
+
+        userRepository.save(foundUser);
+    }
+
+    // 이메일 변경을 요청하여 검사 후 인증 이메일 전송 로직
+    public CommonResDto modiUserEmail(String newEmail, TokenUserInfo userInfo) {
+
+        Optional<User> byEmail = userRepository.findByEmail(userInfo.getEmail());
+        // 이메일 변경 요청을 보낸 사용자가 DB에 없는 경우
+        if(!byEmail.isPresent()) {
+            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다");
+        }
+        String authCode = sendEmailAuthCode(newEmail);
+
+        // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
+        // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
+        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 새로운 이메일로 발송되었습니다.", authCode);
+    }
+
+    public CommonResDto verifyUserNewEmail(UserEmailAuthResDto authResDto, TokenUserInfo userInfo) {
+
+        CommonResDto resDto = verifyEmailCode(authResDto);
+
+        Optional<User> foundUser = userRepository.findByEmail(userInfo.getEmail());
+        if(!foundUser.isPresent()) {
+            throw new EntityNotFoundException("가입되지 않은 사용자입니다.");
+        }
+        User user = foundUser.get();
+        user.modifyEmail(authResDto.getEmail());
+        userRepository.save(user);
+
+        return resDto;
     }
 }

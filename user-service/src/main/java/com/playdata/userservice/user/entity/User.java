@@ -1,9 +1,9 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
+import com.playdata.userservice.user.dto.UserInfoModiReqDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,6 +37,8 @@ public class User extends BaseTimeEntity {
 
     private String nickname;
 
+    private String address;
+
     private String phone;
 
     private String socialId;
@@ -54,5 +56,16 @@ public class User extends BaseTimeEntity {
     private int passwordFaultCount;
 
     private int pauseCount;
+
+    public void modifyCommonUserInfo(UserInfoModiReqDto modiDto, String newProfileImage){
+        this.profileImage = newProfileImage;
+        this.nickname = modiDto.getNickname();
+        this.address = modiDto.getAddress();
+        this.phone = modiDto.getPhone();
+    }
+
+    public void modifyEmail(String newEmail){
+        this.email = newEmail;
+    }
 
 }

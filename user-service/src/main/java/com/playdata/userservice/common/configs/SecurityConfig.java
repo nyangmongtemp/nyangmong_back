@@ -41,9 +41,9 @@ public class SecurityConfig {
             auth
 //
                     .requestMatchers(
-
                             "/user/login", "/user/create", "/user/templogin", "/user/temp",
-                            "/user/verify-email", "/user/verify-code").permitAll()   // 추후에 token이 필요한 요청 url 들은 여기에 추가해야함.
+                            "/user/verify-email", "/user/verify-code"
+                    ).permitAll()   // 추후에 token이 필요한 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });
 

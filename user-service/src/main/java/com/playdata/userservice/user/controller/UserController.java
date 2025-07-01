@@ -3,10 +3,7 @@ package com.playdata.userservice.user.controller;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.user.dto.UserEmailAuthResDto;
-import com.playdata.userservice.user.dto.UserLoginReqDto;
-import com.playdata.userservice.user.dto.UserLoginResDto;
-import com.playdata.userservice.user.dto.UserSaveReqDto;
+import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +22,6 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-
-    private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
     @PostMapping("/create")
@@ -55,7 +50,7 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 인증 코드 검증 
+    // 회원가입 시 이메일 인증 코드 검증
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyUserEmailCode(@RequestBody UserEmailAuthResDto authResDto){
         CommonResDto resDto = userService.verifyEmailCode(authResDto);
@@ -63,44 +58,32 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-//////////////////////////////////////////////////////////////////////////////
-/// 임시 테스트용 메소드들입니다. 추후에 삭제할 예정이니 보지 않으셔도 됩니다.
+    // 내 정보 수정 (비밀번호, 이메일 제외)
+    // 로그인 필요 -> 토큰 필요함.
+    @PatchMapping("/modify-userinfo")
+    public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
+            , @ModelAttribute UserInfoModiReqDto modiDto){
+        userService.modiUserCommonInfo(userInfo, modiDto);
 
-    // 임시로 토큰 발급 과정을 보기 위한 메소드입니다.
-    @PostMapping("/templogin")
-    public ResponseEntity<?> userTempLogin(@RequestBody UserLoginReqDto userLoginReqDto) {
-
-        UserLoginResDto result = userService.tempLogin(userLoginReqDto);
-
-        // 입력한 이메일이 DB에 없는 경우
-        if(result == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        // 입력한 비밀번호가 일치하지 않는 경우
-        if(!result.isLogged()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-
-        // 로그인을 성공한 경우
-        // 토큰 발급 시작
-        String token
-                = jwtTokenProvider.createToken(result.getEmail(), "USER");
-        Map<String ,Object> loginInfo = new HashMap<>();
-        loginInfo.put("token",token);
-        loginInfo.put("email", result.getEmail());
-
-        return new ResponseEntity<>(loginInfo, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
-    
-    // 토큰이 필요한 요청에서 Jwt Filter가 제대로 동작하는 지 확인하는 메소드
-    @GetMapping("/temp")
-    public ResponseEntity<?> temp(@AuthenticationPrincipal TokenUserInfo userInfo) {
 
-        // 유효한 토큰이면 OK
-        return new ResponseEntity<>(userInfo, HttpStatus.OK);
+    // 마이페이지에서 이메일 변경 요청 시 인증 시작하는 로직
+    // 토큰 필요
+    @GetMapping("/modify-email")
+    public ResponseEntity<?> modifyUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                             @RequestParam String newEmail) {
+        CommonResDto resDto = userService.modiUserEmail(newEmail, userInfo);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
-        // 유효하지 않은 토큰인 경우 JwtAuthFilter 에서 Invalid Token 이라는 값을 리턴할 것임.
+    // 마이페이지에서 이메일 변경 요청 인증 코드를 검증하는 로직
+    @PatchMapping("/verify-new-email")
+    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo ,
+            @RequestBody UserEmailAuthResDto authResDto){
+        CommonResDto resDto = userService.verifyUserNewEmail(authResDto, userInfo);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
 }
