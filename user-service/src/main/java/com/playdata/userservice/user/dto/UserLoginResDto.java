@@ -9,6 +9,8 @@ public class UserLoginResDto {
 
     private String email;
 
+    private String role;
+
     private boolean Logged;
 
 }

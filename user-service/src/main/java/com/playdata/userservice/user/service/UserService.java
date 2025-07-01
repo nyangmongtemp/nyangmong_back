@@ -21,20 +21,26 @@ public class UserService {
 
         Optional<User> byEmail =
                 userRepository.findByEmail(userLoginReqDto.getEmail());
-
+        
+        // 해당 이메일이 DB에 없는 경우
         if (!byEmail.isPresent()) {
             return null;
         }
-
+        
+        // 입력한 비밀번호가 틀린 경우
         if(!byEmail.get().getPassword().equals(userLoginReqDto.getPassword())) {
             return UserLoginResDto.builder()
                     .email(userLoginReqDto.getEmail())
+                    // 로그인 결과를 false로
                     .Logged(false)
                     .build();
         }
 
+        // 로그인 성공
         return UserLoginResDto.builder()
                 .email(userLoginReqDto.getEmail())
+                // 로그인 결과를 true로
+                .role("USER")
                 .Logged(true)
                 .build();
     }

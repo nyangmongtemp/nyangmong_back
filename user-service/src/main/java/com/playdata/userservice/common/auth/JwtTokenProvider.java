@@ -38,9 +38,10 @@ public class JwtTokenProvider {
             == 서명
         }
      */
-    public String createToken(String email){
+    public String createToken(String email, String role) {
         // Claims: 페이로드에 들어갈 사용자 정보
         Claims claims = Jwts.claims().setSubject(email);
+        claims.put("role", role);
         Date now = new Date();
 
         return Jwts.builder()
@@ -95,6 +96,7 @@ public class JwtTokenProvider {
                 .email(claims.getSubject())
                 // 클레임이 Role타입으로 바로 변환을 못 해줍니다.
                 // 일단 String으로 데이터를 꺼내고 직접 Role타입으로 포장해서 넣어 줍니다.
+                .role(claims.get("role", String.class))
                 .build();
     }
 }

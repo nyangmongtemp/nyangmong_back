@@ -11,4 +11,5 @@ import lombok.*;
 public class TokenUserInfo {
 
     private String email;
+    private String role;
 }
