@@ -7,13 +7,13 @@ import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.Token;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/user")
@@ -78,10 +78,52 @@ public class UserController {
     }
 
     // 마이페이지에서 이메일 변경 요청 인증 코드를 검증하는 로직
+    // 인증이 완료되면, 새로운 이메일로 DB에 업데이트
+    // 화면단에서는 로그아웃 처리 해야함.
+    // 토큰 필요
     @PatchMapping("/verify-new-email")
-    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo ,
+    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody UserEmailAuthResDto authResDto){
+
         CommonResDto resDto = userService.verifyUserNewEmail(authResDto, userInfo);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+    
+    // 마이페이지에서 비밀번호 변경 요청 시, 등록된 이메일에 인증 코드를 발송하는 로직
+    // 토큰 필요
+    @GetMapping("/new-password-req")
+    public ResponseEntity<?> newPasswordReq(@AuthenticationPrincipal TokenUserInfo userInfo){
+
+        CommonResDto resDto = userService.sendEmailAuthCodeNewPw(userInfo.getEmail());
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 마이페이지에서 비밀번호 변경 요청 및 인증 코드 발송 후, 해당 인증 코드를 검증
+    // 토큰 필요
+    @PostMapping("/verify-new-password")
+    public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+            , @RequestBody UserPwAuthReqDto authResDto){
+
+        // 최대한 기존 서비스 로직을 그대로 사용하기 위한 코드
+        UserEmailAuthResDto dto = UserEmailAuthResDto.builder()
+                .email(userInfo.getEmail())
+                .authCode(authResDto.getAuthCode())
+                .build();
+
+        CommonResDto resDto = userService.verifyEmailCode(dto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 비밀번호 변경 인증이 모두 완료되면 변경해주는 메소드
+    // 화면단에서는 로그아웃 처리해야함.
+    @PatchMapping("/modify-password")
+    public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+            ,@RequestBody UserPasswordModiReqDto reqDto) {
+
+        CommonResDto resDto = userService.modifyNewPassword(userInfo.getEmail(), reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

@@ -10,7 +10,6 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -255,29 +254,62 @@ public class UserService {
     public CommonResDto modiUserEmail(String newEmail, TokenUserInfo userInfo) {
 
         Optional<User> byEmail = userRepository.findByEmail(userInfo.getEmail());
-        // 이메일 변경 요청을 보낸 사용자가 DB에 없는 경우
-        if(!byEmail.isPresent()) {
-            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다");
+        // 이메일 변경 요청을 보낸 사용자가 DB에 이미 존재하는 경우
+        if(byEmail.isPresent()) {
+            throw new EntityNotFoundException("해당 이메일의 사용자가 이미 존재합니다.");
         }
         String authCode = sendEmailAuthCode(newEmail);
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
-        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 새로운 이메일로 발송되었습니다.", authCode);
+        return new CommonResDto(HttpStatus.OK, "인증코드가 새로운 이메일로 발송되었습니다.", authCode);
     }
 
+    // 이메일 변경 요청의 인증 여부를 확인하는 메소드
+    // 완료되면 바로 이메일을 변경함.
     public CommonResDto verifyUserNewEmail(UserEmailAuthResDto authResDto, TokenUserInfo userInfo) {
 
         CommonResDto resDto = verifyEmailCode(authResDto);
 
         Optional<User> foundUser = userRepository.findByEmail(userInfo.getEmail());
-        if(!foundUser.isPresent()) {
-            throw new EntityNotFoundException("가입되지 않은 사용자입니다.");
+        if(foundUser.isPresent()) {
+            throw new EntityNotFoundException("이미 가입된 이메일입니다.");
         }
         User user = foundUser.get();
         user.modifyEmail(authResDto.getEmail());
         userRepository.save(user);
 
         return resDto;
+    }
+
+    // 비밀번호 변경 요청 인증 코드를 확인해주는 로직
+    public CommonResDto sendEmailAuthCodeNewPw(String email) {
+
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        // 비밀번호 변경 요청을 보낸 유저가 DB에 없는 경우
+        if(!byEmail.isPresent()) {
+            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다.");
+        }
+        String code = sendEmailAuthCode(email);
+
+        // 실제 배포 환경에서는 인증 코드는 빼고 리턴해야 함.
+        return new CommonResDto(HttpStatus.OK, "인증 코드가 이메일로 전송되었습니다.", code);
+    }
+
+    // 실제로 비밀번호를 변경해주는 로직
+    public CommonResDto modifyNewPassword(String email, UserPasswordModiReqDto reqDto) {
+
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        // 비밀번호를 변경하려는 유저가 DB에 없는 경우
+        if(!byEmail.isPresent()) {
+            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다.");
+        }
+
+        User user = byEmail.get();
+        String newEncodedPassword = passwordEncoder.encode(reqDto.getPassword());
+        user.modifyPassword(newEncodedPassword);
+        userRepository.save(user);
+
+        return new CommonResDto(HttpStatus.OK, "비밀번호가 변경되었습니다. 다시 로그인 해주세요", true);
     }
 }

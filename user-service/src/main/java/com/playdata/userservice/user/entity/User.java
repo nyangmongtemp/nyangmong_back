@@ -57,6 +57,7 @@ public class User extends BaseTimeEntity {
 
     private int pauseCount;
 
+    // 인증이 필요하지 않은 사용자 정보를 수정하는 메소드
     public void modifyCommonUserInfo(UserInfoModiReqDto modiDto, String newProfileImage){
         this.profileImage = newProfileImage;
         this.nickname = modiDto.getNickname();
@@ -64,8 +65,15 @@ public class User extends BaseTimeEntity {
         this.phone = modiDto.getPhone();
     }
 
+    // 인증이 필요한 이메일 정보를 변경하는 메소드
     public void modifyEmail(String newEmail){
         this.email = newEmail;
+    }
+
+    // 인증이 필요한 비밀번호를 변경하는 메소드
+    public void modifyPassword(String newPassword){
+        this.password = newPassword;
+        this.passwordUpdatedAt = LocalDateTime.now();
     }
 
 }
