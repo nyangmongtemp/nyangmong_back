@@ -1,6 +1,6 @@
 package com.playdata.schedulerservice.crawling.crawler;
 
-import com.playdata.schedulerservice.crawling.entity.festival;
+import com.playdata.schedulerservice.crawling.entity.FestivalEntity;
 import com.playdata.schedulerservice.crawling.repository.PetRepository;
 import java.io.InputStream;
 import java.net.URL;
@@ -60,7 +60,7 @@ public class NaverPetEventCrawler {
                         By.cssSelector(".sc_new.cs_common_module.case_normal.color_9._cs_festival")));
 
                 // 상세 페이지에서 정보를 추출하여 PetEvent 객체 생성
-                festival petEvent = extractDetails(driver);
+                FestivalEntity petEvent = extractDetails(driver);
 
                 // DB에 저장 또는 업데이트 처리
                 saveOrUpdateEvent(petEventRepository, petEvent);
@@ -130,7 +130,7 @@ public class NaverPetEventCrawler {
      * @param driver 상세 페이지에서 동작하는 WebDriver
      * @return 추출한 정보를 담은 PetEvent 엔티티 객체
      */
-    private festival extractDetails(WebDriver driver) {
+    private FestivalEntity extractDetails(WebDriver driver) {
         // 필수 항목: 행사 제목과 출처 (항상 존재한다고 가정)
         String eventTitle = safeFindText(driver, By.cssSelector(".title strong._text"));
         String source = safeFindText(driver, By.cssSelector(".title span.state_end"));
@@ -187,7 +187,7 @@ public class NaverPetEventCrawler {
         String hash = generateHash(eventTitle, eventUrl, location);
 
         // PetEvent 객체 생성 (Builder 패턴 사용)
-        return festival.builder()
+        return FestivalEntity.builder()
                 .title(eventTitle)
                 .source(source)
                 .url(eventUrl)
@@ -208,12 +208,12 @@ public class NaverPetEventCrawler {
      * @param repository PetEvent JPA Repository
      * @param petEvent 저장 또는 업데이트할 PetEvent 객체
      */
-    private void saveOrUpdateEvent(PetRepository repository, festival petEvent) {
+    private void saveOrUpdateEvent(PetRepository repository, FestivalEntity petEvent) {
         // 해시값으로 기존 데이터 조회
-        Optional<festival> optionalEvent = repository.findByHash(petEvent.getHash());
+        Optional<FestivalEntity> optionalEvent = repository.findByHash(petEvent.getHash());
 
         if (optionalEvent.isPresent()) {
-            festival existing = optionalEvent.get();
+            FestivalEntity existing = optionalEvent.get();
             // 기존 데이터와 비교 후 변경사항이 있을 경우 업데이트
             if (!existing.equals(petEvent)) {
                 // 필요한 필드만 업데이트하는 커스텀 메서드 호출 (엔티티 내부 구현 가정)

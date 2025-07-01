@@ -21,7 +21,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @NoArgsConstructor
 @Entity
 @Table(name = "festival")
-public class festival {
+public class FestivalEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long festivalId;
@@ -41,7 +41,7 @@ public class festival {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public void updateFrom(festival sourceEvent) {
+    public void updateFrom(FestivalEntity sourceEvent) {
         this.source = sourceEvent.getSource();
         this.title = sourceEvent.getTitle();
         this.url = sourceEvent.getUrl();
