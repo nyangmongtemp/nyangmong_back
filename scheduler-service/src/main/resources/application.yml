@@ -1,0 +1,9 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: scheduler-service
+
+imagePath:
+  url: /Users/ubing/Desktop/nyangmong/images/crawling/
