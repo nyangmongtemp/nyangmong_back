@@ -129,7 +129,7 @@ public class UserService {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
             else{
-                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER", foundUser.get().getUserId());
+                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER", foundUser.get().getNickname(), foundUser.get().getUserId());
                 // 로그인 성공
                 return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", token);
             }
