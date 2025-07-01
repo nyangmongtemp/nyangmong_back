@@ -129,7 +129,7 @@ public class UserService {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
             else{
-                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER");
+                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER", foundUser.get().getUserId());
                 // 로그인 성공
                 return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", token);
             }
@@ -243,11 +243,11 @@ public class UserService {
     // 프사, 닉네임, 주소, 전화번호를 변경하는 로직
     public void modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto) {
 
-        String email = userInfo.getEmail();
-
-        User foundUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자입니다."));
-
+        Optional<User> byId = userRepository.findById(userInfo.getUserId());
+        if(!byId.isPresent()) {
+            throw new EntityNotFoundException("해당 정보를 가진 사용자가 없습니다.");
+        }
+        User foundUser = byId.get();
         String newProfileImage = setProfileImage(modiDto.getProfileImage());
 
         foundUser.modifyCommonUserInfo(modiDto, newProfileImage);
@@ -258,7 +258,7 @@ public class UserService {
     // 이메일 변경을 요청하여 검사 후 인증 이메일 전송 로직
     public CommonResDto modiUserEmail(String newEmail, TokenUserInfo userInfo) {
 
-        Optional<User> byEmail = userRepository.findByEmail(userInfo.getEmail());
+        Optional<User> byEmail = userRepository.findByEmail(newEmail);
         // 이메일 변경 요청을 보낸 사용자가 DB에 이미 존재하는 경우
         if(byEmail.isPresent()) {
             throw new EntityNotFoundException("해당 이메일의 사용자가 이미 존재합니다.");
@@ -276,9 +276,9 @@ public class UserService {
 
         CommonResDto resDto = verifyEmailCode(authResDto);
 
-        Optional<User> foundUser = userRepository.findByEmail(userInfo.getEmail());
-        if(foundUser.isPresent()) {
-            throw new EntityNotFoundException("이미 가입된 이메일입니다.");
+        Optional<User> foundUser = userRepository.findById(userInfo.getUserId());
+        if(!foundUser.isPresent()) {
+            throw new EntityNotFoundException("이메일을 변경하려하는 사용자가 없습니다.");
         }
         User user = foundUser.get();
         user.modifyEmail(authResDto.getEmail());
@@ -287,7 +287,7 @@ public class UserService {
         return resDto;
     }
 
-    // 비밀번호 변경 요청 인증 코드를 확인해주는 로직
+    // 비밀번호 변경 요청 인증 코드를 발송해주는 로직
     public CommonResDto sendEmailAuthCodeNewPw(String email) {
 
         Optional<User> byEmail = userRepository.findByEmail(email);
@@ -302,9 +302,9 @@ public class UserService {
     }
 
     // 실제로 비밀번호를 변경해주는 로직
-    public CommonResDto modifyNewPassword(String email, UserPasswordModiReqDto reqDto) {
+    public CommonResDto modifyNewPassword(Long userId, UserPasswordModiReqDto reqDto) {
 
-        Optional<User> byEmail = userRepository.findByEmail(email);
+        Optional<User> byEmail = userRepository.findById(userId);
         // 비밀번호를 변경하려는 유저가 DB에 없는 경우
         if(!byEmail.isPresent()) {
             throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다.");
@@ -318,9 +318,9 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "비밀번호가 변경되었습니다. 다시 로그인 해주세요", true);
     }
 
-    public CommonResDto getMyPage(String email) {
+    public CommonResDto getMyPage(Long userId) {
 
-        Optional<User> byEmail = userRepository.findByEmail(email);
+        Optional<User> byEmail = userRepository.findById(userId);
         if(!byEmail.isPresent()) {
             throw new IllegalArgumentException("해당 이메일의 사용자는 없습니다.");
         }

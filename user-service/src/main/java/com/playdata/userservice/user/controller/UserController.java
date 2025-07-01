@@ -123,7 +123,7 @@ public class UserController {
     public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody UserPasswordModiReqDto reqDto) {
 
-        CommonResDto resDto = userService.modifyNewPassword(userInfo.getEmail(), reqDto);
+        CommonResDto resDto = userService.modifyNewPassword(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -132,9 +132,15 @@ public class UserController {
     @GetMapping("/mypage")
     public ResponseEntity<?> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo){
 
-        CommonResDto myPage = userService.getMyPage(userInfo.getEmail());
+        CommonResDto myPage = userService.getMyPage(userInfo.getUserId());
 
         return new ResponseEntity<>(myPage, HttpStatus.OK);
+    }
+
+    // 토큰 검증용 메소드
+    @GetMapping("/temp22")
+    public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
+        return ResponseEntity.ok(userInfo);
     }
 
 }
