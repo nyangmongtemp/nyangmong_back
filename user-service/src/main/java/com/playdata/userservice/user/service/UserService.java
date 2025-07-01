@@ -43,8 +43,11 @@ public class UserService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     // Redis key 상수
+    // 인증 코드 저장용
     private static final String VERIFICATION_CODE_KEY = "email_verify:code:";
+    // 인증 코드 발급 횟수
     private static final String VERIFICATION_ATTEMPT_KEY = "email_verify:attempt:";
+    // 인증 코드 발송 금지 상태
     private static final String VERIFICATION_BLOCK_KEY = "email_verify:block:";
     
     // 이미지 저장 경로 --> 추후에 yml에 있는 주소를 s3 주소로 바꿀 것
@@ -68,9 +71,11 @@ public class UserService {
         // DB에 저장하기 위해 비밀번호 인코딩
         String password = userSaveReqDto.getPassword();
 
-        // 이미지를 지정한 경로에 저장
-        String profileImagePath = setProfileImage(userSaveReqDto.getProfileImage());
-        
+        String profileImagePath = null;
+        // 이미지가 있는 경우 이미지를 지정한 경로에 저장
+        if(userSaveReqDto.getProfileImage() != null) {
+            profileImagePath = setProfileImage(userSaveReqDto.getProfileImage());
+        }
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
         // 부가적인 정보를 담아서 User를 DB에 저장
@@ -98,7 +103,7 @@ public class UserService {
                 File dest = new File(profileImageSaveUrl, fileName);
                 imageFile.transferTo(dest);
 
-                profileImagePath = fileName; // 저장된 상대 경로만 DB에 넣음
+                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
             } catch (IOException e) {
                 // 저장 실패 처리
                 e.printStackTrace();
@@ -311,5 +316,17 @@ public class UserService {
         userRepository.save(user);
 
         return new CommonResDto(HttpStatus.OK, "비밀번호가 변경되었습니다. 다시 로그인 해주세요", true);
+    }
+
+    public CommonResDto getMyPage(String email) {
+
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        if(!byEmail.isPresent()) {
+            throw new IllegalArgumentException("해당 이메일의 사용자는 없습니다.");
+        }
+        User foundUser = byEmail.get();
+        UserMyPageResDto resDto = foundUser.toUserMyPageResDto();
+
+        return new CommonResDto(HttpStatus.OK, "해당 유저의 정보를 찾음.", resDto);
     }
 }

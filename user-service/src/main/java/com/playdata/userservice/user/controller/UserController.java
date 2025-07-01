@@ -128,4 +128,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 마이페이지 요청 메소드
+    @GetMapping("/mypage")
+    public ResponseEntity<?> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo){
+
+        CommonResDto myPage = userService.getMyPage(userInfo.getEmail());
+
+        return new ResponseEntity<>(myPage, HttpStatus.OK);
+    }
+
 }

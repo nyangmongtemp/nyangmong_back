@@ -2,6 +2,7 @@ package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
 import com.playdata.userservice.user.dto.UserInfoModiReqDto;
+import com.playdata.userservice.user.dto.UserMyPageResDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -74,6 +75,17 @@ public class User extends BaseTimeEntity {
     public void modifyPassword(String newPassword){
         this.password = newPassword;
         this.passwordUpdatedAt = LocalDateTime.now();
+    }
+
+    // 마이페이지 요청 응답용 메소드
+    public UserMyPageResDto toUserMyPageResDto(){
+        return UserMyPageResDto.builder()
+                .email(this.email)
+                .nickname(this.nickname)
+                .userName(this.userName)
+                .phone(this.phone)
+                .createtime(this.getCreateTime())
+                .build();
     }
 
 }
