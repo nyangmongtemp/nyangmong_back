@@ -46,6 +46,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             authorityList.add(new SimpleGrantedAuthority("ROLE_" + userRole));
 
+            nickname = JwtTokenProvider.urlDecode(nickname);
+            log.info("decoded nickname:{}", nickname);
+
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     new TokenUserInfo(userEmail, userRole, nickname, Long.valueOf(userId)),
                     "",
