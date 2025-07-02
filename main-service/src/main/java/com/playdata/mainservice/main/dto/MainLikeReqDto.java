@@ -8,7 +8,9 @@ import lombok.Getter;
 public class MainLikeReqDto {
 
     Long contentId;
+
     String category;
+
     String contentType;
 
 }

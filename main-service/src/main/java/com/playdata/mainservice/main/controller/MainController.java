@@ -39,5 +39,14 @@ public class MainController {
 
         return new ResponseEntity(resDto, HttpStatus.CREATED);
     }
-
+    
+    // 댓글 삭제
+    
+    // 댓글 수정
+    
+    // 대댓글 생성
+    
+    // 대댓글 삭제
+    
+    // 대댓글 수정
 }

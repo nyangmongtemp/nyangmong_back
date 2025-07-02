@@ -9,8 +9,6 @@ public class MainComReqDto {
 
     private String category;
 
-    private String contentType;
-
     private boolean hidden;
 
     private String content;

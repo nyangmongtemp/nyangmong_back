@@ -46,5 +46,11 @@ public class Comment extends BaseTimeEntity {
         this.contentId = contentId;
         this.content = content;
         this.hidden = hidden;
+        this.active = true;
+    }
+
+    // 댓글 삭제 메소드
+    public void deleteComment() {
+        this.active = false;
     }
 }

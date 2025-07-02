@@ -72,13 +72,12 @@ public class MainService {
     public CommonResDto createComment(MainComReqDto reqDto, Long userId) {
 
         // 요청 Dto 값의 유효성을 확인
-        if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
+        if(!isValidCategory(reqDto.getCategory())) {
             return new CommonResDto(HttpStatus.BAD_REQUEST, "요청 url이 잘못되었습니다.", null);
         }
 
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
         Category cate = Category.valueOf(reqDto.getCategory().toUpperCase());
-        ContentType ct = ContentType.valueOf(reqDto.getContentType().toUpperCase());
 
         Comment newComment
                 = new Comment(userId, cate, reqDto.getContentId(), reqDto.getContent(), reqDto.isHidden());
