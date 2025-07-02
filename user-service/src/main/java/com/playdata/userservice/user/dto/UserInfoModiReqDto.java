@@ -6,13 +6,10 @@ import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class UserInfoModiReqDto {
 
     String nickname;
-
-    MultipartFile profileImage;
 
     String phone;
 

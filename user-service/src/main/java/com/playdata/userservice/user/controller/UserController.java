@@ -1,18 +1,18 @@
 package com.playdata.userservice.user.controller;
 
-import com.playdata.userservice.common.auth.JwtTokenProvider;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController
@@ -24,13 +24,17 @@ public class UserController {
     private final UserService userService;
 
     // 회원가입
-    @PostMapping("/create")
-    public ResponseEntity<?> userCreate(@ModelAttribute UserSaveReqDto userSaveReqDto){
-        CommonResDto resDto = userService.userCreate(userSaveReqDto);
+    @PostMapping(value = "/create", consumes = "multipart/form-data")
+    public ResponseEntity<?> userCreate(
+            @RequestPart("user") String userJson,
+            // 프로필 이미지는 필수가 아님
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
+    ) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserSaveReqDto userSaveReqDto = objectMapper.readValue(userJson, UserSaveReqDto.class);
 
-        // 회원 가입에 성공한 경우
+        CommonResDto resDto = userService.userCreate(userSaveReqDto, profileImage);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
-
     }
     
     // 로그인
@@ -60,10 +64,16 @@ public class UserController {
 
     // 내 정보 수정 (비밀번호, 이메일 제외)
     // 로그인 필요 -> 토큰 필요함.
-    @PatchMapping("/modify-userinfo")
+    @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
     public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
-            , @ModelAttribute UserInfoModiReqDto modiDto){
-        userService.modiUserCommonInfo(userInfo, modiDto);
+            ,@RequestPart("user") String modiJson,
+            // 프로필 이미지 변경은 필수가 아님
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws JsonProcessingException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserInfoModiReqDto modiDto = objectMapper.readValue(modiJson, UserInfoModiReqDto.class);
+
+        userService.modiUserCommonInfo(userInfo, modiDto, profileImage);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -4,16 +4,13 @@ import com.playdata.userservice.user.entity.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class UserSaveReqDto {
 
@@ -26,8 +23,6 @@ public class UserSaveReqDto {
     private String password;
 
     private String userName;
-
-    private MultipartFile profileImage;
 
     private String phone;
 

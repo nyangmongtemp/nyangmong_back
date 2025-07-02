@@ -33,7 +33,7 @@ public class UserService {
 
     // 비밀번호 인코딩용
     private final PasswordEncoder passwordEncoder;
-    
+
     private final UserRepository userRepository;
 
     // 로그인 토큰 발급용
@@ -58,7 +58,7 @@ public class UserService {
 
     
     // 회원 가입
-    public CommonResDto userCreate(UserSaveReqDto userSaveReqDto) {
+    public CommonResDto userCreate(UserSaveReqDto userSaveReqDto, MultipartFile profileImage) {
 
         String email = userSaveReqDto.getEmail();
         Optional<User> foundByEmail = userRepository.findByEmail(email);
@@ -75,8 +75,8 @@ public class UserService {
 
         String profileImagePath = null;
         // 이미지가 있는 경우 이미지를 지정한 경로에 저장
-        if(userSaveReqDto.getProfileImage() != null) {
-            profileImagePath = setProfileImage(userSaveReqDto.getProfileImage());
+        if(profileImage != null) {
+            profileImagePath = setProfileImage(profileImage);
         }
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
@@ -86,33 +86,6 @@ public class UserService {
 
         CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
         return resDto;
-    }
-
-    // 프로필 이미지를 저장하는 로직
-    private String setProfileImage(MultipartFile imageFile) {
-        String profileImagePath = null;
-
-        // profile image 저장 경로
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                // 로컬 저장 경로 (예: C:/uploads/profile 또는 /home/user/images/profile)
-                String originalFilename = imageFile.getOriginalFilename();
-                String fileName = UUID.randomUUID() + "_" + originalFilename;
-
-                File dir = new File(profileImageSaveUrl);
-                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
-
-                File dest = new File(profileImageSaveUrl, fileName);
-                imageFile.transferTo(dest);
-
-                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
-            } catch (IOException e) {
-                // 저장 실패 처리
-                e.printStackTrace();
-                throw new RuntimeException("이미지 저장 중 오류가 발생하였습니다.");
-            }
-        }
-        return profileImagePath;
     }
 
     // 로그인 로직
@@ -166,49 +139,6 @@ public class UserService {
 
     }
 
-    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
-    private String sendEmailAuthCode(String email) {
-        String authNum;
-        // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
-        try {
-            authNum = mailSenderService.joinMain(email);
-        } catch (MessagingException e) {
-            log.info(e.getMessage());
-            throw new RuntimeException("이메일 전송 과정 중 문제 발생");
-        }
-
-        // 인증 코드를 redis에 저장하자
-        String key = VERIFICATION_CODE_KEY + email;
-        redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
-        return authNum;
-    }
-
-    // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
-    private boolean isBlocked(String email) {
-        String key = VERIFICATION_BLOCK_KEY + email;
-        return redisTemplate.hasKey(key);
-    }
-    
-    // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
-    private void blockUser(String email) {
-
-        String key = VERIFICATION_BLOCK_KEY + email;
-        redisTemplate.opsForValue().set(key, "blocked", Duration.ofMinutes(30));
-
-    }
-    
-    // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
-    private int incrementAttemptCount(String email) {
-
-        String key = VERIFICATION_ATTEMPT_KEY + email;
-        Object obj = redisTemplate.opsForValue().get(key);
-
-        int count = (obj != null) ? Integer.parseInt(obj.toString()) + 1 : 1;
-        redisTemplate.opsForValue().set(key, String.valueOf(count), Duration.ofMinutes(1));
-
-        return count;
-    }
-
     // 이메일로 발송된 인증코드 검증 로직
     public CommonResDto verifyEmailCode(UserEmailAuthResDto authResDto) {
 
@@ -247,14 +177,18 @@ public class UserService {
     }
 
     // 프사, 닉네임, 주소, 전화번호를 변경하는 로직
-    public void modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto) {
+    public void modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto, MultipartFile profileImage) {
 
         Optional<User> byId = userRepository.findById(userInfo.getUserId());
         if(!byId.isPresent()) {
             throw new EntityNotFoundException("해당 정보를 가진 사용자가 없습니다.");
         }
         User foundUser = byId.get();
-        String newProfileImage = setProfileImage(modiDto.getProfileImage());
+        String newProfileImage = null;
+        // 변경할 프로필 이미지가 왔다면, 새로 저장
+        if(profileImage != null) {
+            newProfileImage = setProfileImage(profileImage);
+        }
 
         foundUser.modifyCommonUserInfo(modiDto, newProfileImage);
 
@@ -334,5 +268,75 @@ public class UserService {
         UserMyPageResDto resDto = foundUser.toUserMyPageResDto();
 
         return new CommonResDto(HttpStatus.OK, "해당 유저의 정보를 찾음.", resDto);
+    }
+
+    // 프로필 이미지를 저장하는 로직
+    private String setProfileImage(MultipartFile imageFile) {
+        String profileImagePath = null;
+
+        // profile image 저장 경로
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                // 로컬 저장 경로 (예: C:/uploads/profile 또는 /home/user/images/profile)
+                String originalFilename = imageFile.getOriginalFilename();
+                String fileName = UUID.randomUUID() + "_" + originalFilename;
+
+                File dir = new File(profileImageSaveUrl);
+                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
+
+                File dest = new File(profileImageSaveUrl, fileName);
+                imageFile.transferTo(dest);
+
+                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
+            } catch (IOException e) {
+                // 저장 실패 처리
+                e.printStackTrace();
+                throw new RuntimeException("이미지 저장 중 오류가 발생하였습니다.");
+            }
+        }
+        return profileImagePath;
+    }
+
+    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
+    private String sendEmailAuthCode(String email) {
+        String authNum;
+        // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
+        try {
+            authNum = mailSenderService.joinMain(email);
+        } catch (MessagingException e) {
+            log.info(e.getMessage());
+            throw new RuntimeException("이메일 전송 과정 중 문제 발생");
+        }
+
+        // 인증 코드를 redis에 저장하자
+        String key = VERIFICATION_CODE_KEY + email;
+        redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
+        return authNum;
+    }
+
+    // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
+    private boolean isBlocked(String email) {
+        String key = VERIFICATION_BLOCK_KEY + email;
+        return redisTemplate.hasKey(key);
+    }
+
+    // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
+    private void blockUser(String email) {
+
+        String key = VERIFICATION_BLOCK_KEY + email;
+        redisTemplate.opsForValue().set(key, "blocked", Duration.ofMinutes(30));
+
+    }
+
+    // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
+    private int incrementAttemptCount(String email) {
+
+        String key = VERIFICATION_ATTEMPT_KEY + email;
+        Object obj = redisTemplate.opsForValue().get(key);
+
+        int count = (obj != null) ? Integer.parseInt(obj.toString()) + 1 : 1;
+        redisTemplate.opsForValue().set(key, String.valueOf(count), Duration.ofMinutes(1));
+
+        return count;
     }
 }
