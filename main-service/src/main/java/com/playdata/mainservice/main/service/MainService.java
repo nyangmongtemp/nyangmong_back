@@ -66,7 +66,7 @@ public class MainService {
     }
 
     // 댓글 생성 메소드
-    public CommonResDto createComment(MainComReqDto reqDto, Long userId) {
+    public CommonResDto createComment(MainComReqDto reqDto, Long userId, String nickname) {
 
         // 요청 Dto 값의 유효성을 확인
         if(!isValidCategory(reqDto.getCategory())) {
@@ -76,67 +76,65 @@ public class MainService {
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
         Category cate = Category.valueOf(reqDto.getCategory().toUpperCase());
 
+        // 새로운 댓글 생성
         Comment newComment
                 = new Comment(userId, cate, reqDto.getContentId(), reqDto.getContent(), reqDto.isHidden());
-
+        // DB에 저장
         commentRepository.save(newComment);
 
-        return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨", newComment.fromEntity());
+        return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨",
+                // Dto 변환 해서 화면단으로 리턴
+                newComment.fromEntity(nickname));
     }
-
+    
+    // 댓글 삭제 메소드
     public CommonResDto deleteComment(Long commentId, Long userId) {
 
-        Optional<Comment> foundComment = commentRepository.findById(commentId);
-        // 삭제하려는 댓글이 존재하지 않는 경우
-        if(!foundComment.isPresent()) {
-            throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
-        }
-        // 삭제 요청을 보낸 사용자가 댓글의 작성자가 아닌 경우
-        if(!foundComment.get().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 댓글의 삭제 권한이 없습니다.");
-        }
-        Comment deleted = foundComment.get();
-        deleted.deleteComment();
-        commentRepository.save(deleted);
+        Comment foundComment = isValidComment(commentId, userId);
+        foundComment.deleteComment();
+        commentRepository.save(foundComment);
 
         return new CommonResDto(HttpStatus.OK, "댓글이 정상적으로 삭제되었습니다.", true);
     }
 
-    public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
+    // 댓글 수정 메소드
+    public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto, String nickname) {
 
-        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
-        // 삭제하려는 댓글이 존재하지 않거나 삭제된 경우
-        if(!foundComment.isPresent() || !foundComment.get().isActive()) {
-            throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
-        }
-        // 삭제 요청을 보낸 사용자가 댓글의 작성자가 아닌 경우
-        if(!foundComment.get().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 댓글의 수정 권한이 없습니다.");
-        }
-        Comment comment = foundComment.get();
+        Comment comment = isValidComment(reqDto.getCommentId(), userId);
         comment.mofifyComment(reqDto.getContent());
-        ComSaveResDto dto = commentRepository.save(comment).fromEntity();
+        ComSaveResDto dto = commentRepository.save(comment).fromEntity(nickname);
 
         return new CommonResDto(HttpStatus.OK, "댓글 내용이 수정되었습니다.", dto);
     }
 
     public CommonResDto createReply(Long userId, ReplySaveReqDto reqDto) {
 
-        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
-        // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우
-        if(!foundComment.isPresent() || !foundComment.get().isActive()) {
-            throw new EntityNotFoundException("대댓글을 작성할 댓글이 존재하지 않습니다.");
-        }
+        Comment foundComment = isPresentComment(reqDto);
 
-        Reply createdReply = new Reply(userId, reqDto.getContent(), foundComment.get());
+        Reply createdReply = new Reply(userId, reqDto.getContent(), foundComment);
 
         ReplySaveResDto resDto = replyRepository.save(createdReply).fromEntity();
 
         return new CommonResDto(HttpStatus.CREATED, "대댓글이 생성되었습니다.", resDto);
     }
-    
+
+    public CommonResDto deleteReply(Long userId, Long replyId) {
+
+        Reply validReply = isValidReply(userId, replyId);
+        validReply.deleteReply();
+        replyRepository.save(validReply);
+
+        return new CommonResDto(HttpStatus.OK, "대댓글이 삭제되었습니다.", true);
+    }
+
+    public void modifyReply(Long userId, Long replyId) {
+
+
+
+    }
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
+
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }
@@ -145,5 +143,43 @@ public class MainService {
 
     private boolean isValidCategory(String category) {
         return categoryList.contains(category);
+    }
+    
+    // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
+    private Comment isValidComment(Long commentId, Long userId) {
+        Optional<Comment> foundComment = commentRepository.findById(commentId);
+        // 삭제하려는 댓글이 존재하지 않는 경우
+        if(!foundComment.isPresent()) {
+            throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
+        }
+        // 삭제 요청을 보낸 사용자가 댓글의 작성자가 아닌 경우
+        if(!foundComment.get().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 댓글의 삭제 및 수정 권한이 없습니다.");
+        }
+        return foundComment.get();
+    }
+
+    // 대댓글을 작성할 댓글이 유효한지 판별해주는 메소드
+    private Comment isPresentComment(ReplySaveReqDto reqDto) {
+        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
+        // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우
+        if(!foundComment.isPresent() || !foundComment.get().isActive()) {
+            throw new EntityNotFoundException("대댓글을 작성할 댓글이 존재하지 않습니다.");
+        }
+        return foundComment.get();
+    }
+    
+    // 대댓글을 수정 및 삭제할 권한이 있는지 판별해주는 메소드
+    private Reply isValidReply(Long userId, Long replyId) {
+        Optional<Reply> foundReply = replyRepository.findById(replyId);
+        // 삭제할 대댓글이 존재하지 않는 경우
+        if(!foundReply.isPresent() || !foundReply.get().isActive()) {
+            throw new EntityNotFoundException("삭제할 대댓글이 존재하지 않습니다.");
+        }
+        // 삭제를 요청한 사용자가 대댓글 작성자가 아닌 경우
+        if(!foundReply.get().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 대댓글의 수정 및 삭제 권한이 없습니다.");
+        }
+        return foundReply.get();
     }
 }

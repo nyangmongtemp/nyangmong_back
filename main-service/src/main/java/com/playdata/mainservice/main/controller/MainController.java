@@ -37,7 +37,7 @@ public class MainController {
     @PostMapping("/comment/create")
     public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody MainComReqDto reqDto){
-        CommonResDto resDto = mainService.createComment(reqDto, userInfo.getUserId());
+        CommonResDto resDto = mainService.createComment(reqDto, userInfo.getUserId(), userInfo.getNickname());
 
         return new ResponseEntity(resDto, HttpStatus.CREATED);
     }
@@ -56,7 +56,7 @@ public class MainController {
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody ComModiReqDto reqDto){
         CommonResDto resDto
-                = mainService.modifyComment(userInfo.getUserId(), reqDto);
+                = mainService.modifyComment(userInfo.getUserId(), reqDto, userInfo.getNickname());
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -71,6 +71,14 @@ public class MainController {
     }
 
     // 대댓글 삭제
-    
+    @GetMapping("/reply/delete/{id}")
+    public ResponseEntity<?> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
+            ,@PathVariable(name = "id") Long replyId) {
+        CommonResDto resDto = mainService.deleteReply(userInfo.getUserId(), replyId);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     // 대댓글 수정
+
 }

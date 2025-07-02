@@ -39,7 +39,7 @@ public class Reply extends BaseTimeEntity {
         this.active = true;
     }
 
-    // 댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
+    // 대댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
     public ReplySaveResDto fromEntity() {
         return ReplySaveResDto.builder()
                 .replyId(replyId)
@@ -47,5 +47,15 @@ public class Reply extends BaseTimeEntity {
                 .content(content)
                 .commentId(this.comment.getCommentId())
                 .build();
+    }
+
+    // 대댓글 삭제 시 사용하는 메소드
+    public void deleteReply() {
+        this.active = false;
+    }
+
+    // 대댓글 수정 시 사용하는 메소드
+    public void modifyReply(String content) {
+        this.content = content;
     }
 }

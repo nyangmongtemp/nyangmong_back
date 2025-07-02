@@ -51,7 +51,7 @@ public class Comment extends BaseTimeEntity {
     }
 
     // 댓글 생성 및 수정 시 리턴할 Dto 변환 메소드
-    public ComSaveResDto fromEntity() {
+    public ComSaveResDto fromEntity(String nickname) {
         return ComSaveResDto.builder()
                 .commentId(commentId)
                 .userId(userId)
@@ -59,6 +59,7 @@ public class Comment extends BaseTimeEntity {
                 .contentId(contentId)
                 .content(content)
                 .hidden(hidden)
+                .nickname(nickname)
                 .build();
     }
 
