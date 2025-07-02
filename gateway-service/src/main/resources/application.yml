@@ -34,4 +34,12 @@ spring:
             - RewritePath=/user-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
 
+        - id: scheduler-service
+          uri: lb://SCHEDULER-SERVICE
+          predicates:
+            - Path=/scheduler-service/**
+          filters:
+            - RewritePath=/scheduler-service/(?<segment>.*), /${segment}
+            - AuthorizationHeaderFilter
+
 
