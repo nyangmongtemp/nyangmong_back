@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.main.dto.ComSaveResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,8 +50,25 @@ public class Comment extends BaseTimeEntity {
         this.active = true;
     }
 
+    // 댓글 생성 및 수정 시 리턴할 Dto 변환 메소드
+    public ComSaveResDto fromEntity() {
+        return ComSaveResDto.builder()
+                .commentId(commentId)
+                .userId(userId)
+                .category(category)
+                .contentId(contentId)
+                .content(content)
+                .hidden(hidden)
+                .build();
+    }
+
     // 댓글 삭제 메소드
     public void deleteComment() {
         this.active = false;
+    }
+
+    // 댓글 수정 메소드
+    public void mofifyComment(String newContent) {
+        this.content = newContent;
     }
 }

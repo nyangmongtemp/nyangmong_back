@@ -1,6 +1,8 @@
 package com.playdata.mainservice.main.service;
 
 import com.playdata.mainservice.common.dto.CommonResDto;
+import com.playdata.mainservice.main.dto.ComModiReqDto;
+import com.playdata.mainservice.main.dto.ComSaveResDto;
 import com.playdata.mainservice.main.dto.MainComReqDto;
 import com.playdata.mainservice.main.dto.MainLikeReqDto;
 import com.playdata.mainservice.main.entity.Category;
@@ -85,7 +87,7 @@ public class MainService {
 
         commentRepository.save(newComment);
 
-        return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨", newComment);
+        return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨", newComment.fromEntity());
     }
 
     public CommonResDto deleteComment(Long commentId, Long userId) {
@@ -106,8 +108,27 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "댓글이 정상적으로 삭제되었습니다.", true);
     }
 
+    public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
+
+        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
+        // 삭제하려는 댓글이 존재하지 않는 경우
+        if(!foundComment.isPresent() || !foundComment.get().isActive()) {
+            throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
+        }
+        // 삭제 요청을 보낸 사용자가 댓글의 작성자가 아닌 경우
+        if(!foundComment.get().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 댓글의 수정 권한이 없습니다.");
+        }
+        Comment comment = foundComment.get();
+        comment.mofifyComment(reqDto.getContent());
+        ComSaveResDto dto = commentRepository.save(comment).fromEntity();
+
+        return new CommonResDto(HttpStatus.OK, "댓글 내용이 수정되었습니다.", dto);
+    }
+
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
+
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }

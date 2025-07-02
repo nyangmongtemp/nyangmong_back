@@ -2,6 +2,7 @@ package com.playdata.mainservice.main.controller;
 
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
+import com.playdata.mainservice.main.dto.ComModiReqDto;
 import com.playdata.mainservice.main.dto.MainComReqDto;
 import com.playdata.mainservice.main.dto.MainLikeReqDto;
 import com.playdata.mainservice.main.service.MainService;
@@ -50,6 +51,14 @@ public class MainController {
     }
 
     // 댓글 수정
+    @PostMapping("/comment/modify")
+    public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                           @RequestBody ComModiReqDto reqDto){
+        CommonResDto resDto
+                = mainService.modifyComment(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
     // 대댓글 생성
     
