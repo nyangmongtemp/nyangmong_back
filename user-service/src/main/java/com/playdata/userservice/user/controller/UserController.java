@@ -140,6 +140,7 @@ public class UserController {
     // 토큰 검증용 메소드
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
+        log.info(userInfo.toString());
         return ResponseEntity.ok(userInfo);
     }
 
