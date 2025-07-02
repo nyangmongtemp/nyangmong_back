@@ -3,7 +3,7 @@
 # 읽어오고자 하는 config 서버의 위치 등록
 spring:
   application:
-    name: user-service # 서비스 이름과 매칭되는 설정 파일을 지정 (product-service.yml)
+    name: main-service # 서비스 이름과 매칭되는 설정 파일을 지정 (product-service.yml)
   cloud:
     config:
       uri: http://localhost:8888

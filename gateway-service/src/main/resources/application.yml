@@ -42,4 +42,12 @@ spring:
             - RewritePath=/scheduler-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
+        - id: main-service
+          uri: lb://MAIN-SERVICE
+          predicates:
+            - Path=/main-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/main-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
 

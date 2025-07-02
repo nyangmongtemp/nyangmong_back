@@ -1,0 +1,43 @@
+package com.playdata.mainservice.main.controller;
+
+import com.playdata.mainservice.common.auth.TokenUserInfo;
+import com.playdata.mainservice.common.dto.CommonResDto;
+import com.playdata.mainservice.main.dto.MainComReqDto;
+import com.playdata.mainservice.main.dto.MainLikeReqDto;
+import com.playdata.mainservice.main.service.MainService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/main")
+@RequiredArgsConstructor
+public class MainController {
+
+    private final MainService mainService;
+
+    // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
+    @PostMapping("/like")
+    public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
+            ,@RequestBody MainLikeReqDto reqDto) {
+
+        CommonResDto likePost = mainService.createLike(userInfo.getUserId(), reqDto);
+        
+        return new ResponseEntity<>(likePost,
+                // 요청이 잘못된 경우에는 에러 코드가 나오게끔 하기 위한 코드
+                HttpStatusCode.valueOf(likePost.getStatusCode()));
+    }
+
+    // 댓글 생성
+    @PostMapping("/comment/create")
+    public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                           @RequestBody MainComReqDto reqDto){
+        CommonResDto resDto = mainService.createComment(reqDto, userInfo.getUserId());
+
+        return new ResponseEntity(resDto, HttpStatus.CREATED);
+    }
+
+}
