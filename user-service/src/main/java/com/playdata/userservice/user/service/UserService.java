@@ -45,8 +45,10 @@ public class UserService {
     // Redis key 상수
     // 인증 코드 저장용
     private static final String VERIFICATION_CODE_KEY = "email_verify:code:";
+
     // 인증 코드 발급 횟수
     private static final String VERIFICATION_ATTEMPT_KEY = "email_verify:attempt:";
+
     // 인증 코드 발송 금지 상태
     private static final String VERIFICATION_BLOCK_KEY = "email_verify:block:";
     
@@ -123,7 +125,11 @@ public class UserService {
         }
         else {
             String pw = foundUser.get().getPassword();
-
+            
+            // 탈퇴한 회원인 경우 로그인 실패 처리
+            if(!foundUser.get().isActive()) {
+                throw new IllegalArgumentException("탈퇴한 회원입니다.");
+            }
             // 비밀번호가 일치 하지 않는 경우
             if(!passwordEncoder.matches(userLoginReqDto.getPassword(), pw)) {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
