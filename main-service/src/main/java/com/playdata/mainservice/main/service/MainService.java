@@ -1,14 +1,8 @@
 package com.playdata.mainservice.main.service;
 
 import com.playdata.mainservice.common.dto.CommonResDto;
-import com.playdata.mainservice.main.dto.ComModiReqDto;
-import com.playdata.mainservice.main.dto.ComSaveResDto;
-import com.playdata.mainservice.main.dto.MainComReqDto;
-import com.playdata.mainservice.main.dto.MainLikeReqDto;
-import com.playdata.mainservice.main.entity.Category;
-import com.playdata.mainservice.main.entity.Comment;
-import com.playdata.mainservice.main.entity.ContentType;
-import com.playdata.mainservice.main.entity.Like;
+import com.playdata.mainservice.main.dto.*;
+import com.playdata.mainservice.main.entity.*;
 import com.playdata.mainservice.main.repository.CommentRepository;
 import com.playdata.mainservice.main.repository.LikeRepository;
 import com.playdata.mainservice.main.repository.ReplyRepository;
@@ -111,7 +105,7 @@ public class MainService {
     public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
 
         Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
-        // 삭제하려는 댓글이 존재하지 않는 경우
+        // 삭제하려는 댓글이 존재하지 않거나 삭제된 경우
         if(!foundComment.isPresent() || !foundComment.get().isActive()) {
             throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
         }
@@ -126,9 +120,23 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "댓글 내용이 수정되었습니다.", dto);
     }
 
+    public CommonResDto createReply(Long userId, ReplySaveReqDto reqDto) {
+
+        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
+        // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우
+        if(!foundComment.isPresent() || !foundComment.get().isActive()) {
+            throw new EntityNotFoundException("대댓글을 작성할 댓글이 존재하지 않습니다.");
+        }
+
+        Reply createdReply = new Reply(userId, reqDto.getContent(), foundComment.get());
+
+        ReplySaveResDto resDto = replyRepository.save(createdReply).fromEntity();
+
+        return new CommonResDto(HttpStatus.CREATED, "대댓글이 생성되었습니다.", resDto);
+    }
+    
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
-
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }

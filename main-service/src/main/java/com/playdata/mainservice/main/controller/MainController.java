@@ -5,6 +5,7 @@ import com.playdata.mainservice.common.dto.CommonResDto;
 import com.playdata.mainservice.main.dto.ComModiReqDto;
 import com.playdata.mainservice.main.dto.MainComReqDto;
 import com.playdata.mainservice.main.dto.MainLikeReqDto;
+import com.playdata.mainservice.main.dto.ReplySaveReqDto;
 import com.playdata.mainservice.main.service.MainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -61,7 +62,14 @@ public class MainController {
     }
 
     // 대댓글 생성
-    
+    @PostMapping("/reply/create")
+    public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                         @RequestBody ReplySaveReqDto reqDto) {
+        CommonResDto resDto = mainService.createReply(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
     // 대댓글 삭제
     
     // 대댓글 수정

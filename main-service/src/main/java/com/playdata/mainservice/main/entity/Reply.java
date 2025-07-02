@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.main.dto.ReplySaveResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,4 +31,21 @@ public class Reply extends BaseTimeEntity {
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
+    // 대댓글 생성 시 사용하는 메소드
+    public Reply(Long userId, String content, Comment comment) {
+        this.userId = userId;
+        this.content = content;
+        this.comment = comment;
+        this.active = true;
+    }
+
+    // 댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
+    public ReplySaveResDto fromEntity() {
+        return ReplySaveResDto.builder()
+                .replyId(replyId)
+                .userId(userId)
+                .content(content)
+                .commentId(this.comment.getCommentId())
+                .build();
+    }
 }
