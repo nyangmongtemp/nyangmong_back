@@ -41,9 +41,16 @@ public class MainController {
     }
     
     // 댓글 삭제
-    
+    @GetMapping("/comment/delete/{id}")
+    public ResponseEntity<?> deleteComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                           @PathVariable(name = "id") Long commentId) {
+        CommonResDto resDto = mainService.deleteComment(commentId, userInfo.getUserId());
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     // 댓글 수정
-    
+
     // 대댓글 생성
     
     // 대댓글 삭제

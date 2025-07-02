@@ -40,6 +40,14 @@ public class CommonExceptionHandler {
         return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
     }
 
+    // 수정, 삭제 권한이 없을 때 사용하는 메소드
+    @ExceptionHandler(IllegalAccessException.class)
+    public ResponseEntity<?> illegalHandler(IllegalAccessException e) {
+        e.printStackTrace();
+        CommonErrorDto errorDto
+                = new CommonErrorDto(HttpStatus.FORBIDDEN, e.getMessage());
+        return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
+    }
 
     // 파일 저장 중에 발생한 오류를 처리하는 메소드
     @ExceptionHandler(IOException.class)
