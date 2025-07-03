@@ -18,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity // 권한 검사를 컨트롤러의 메서드에서 전역적으로 수행하기 위한 설정.
 
-public class SecurityConfig {
+public class
+SecurityConfig {
 
     private  final JwtAuthFilter jwtAuthFilter;
     private  final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;

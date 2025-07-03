@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,19 +148,81 @@ public class MainService {
 
         return new CommonResDto(HttpStatus.CREATED, "대댓글 수정이 완료되었습니다.", validReply.fromEntity());
     }
+    
+    // 탈퇴한 회원의 모든 좋아요, 댓글, 대댓글의 active 값을 false 처리 하는 로직
+    public CommonResDto deleteUserAll(Long userId) {
+
+        // 좋아요
+        Optional<List<Like>> foundLike = likeRepository.findByUserId(userId);
+        // 사용자가 만든 좋아요가 있는 경우에만 active false 작업 수행
+        if(foundLike.isPresent()) {
+            List<Like> likes = foundLike.get();
+            likes.forEach(Like::deleteLike); // 상태만 먼저 수정
+            likeRepository.saveAll(likes);   // 일괄 저장
+        }
+        // 댓글
+        Optional<List<Comment>> foundComment = commentRepository.findByUserId(userId);
+        // 사용자가 작성한 댓글이 있는 경우에만 active false 작업 수행
+        if(foundComment.isPresent()) {
+            List<Comment> comments = foundComment.get();
+            comments.forEach(Comment::deleteComment);
+            commentRepository.saveAll(comments);
+        }
+
+        // 대댓글  --> 필요 없을 수도 있지만, 미연의 사태를 방지하기 위해
+        // 댓글 삭제 시, 매핑된 모든 대댓글을 active false하는 로직이 있지만
+        // 혹시 모르는 경우를 대비해 대댓글도 모드 active false 처리 진행
+        Optional<List<Reply>> foundReply = replyRepository.findByUserId(userId);
+        // 사용자가 작성한 대댓글이 있는 경우에만 active false 작업 수행
+        if(foundReply.isPresent()) {
+            List<Reply> replies = foundReply.get();
+            replies.forEach(Reply::deleteReply);
+            replyRepository.saveAll(replies);
+        }
+
+        return new CommonResDto(HttpStatus.OK, "회원의 모든 댓글, 대댓글, 좋아요를 삭제하였습니다.", true);
+    }
+
+    // 회원의 닉네임 변경 시, 저장된 모든 댓글, 대댓글의 닉네임 값 변경
+    public CommonResDto changeUserNickname(Long userId, String encodedNickname) {
+
+        String nickname = URLDecoder.decode(encodedNickname, StandardCharsets.UTF_8);
+        // 사용자가 작성한 모든 댓글 조회
+        Optional<List<Comment>> foundComment = commentRepository.findByUserId(userId);
+        // 사용자가 작성한 댓글이 있는 경우에만 닉네임 변경 작업 수행
+        if(foundComment.isPresent()) {
+            List<Comment> comments = foundComment.get();
+            comments.stream().filter(Comment::isActive).forEach(comment -> {
+                comment.modifyNickname(nickname);
+            });
+            commentRepository.saveAll(comments);
+        }
+
+        // 사용자가 작성한 모든 대댓글 조회
+        Optional<List<Reply>> foundReply = replyRepository.findByUserId(userId);
+        // 사용자가 작성한 대댓글이 있는 경우에만, 닉네임 변경 작업 수행
+        if(foundReply.isPresent()) {
+            List<Reply> replies = foundReply.get();
+            replies.stream().filter(Reply::isActive).forEach(reply -> {
+                reply.modifyNickname(nickname);
+            });
+            replyRepository.saveAll(replies);
+        }
+
+        return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 닉네임이 변경되었습니다.", true);
+    }
+
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
-
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }
 
     // 카테고리의 유효성 확인
-
     private boolean isValidCategory(String category) {
         return categoryList.contains(category);
     }
-    
+
     // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
     private Comment isValidComment(Long commentId, Long userId) {
         Optional<Comment> foundComment = commentRepository.findById(commentId);
@@ -181,8 +246,9 @@ public class MainService {
         }
         return foundComment.get();
     }
-    
+
     // 대댓글을 수정 및 삭제할 권한이 있는지 판별해주는 메소드
+
     private Reply isValidReply(Long userId, Long replyId) {
         Optional<Reply> foundReply = replyRepository.findById(replyId);
         // 삭제할 대댓글이 존재하지 않는 경우

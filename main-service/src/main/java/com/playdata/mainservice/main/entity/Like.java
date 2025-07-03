@@ -46,4 +46,9 @@ public class Like extends BaseTimeEntity {
         this.active = !this.active;
     }
 
+    // 회원 탈퇴시 모든 좋아요 삭제
+    public void deleteLike() {
+        this.active = false;
+    }
+
 }

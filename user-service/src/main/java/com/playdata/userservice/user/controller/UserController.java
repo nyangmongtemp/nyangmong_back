@@ -147,6 +147,14 @@ public class UserController {
         return new ResponseEntity<>(myPage, HttpStatus.OK);
     }
 
+    // 회원 탈퇴 요청 메소드
+    @GetMapping("/resign")
+    public ResponseEntity<?> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
+        CommonResDto resDto = userService.resignUser(userInfo.getUserId());
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     // 토큰 검증용 메소드
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){

@@ -62,4 +62,9 @@ public class Reply extends BaseTimeEntity {
     public void modifyReply(String content) {
         this.content = content;
     }
+
+    // 사용자의 닉네임 변경 시 사용하는 메소드
+    public void modifyNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

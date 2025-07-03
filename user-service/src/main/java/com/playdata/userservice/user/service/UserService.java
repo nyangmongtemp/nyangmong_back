@@ -1,5 +1,6 @@
 package com.playdata.userservice.user.service;
 
+import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
@@ -13,12 +14,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +39,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
+
+    // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
+    private final MainServiceClient mainClient;
 
     // 로그인 토큰 발급용
     private final JwtTokenProvider jwtTokenProvider;
@@ -189,6 +196,19 @@ public class UserService {
         if(profileImage != null) {
             newProfileImage = setProfileImage(profileImage);
         }
+        // nickname을 변경하는 경우
+        if(modiDto.getNickname() != null) {
+            // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
+            String encodedNickname = URLEncoder.encode(modiDto.getNickname(), StandardCharsets.UTF_8);
+
+            ResponseEntity<?> response
+                    = mainClient.modifyNickname(userInfo.getUserId(), encodedNickname);
+            
+            // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
+            if(response.getStatusCode() != HttpStatus.OK) {
+                throw new RuntimeException("회원정보 수정 중 오류가 발생하였습니다.");
+            }
+        }
 
         foundUser.modifyCommonUserInfo(modiDto, newProfileImage);
 
@@ -269,7 +289,28 @@ public class UserService {
 
         return new CommonResDto(HttpStatus.OK, "해당 유저의 정보를 찾음.", resDto);
     }
+    
+    // 회원 탈퇴를 담당하는 로직
+    public CommonResDto resignUser(Long userId) {
 
+        Optional<User> targetUser = userRepository.findById(userId);
+        // 탈퇴를 진행할 사용자가 없거나, 이미 사용자가 탈퇴를 진행한 경우
+        if(!targetUser.isPresent() || !targetUser.get().isActive()) {
+            throw new EntityNotFoundException("탈퇴를 진행할 사용자가 없습니다.");
+        }
+        User user = targetUser.get();
+        user.resignUser();
+        ResponseEntity<?> response = mainClient.deleteUser(userId);
+        
+        // 댓글, 대댓글 비활성화 처리 중 오류 발생
+        if(response.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("회원 탈퇴 진행 중 오류가 발생하였습니다.");
+        }
+
+        userRepository.save(user);
+        return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
+    }
+    
     // 프로필 이미지를 저장하는 로직
     private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
@@ -296,8 +337,8 @@ public class UserService {
         }
         return profileImagePath;
     }
-
     // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
+
     private String sendEmailAuthCode(String email) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
@@ -313,22 +354,22 @@ public class UserService {
         redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
         return authNum;
     }
-
     // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
+
     private boolean isBlocked(String email) {
         String key = VERIFICATION_BLOCK_KEY + email;
         return redisTemplate.hasKey(key);
     }
-
     // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
+
     private void blockUser(String email) {
 
         String key = VERIFICATION_BLOCK_KEY + email;
         redisTemplate.opsForValue().set(key, "blocked", Duration.ofMinutes(30));
 
     }
-
     // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
+
     private int incrementAttemptCount(String email) {
 
         String key = VERIFICATION_ATTEMPT_KEY + email;

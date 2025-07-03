@@ -85,5 +85,21 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // feign 요청을 받는 메소드들입니다.
+    // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
+    @GetMapping("/deleteUser/{id}")
+    ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
+        CommonResDto resDto = mainService.deleteUserAll(userId);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
+    @GetMapping("/modifyNickname/{id}/{nickname}")
+    ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
+        CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
 }

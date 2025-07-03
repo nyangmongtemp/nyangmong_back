@@ -91,4 +91,9 @@ public class User extends BaseTimeEntity {
                 .build();
     }
 
+    // 탈퇴 진행 메소드
+    public void resignUser() {
+        this.active = false;
+    }
+
 }
