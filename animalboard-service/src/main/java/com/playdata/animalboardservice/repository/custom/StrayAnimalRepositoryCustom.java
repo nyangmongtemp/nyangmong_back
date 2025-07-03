@@ -14,5 +14,4 @@ public interface StrayAnimalRepositoryCustom {
      * @return
      */
     Page<StrayAnimal> findList(SearchDto searchDto, Pageable pageable);
-
 }
