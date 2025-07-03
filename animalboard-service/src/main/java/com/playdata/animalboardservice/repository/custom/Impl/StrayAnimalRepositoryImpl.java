@@ -56,12 +56,12 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 보호소 주소 검색 (시/도 단위부터 검색 가능)
-        if (searchDto.getCareAddr() != null) {
+        if (searchDto.getCareAddr() != null && !searchDto.getCareAddr().isBlank()) {
             builder.and(strayAnimal.careAddr.startsWithIgnoreCase(searchDto.getCareAddr()));
         }
 
         // 축종명(개/고양이 등) 필터
-        if (searchDto.getUpKindNm() != null) {
+        if (searchDto.getUpKindNm() != null && !searchDto.getUpKindNm().isBlank()) {
             builder.and(strayAnimal.upKindNm.eq(searchDto.getUpKindNm()));
         }
 
