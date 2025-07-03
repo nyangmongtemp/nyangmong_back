@@ -38,9 +38,9 @@ public class InformationBoard extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean active; // 게시글 업로드 상태(남아 있는지, 삭제 되었는지)
 
-    private String nickname;
+    private String nickname; // 사용자 닉네임
 
-    private String profileImage;
+    private String profileImage; // 사용자 프로필 이미지
 
     public InformationBoardResDto fromEntity(InformationBoard Board) {
         return InformationBoardResDto.builder()

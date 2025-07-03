@@ -2,8 +2,10 @@ package com.playdata.boardservice.board.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
 import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.service.BoardService;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
@@ -60,6 +62,24 @@ public class BoardController {
 
         // 성공 시 응답
         return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 게시물 수정 (공통)
+    @PutMapping("/{category}/modify/{postId}")
+    public ResponseEntity<?> modifyBoard(@PathVariable String category,
+                                         @PathVariable Long postId,
+            @AuthenticationPrincipal TokenUserInfo userInfo
+            , @RequestPart("context") String context,
+                                         @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BoardModiDto modiDto = objectMapper.readValue(context, BoardModiDto.class);
+
+        // 대소문자 구분 없이 enum 변환
+        Category enumCategory = Category.valueOf(category.toUpperCase());
+
+        boardService.boardModify(modiDto, thumbnailImage, userInfo, enumCategory, postId);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

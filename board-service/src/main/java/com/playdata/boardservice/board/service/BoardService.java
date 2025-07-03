@@ -1,5 +1,6 @@
 package com.playdata.boardservice.board.service;
 
+import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
 import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
 import com.playdata.boardservice.board.entity.Category;
@@ -19,8 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
-
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.c;
 
 @Service
 @Slf4j
@@ -139,6 +138,107 @@ public class BoardService {
             return new CommonResDto(HttpStatus.BAD_REQUEST, e.getMessage(), null);
         }
     }
+
+    public void boardModify(BoardModiDto modiDto,
+                                   MultipartFile thumbnailImage,
+                                   TokenUserInfo userInfo,
+                                   Category category,
+                                   Long postId) {
+        try {
+            // 썸네일 저장 경로 변수 (null이면 수정 안 함)
+            String savedPath = null;
+
+            // 사용자가 새로운 썸네일 이미지를 첨부한 경우
+            if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+                String originalName = thumbnailImage.getOriginalFilename();
+                String fileName = UUID.randomUUID() + "_" + originalName;
+                String categoryStr = category.name();
+
+                // 디렉토리가 없다면 생성 (서비스 운영중 파일이 폴더가 손상 되었을 확률도 있기 때문에 다시 설정)
+                File dir = new File(thumbnailImagePath, categoryStr);
+                if (!dir.exists()) dir.mkdirs();
+
+                // 파일 저장
+                File dest = new File(dir, fileName);
+                thumbnailImage.transferTo(dest);
+
+                // DB에 저장할 상대 경로 세팅
+                savedPath = categoryStr + "/" + fileName;
+            }
+
+            // 소개 게시판은 INTRODUCTION enum 으로 단일 구분
+            if (category == Category.INTRODUCTION) {
+                // 게시글 조회 (없으면 예외)
+                IntroductionBoard board = introductionBoardRepository.findById(postId)
+                        .orElseThrow(() -> new IllegalArgumentException("해당 소개 게시글이 존재하지 않습니다."));
+
+                // 작성자 검증 (자기 글만 수정 가능)
+                if (!board.getUserId().equals(userInfo.getUserId())) {
+                    throw new SecurityException("작성자만 수정할 수 있습니다.");
+                }
+
+                // 썸네일은 필수이므로 없으면 예외
+                if (savedPath == null) {
+                    throw new IllegalArgumentException("소개 게시판은 썸네일 이미지를 반드시 첨부해야 합니다.");
+                }
+
+                // 본문 및 썸네일 수정
+                board.setContent(modiDto.getContent());
+                board.setThumbnailImage(savedPath);
+
+                // 수정된 게시글 저장
+                introductionBoardRepository.save(board);
+
+                // 정보 게시판의 카테고리를 설정
+            } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
+
+                // 게시글 조회 (없으면 예외)
+                InformationBoard board = informationBoardRepository.findById(postId)
+                        .orElseThrow(() -> new IllegalArgumentException("해당 정보 게시글이 존재하지 않습니다."));
+
+                // 작성자 검증
+                if (!board.getUserId().equals(userInfo.getUserId())) {
+                    throw new SecurityException("작성자만 수정할 수 있습니다.");
+                }
+
+                // content 수정
+                board.setContent(modiDto.getContent());
+
+                if (savedPath != null) {
+                    // 새 이미지가 있으면 교체
+                    board.setThumbnailImage(savedPath);
+                } else if (board.getThumbnailImage() != null && (thumbnailImage == null || thumbnailImage.isEmpty())) {
+
+                    // 기존 이미지가 있었고, 새 이미지가 없으면 → 삭제
+                    // 삭제 시 저장 디렉토리에서도 이미지 삭제
+                    File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
+                    if (oldFile.exists()) oldFile.delete();
+
+                    board.setThumbnailImage(null);
+                }
+
+                // 수정된 게시글 저장
+                informationBoardRepository.save(board);
+
+            } else {
+                // 그 외 잘못된 카테고리는 예외
+                throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
+            }
+
+        } catch (IOException e) {
+            // 파일 저장 실패 시 로그 출력 및 예외 던짐
+            log.error("썸네일 저장 실패: {}", e.getMessage());
+            throw new RuntimeException("파일 저장 중 오류 발생");
+        } catch (SecurityException | IllegalArgumentException e) {
+            // 유효성 or 인증 오류는 그대로 던짐
+            throw e;
+        } catch (Exception e) {
+            // 예기치 못한 에러 처리
+            log.error("게시글 수정 중 예외 발생: {}", e.getMessage());
+            throw new RuntimeException("게시글 수정 중 오류 발생");
+        }
+    }
+
 }
 
 
