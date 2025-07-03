@@ -27,16 +27,19 @@ public class Reply extends BaseTimeEntity {
 
     private boolean active;
 
+    private String nickname;
+
     @ManyToOne
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
     // 대댓글 생성 시 사용하는 메소드
-    public Reply(Long userId, String content, Comment comment) {
+    public Reply(Long userId, String content, Comment comment, String nickname) {
         this.userId = userId;
         this.content = content;
         this.comment = comment;
         this.active = true;
+        this.nickname = nickname;
     }
 
     // 대댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
@@ -46,6 +49,7 @@ public class Reply extends BaseTimeEntity {
                 .userId(userId)
                 .content(content)
                 .commentId(this.comment.getCommentId())
+                .nickname(this.nickname)
                 .build();
     }
 

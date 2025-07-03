@@ -2,10 +2,7 @@ package com.playdata.mainservice.main.controller;
 
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
-import com.playdata.mainservice.main.dto.ComModiReqDto;
-import com.playdata.mainservice.main.dto.MainComReqDto;
-import com.playdata.mainservice.main.dto.MainLikeReqDto;
-import com.playdata.mainservice.main.dto.ReplySaveReqDto;
+import com.playdata.mainservice.main.dto.*;
 import com.playdata.mainservice.main.service.MainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -56,7 +53,7 @@ public class MainController {
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody ComModiReqDto reqDto){
         CommonResDto resDto
-                = mainService.modifyComment(userInfo.getUserId(), reqDto, userInfo.getNickname());
+                = mainService.modifyComment(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -65,7 +62,7 @@ public class MainController {
     @PostMapping("/reply/create")
     public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody ReplySaveReqDto reqDto) {
-        CommonResDto resDto = mainService.createReply(userInfo.getUserId(), reqDto);
+        CommonResDto resDto = mainService.createReply(userInfo, reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -80,5 +77,13 @@ public class MainController {
     }
 
     // 대댓글 수정
+    @PostMapping("/reply/modify")
+    public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                         @RequestBody ReplyModiReqDto reqDto){
+        CommonResDto resDto = mainService.modifyReply(userInfo, reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
 
 }

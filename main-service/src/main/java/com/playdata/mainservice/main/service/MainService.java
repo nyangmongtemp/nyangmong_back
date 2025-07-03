@@ -1,5 +1,6 @@
 package com.playdata.mainservice.main.service;
 
+import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
 import com.playdata.mainservice.main.dto.*;
 import com.playdata.mainservice.main.entity.*;
@@ -78,13 +79,13 @@ public class MainService {
 
         // 새로운 댓글 생성
         Comment newComment
-                = new Comment(userId, cate, reqDto.getContentId(), reqDto.getContent(), reqDto.isHidden());
+                = new Comment(userId, cate, reqDto.getContentId(), reqDto.getContent(), reqDto.isHidden(), nickname);
         // DB에 저장
         commentRepository.save(newComment);
 
         return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨",
                 // Dto 변환 해서 화면단으로 리턴
-                newComment.fromEntity(nickname));
+                newComment.fromEntity());
     }
     
     // 댓글 삭제 메소드
@@ -98,20 +99,20 @@ public class MainService {
     }
 
     // 댓글 수정 메소드
-    public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto, String nickname) {
+    public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
 
         Comment comment = isValidComment(reqDto.getCommentId(), userId);
         comment.mofifyComment(reqDto.getContent());
-        ComSaveResDto dto = commentRepository.save(comment).fromEntity(nickname);
+        ComSaveResDto dto = commentRepository.save(comment).fromEntity();
 
         return new CommonResDto(HttpStatus.OK, "댓글 내용이 수정되었습니다.", dto);
     }
 
-    public CommonResDto createReply(Long userId, ReplySaveReqDto reqDto) {
+    public CommonResDto createReply(TokenUserInfo userInfo, ReplySaveReqDto reqDto) {
 
         Comment foundComment = isPresentComment(reqDto);
 
-        Reply createdReply = new Reply(userId, reqDto.getContent(), foundComment);
+        Reply createdReply = new Reply(userInfo.getUserId(), reqDto.getContent(), foundComment, userInfo.getNickname());
 
         ReplySaveResDto resDto = replyRepository.save(createdReply).fromEntity();
 
@@ -127,10 +128,22 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "대댓글이 삭제되었습니다.", true);
     }
 
-    public void modifyReply(Long userId, Long replyId) {
+    public CommonResDto modifyReply(TokenUserInfo userInfo, ReplyModiReqDto reqDto) {
 
+        // 대댓글 존재 여부 및 활성화 여부, 수정, 삭제 권한 여부 확인
+        Reply validReply = isValidReply(userInfo.getUserId(), reqDto.getReplyId());
 
+        // 대댓글에 매핑된 댓글의 존재 및 활성화 여부 확인
+        ReplySaveReqDto saveReqDto
+                = new ReplySaveReqDto(userInfo.getUserId(), validReply.getContent());
+        isPresentComment(saveReqDto);
 
+        // 대댓글의 댓글이 존재하고 수정 권한도 있는 경우
+        // 수정 진행
+        validReply.modifyReply(reqDto.getContent());
+        replyRepository.save(validReply);
+
+        return new CommonResDto(HttpStatus.CREATED, "대댓글 수정이 완료되었습니다.", validReply.fromEntity());
     }
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
@@ -174,7 +187,7 @@ public class MainService {
         Optional<Reply> foundReply = replyRepository.findById(replyId);
         // 삭제할 대댓글이 존재하지 않는 경우
         if(!foundReply.isPresent() || !foundReply.get().isActive()) {
-            throw new EntityNotFoundException("삭제할 대댓글이 존재하지 않습니다.");
+            throw new EntityNotFoundException("수정, 삭제할 대댓글이 존재하지 않습니다.");
         }
         // 삭제를 요청한 사용자가 대댓글 작성자가 아닌 경우
         if(!foundReply.get().getUserId().equals(userId)) {

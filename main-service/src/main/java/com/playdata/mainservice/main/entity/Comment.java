@@ -36,22 +36,25 @@ public class Comment extends BaseTimeEntity {
 
     private boolean hidden;
 
+    private String nickname;
+
     @OneToMany(mappedBy = "comment")
     private List<Reply> replyList;
 
     
     // 댓글 생성용 메소드
-    public Comment(Long userId, Category category, Long contentId, String content, boolean hidden) {
+    public Comment(Long userId, Category category, Long contentId, String content, boolean hidden, String nickname) {
         this.userId = userId;
         this.category = category;
         this.contentId = contentId;
         this.content = content;
         this.hidden = hidden;
         this.active = true;
+        this.nickname = nickname;
     }
 
     // 댓글 생성 및 수정 시 리턴할 Dto 변환 메소드
-    public ComSaveResDto fromEntity(String nickname) {
+    public ComSaveResDto fromEntity() {
         return ComSaveResDto.builder()
                 .commentId(commentId)
                 .userId(userId)
@@ -66,6 +69,13 @@ public class Comment extends BaseTimeEntity {
     // 댓글 삭제 메소드
     public void deleteComment() {
         this.active = false;
+
+        // 연관된 모든 대댓글도 비활성화
+        if (replyList != null) {
+            for (Reply reply : replyList) {
+                reply.deleteReply();
+            }
+        }
     }
 
     // 댓글 수정 메소드

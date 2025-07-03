@@ -5,16 +5,10 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ReplySaveResDto {
+public class ReplyModiReqDto {
 
     private Long replyId;
 
     private String content;
-
-    private Long commentId;
-
-    private Long userId;
-
-    private String nickname;
 
 }
