@@ -35,7 +35,7 @@ public class MainService {
     private List<String> typeList = List.of("post", "comment", "reply");
 
     // 좋아요를 통합적으로 생성하는 서비스 메소드
-    public CommonResDto createLike(Long userId, MainLikeReqDto reqDto) {
+    public CommonResDto createLike(Long userId, MainLikeCommReqDto reqDto) {
         
         // 요청 Dto 값의 유효성을 확인
         if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
@@ -215,8 +215,10 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 닉네임이 변경되었습니다.", true);
     }
 
-    public CommonResDto getLikeCount(List<MainLikeReqDto> contentList) {
-        List<LikeCountResDto> result = contentList.stream()
+    // 게시물 목록 조회 시 사용할 댓글, 좋아요 개수 조회
+    public CommonResDto getLikeCommentCount(List<MainLikeCommReqDto> contentList) {
+
+        List<LikeComCountResDto> result = contentList.stream()
                 .map((req) -> {
                     // 입력된 contentType과 category의 유효성 확인
                     isValidContentType(req.getContentType());
@@ -229,33 +231,46 @@ public class MainService {
                     // 해당 게시물 혹은 댓글, 대댓글 중에서 활성화된 좋아요의 개수만 카운팅
                     Long count = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(
                             contentType, category, req.getContentId());
+                    
+                    // 검색 대상 게시물들의 모든 댓글의 id를 리턴 --> 대댓글 검색용
+                    List<Long> foundComment
+                            = commentRepository.findActiveCommentIdsByCategoryAndContentId(category, req.getContentId());
+                    
+                    // 조회된 댓글의 개수 합산
+                    long totalCount = foundComment.size();
+                    
+                    // 조회된 댓글들의 모든 대댓글 개수 리턴
+                    Long replyCount = replyRepository.countAllActiveRepliesByCommentIds(foundComment);
+                    
+                    // 댓글 개수에 대댓글 합산
+                    totalCount += replyCount;
 
                     // dto로 리턴
-                    return LikeCountResDto.builder()
+                    return LikeComCountResDto.builder()
                             .contentId(req.getContentId())
                             .contentType(req.getContentType())
                             .category(req.getCategory())
                             .likeCount(count)
+                            .commentCount(totalCount)
                             .build();
                 })
                 .collect(Collectors.toList());
-
-        return new CommonResDto(HttpStatus.OK, "해당 컨텐츠들의 좋아요 개수를 모두 찾았습니다.", result);
+        return new CommonResDto(HttpStatus.OK, "모든 댓글수, 좋아요 수 구함.", result);
     }
 
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
-    // 컨텐츠타입의 유효성 확인
 
+    // 컨텐츠타입의 유효성 확인
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }
-    // 카테고리의 유효성 확인
 
+    // 카테고리의 유효성 확인
     private boolean isValidCategory(String category) {
         return categoryList.contains(category);
     }
-    // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
 
+    // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
     private Comment isValidComment(Long commentId, Long userId) {
         Optional<Comment> foundComment = commentRepository.findById(commentId);
         // 삭제하려는 댓글이 존재하지 않는 경우
@@ -268,6 +283,7 @@ public class MainService {
         }
         return foundComment.get();
     }
+
     // 대댓글을 작성할 댓글이 유효한지 판별해주는 메소드
 
     private Comment isPresentComment(ReplySaveReqDto reqDto) {

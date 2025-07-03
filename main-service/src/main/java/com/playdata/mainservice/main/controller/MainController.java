@@ -23,7 +23,7 @@ public class MainController {
     // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
     @PostMapping("/like")
     public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestBody MainLikeReqDto reqDto) {
+            ,@RequestBody MainLikeCommReqDto reqDto) {
 
         CommonResDto likePost = mainService.createLike(userInfo.getUserId(), reqDto);
         
@@ -87,19 +87,16 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 게시물 좋아요 개수 조회 -> 리스트 형태로 올 경우
-    @PostMapping("/like/list")
-    public ResponseEntity<?> getPostListLikeCount(@RequestBody List<MainLikeReqDto> contentList) {
-        CommonResDto resDto = mainService.getLikeCount(contentList);
+    // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
+    @PostMapping("/list")
+    public ResponseEntity<?> getListLikeCount(@RequestBody List<MainLikeCommReqDto> contentList) {
+        CommonResDto resDto = mainService.getLikeCommentCount(contentList);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 게시물 댓글 개수 조회 -> 리스트 형태로 올 경우
+    // 게시물 상세 조회 시 모든 좋아요, 댓글 개수 리턴
 
-    // 게시물 상세 조회 시 모든 좋아요 개수 리턴
-    
-    // 게시물 상세 조회 시 모든 댓글 개수 리턴
     
     // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
     
