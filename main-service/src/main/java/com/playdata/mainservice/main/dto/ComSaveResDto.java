@@ -21,4 +21,5 @@ public class ComSaveResDto {
     private Long userId;
 
     private String nickname;
+
 }

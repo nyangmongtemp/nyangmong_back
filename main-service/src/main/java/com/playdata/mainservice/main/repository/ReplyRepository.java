@@ -16,4 +16,6 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
     @Query("SELECT COUNT(r) FROM Reply r " +
             "WHERE r.comment.commentId IN :commentIds AND r.active = true")
     Long countAllActiveRepliesByCommentIds(@Param("commentIds") List<Long> commentIds);
+
+
 }

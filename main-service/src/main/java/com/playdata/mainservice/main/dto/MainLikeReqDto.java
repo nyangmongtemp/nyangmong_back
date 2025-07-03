@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MainLikeCommReqDto {
+public class MainLikeReqDto {
 
     private Long contentId;
 

@@ -5,14 +5,10 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class LikeComCountResDto {
-
-    private Long contentId;
+public class LikeComCountReqDto {
 
     private String category;
 
-    private Long likeCount;
-
-    private Long commentCount;
+    private Long contentId;
 
 }

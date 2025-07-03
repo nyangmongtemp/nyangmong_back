@@ -5,6 +5,7 @@ import com.playdata.mainservice.common.dto.CommonResDto;
 import com.playdata.mainservice.main.dto.*;
 import com.playdata.mainservice.main.service.MainService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class MainController {
     // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
     @PostMapping("/like")
     public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestBody MainLikeCommReqDto reqDto) {
+            ,@RequestBody MainLikeReqDto reqDto) {
 
         CommonResDto likePost = mainService.createLike(userInfo.getUserId(), reqDto);
         
@@ -42,6 +43,13 @@ public class MainController {
     }
     
     // 댓글 삭제
+
+    /**
+     * asdf
+     * @param userInfo
+     * @param commentId
+     * @return
+     */
     @DeleteMapping("/comment/delete/{id}")
     public ResponseEntity<?> deleteComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @PathVariable(name = "id") Long commentId) {
@@ -89,17 +97,29 @@ public class MainController {
 
     // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
     @PostMapping("/list")
-    public ResponseEntity<?> getListLikeCount(@RequestBody List<MainLikeCommReqDto> contentList) {
+    public ResponseEntity<?> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
         CommonResDto resDto = mainService.getLikeCommentCount(contentList);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     // 게시물 상세 조회 시 모든 좋아요, 댓글 개수 리턴
+    @PostMapping("/detail")
+    public ResponseEntity<?> getDetailLikeCommentCount(@RequestBody LikeComCountReqDto reqDto) {
+        CommonResDto resDto = mainService.getDetail(reqDto);
 
-    
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
-    
+    @PostMapping("/comment/list")
+    public ResponseEntity<?> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
+        CommonResDto resDto = mainService.getCommentDetail(reqDto, pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
     // 게시물의 댓글 조회 시 대댓글 조회
     
     // 비공개 댓글 조회 권한 확인

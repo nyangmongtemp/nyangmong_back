@@ -87,4 +87,5 @@ public class Comment extends BaseTimeEntity {
     public void modifyNickname(String nickname) {
         this.nickname = nickname;
     }
+
 }
