@@ -42,4 +42,13 @@ spring:
             - RewritePath=/scheduler-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
+        - id: animalboard-service
+          uri: lb://ANIMALBOARD-SERVICE
+          predicates:
+            - Path=/animalboard-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
 
