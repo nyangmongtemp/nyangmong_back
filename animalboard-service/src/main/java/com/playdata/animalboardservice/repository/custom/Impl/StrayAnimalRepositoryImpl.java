@@ -65,7 +65,7 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
             builder.and(strayAnimal.upKindNm.eq(searchDto.getUpKindNm()));
         }
 
-        // 축종명(개/고양이 등) 필터
+        // 성별(M,F,Q) 필터
         if (searchDto.getSexCode() != null) {
             builder.and(strayAnimal.sexCd.eq(searchDto.getSexCode()));
         }
