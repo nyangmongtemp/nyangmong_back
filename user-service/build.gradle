@@ -31,22 +31,31 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+    // jpa
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // jdbc
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    // java mail sender
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.cloud:spring-cloud-starter'
+    // 혹시 모를 서킷 -> 안쓸 수도 있음
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
 
+    // config 설정 불러오기
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    // 유레가 클라이언트
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    // 오픈페인
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

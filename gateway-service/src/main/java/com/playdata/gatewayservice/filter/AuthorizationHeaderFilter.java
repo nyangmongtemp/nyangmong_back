@@ -26,8 +26,13 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
+    @Value("${jwt.secretAdminKey}")
+    private String adminKey;
+
     private final List<String> allowUrl = Arrays.asList(
-        "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/list"
+            "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/**"
+            ,"/user/create", "/user/temp", "/user/templogin", "/user/verify-email",
+            "/user/verify-code"
     );
 
     @Override
@@ -44,8 +49,6 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             log.info("isAllowed:{}", isAllowed);
 
             if (isAllowed || path.startsWith("/actuator")) {
-                // 허용 url이 맞다면 그냥 통과~
-                log.info("gateway filter 통과!");
                 return chain.filter(exchange);
             }
 
@@ -66,21 +69,30 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                     = authorizationHeader.replace("Bearer ", "");
             log.info("token: {}", token);
 
-            // JWT 토큰 유효성 검증 및 클레임 얻어내기
-            Claims claims = validateJwt(token);
+            Claims claims;
+            String roleHeader = "X-User-Role";
+
+            if (path.startsWith("/admin")) {
+                // 관리자 경로는 adminSecretKey 사용
+                claims = validateJwt(token, adminKey);
+                roleHeader = "X-Admin-Role"; // 필요 시 다르게
+            } else {
+                // 사용자 경로는 userSecretKey 사용
+                claims = validateJwt(token, secretKey);
+            }
+
             if (claims == null) {
-                // jwt 토큰에 문제가 있을 경우 (서명 위조 or 수명 만료)
                 return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
             }
 
-            // 사용자 정보를 클레임에서 꺼내서 헤더에 담자
             ServerHttpRequest request = exchange.getRequest()
                     .mutate()
                     .header("X-User-Email", claims.getSubject())
+                    .header(roleHeader, claims.get("role", String.class))
+                    .header("X-User-Id", claims.get("userId", String.class))
+                    .header("X-User-Nickname", claims.get("nickname", String.class))
                     .build();
 
-            // 새롭게 만든 (토큰 정보를 헤더에 담은) request를 exchange에 갈아끼워서 보내자.
-            // 필터도 통과시키자.
             return chain.filter(exchange.mutate().request(request).build());
 
         };
@@ -100,7 +112,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
         return response.writeWith(Mono.just(buffer));
     }
 
-    private Claims validateJwt(String token) {
+    private Claims validateJwt(String token, String secretKey) {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(secretKey)
