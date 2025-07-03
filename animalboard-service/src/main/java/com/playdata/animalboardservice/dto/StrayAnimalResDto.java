@@ -1,7 +1,7 @@
 package com.playdata.animalboardservice.dto;
 
+import com.playdata.animalboardservice.entity.SexCode;
 import com.playdata.animalboardservice.entity.StrayAnimal;
-import com.playdata.animalboardservice.entity.StrayAnimal.SexCode;
 import lombok.Builder;
 import lombok.Getter;
 

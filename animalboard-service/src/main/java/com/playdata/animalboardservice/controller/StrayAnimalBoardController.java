@@ -22,7 +22,12 @@ public class StrayAnimalBoardController {
 
     private final StrayAnimalService strayAnimalService;
 
-    // 유기동물 목록 조회 (검색 조건 및 페이징 처리 포함)
+    /**
+     * 유기동물 목록 조회 (검색 조건 및 페이징 처리 포함)
+     * @param searchDto 검색어
+     * @param pageable 페이징
+     * @return
+     */
     @GetMapping("/list")
     public ResponseEntity<Page<?>> findStrayAnimalList(SearchDto searchDto, Pageable pageable) {
         // 서비스에서 조회된 유기동물 목록 반환
@@ -30,7 +35,11 @@ public class StrayAnimalBoardController {
         return ResponseEntity.ok().body(resDto);
     }
 
-    // 특정 유기동물 상세 조회 (추후 구현 예정)
+    /**
+     * 특정 유기동물 상세 조회
+     * @param id
+     * @return
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getAnimalBoard(@PathVariable Long id) {
         return new ResponseEntity<>(null, HttpStatus.OK);

@@ -7,7 +7,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface StrayAnimalRepositoryCustom {
 
-    // QueryDSL 기반 커스텀 조회용 Repository 인터페이스
+    /**
+     * 유기동물 목록 조회 (검색 조건 및 페이징 처리 포함) 인터페이스
+     * @param searchDto
+     * @param pageable
+     * @return
+     */
     Page<StrayAnimal> findList(SearchDto searchDto, Pageable pageable);
 
 }
