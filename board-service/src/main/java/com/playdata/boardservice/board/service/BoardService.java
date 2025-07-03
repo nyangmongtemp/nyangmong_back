@@ -1,0 +1,146 @@
+package com.playdata.boardservice.board.service;
+
+import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.entity.Category;
+import com.playdata.boardservice.board.entity.InformationBoard;
+import com.playdata.boardservice.board.entity.IntroductionBoard;
+import com.playdata.boardservice.board.repository.InformationBoardRepository;
+import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
+import com.playdata.boardservice.common.auth.TokenUserInfo;
+import com.playdata.boardservice.common.dto.CommonResDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.c;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class BoardService {
+
+    private final InformationBoardRepository informationBoardRepository;
+    private final IntroductionBoardRepository introductionBoardRepository;
+
+    // 이미지 저장 경로
+    @Value("${imagePath.thumbnail.url}")
+    private String thumbnailImagePath;
+
+    // 질문, 후기, 자유 게시판 게시물 등록
+    public CommonResDto informationCreate(InformationBoardSaveReqDto informationSaveDto
+            , MultipartFile thumbnailImage
+            , TokenUserInfo userInfo) {
+        try {
+            // 카테고리 값 가져와서 null, 빈문자열 체크 후 값이 있다면 대문자로 변환
+            String category = (informationSaveDto.getCategory() != null && !informationSaveDto.getCategory().isBlank())
+                    ? informationSaveDto.getCategory().trim().toUpperCase()
+                    : "default";
+
+            // DTO → toEntity() 로 변환 -> DB
+            informationSaveDto.setCategory(category);
+
+            // 썸네일 경로를 저장할 변수
+            String savedPath = null;
+
+            // 썸네일 이미지가 있다면 저장
+            if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+
+                // 원래 업로드된 파일명
+                String originalName = thumbnailImage.getOriginalFilename();
+
+                // 고유한 파일명을 만들기 위해 UUID 사용
+                String fileName = UUID.randomUUID() + "_" + originalName;
+
+                // 카테고리별 폴더 구성
+                File dir = new File(thumbnailImagePath, category);
+                if (!dir.exists()) dir.mkdirs();
+
+                // 최종 저장 경로
+                File dest = new File(dir, fileName);
+                thumbnailImage.transferTo(dest);
+
+                // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
+                savedPath = category + "/" + fileName;
+
+                // DTO에 썸네일 경로 세팅
+                informationSaveDto.setThumbnailImage(savedPath);
+            }
+
+            // DTO → toEntity() 로 변환 -> DB
+            InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname());
+            informationBoardRepository.save(entity);
+
+            // 성공 응답 반환
+            return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
+
+        } catch (IOException e) {
+            // 예외 발생 시 에러 로그 남기고 실패 응답
+            log.error("썸네일 저장 실패: {}", e.getMessage());
+            return new CommonResDto(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류 발생", null);
+        }
+    }
+
+    // 소개 게시판 게시물 등록
+    public CommonResDto introductionCreate(IntroductionBoardSaveReqDto introductionSaveDto
+            , MultipartFile thumbnailImage
+            , TokenUserInfo userInfo) {
+        try {
+            // 썸네일 경로를 저장할 변수
+            String savedPath = null;
+
+            // 썸네일 이미지가 있다면 저장
+            if (thumbnailImage == null || thumbnailImage.isEmpty()) {
+                throw new IllegalArgumentException("썸네일 이미지는 필수입니다.");
+            }
+
+                // 원래 업로드된 파일명
+                String originalName = thumbnailImage.getOriginalFilename();
+
+                // 고유한 파일명을 만들기 위해 UUID 사용
+                String fileName = UUID.randomUUID() + "_" + originalName;
+
+                // 카테고리 = "INTRODUCTION"
+                String category = "INTRODUCTION";
+
+                // 카테고리별 폴더 구성
+                File dir = new File(thumbnailImagePath, category);
+                if (!dir.exists()) dir.mkdirs();
+
+                // 최종 저장 경로
+                File dest = new File(dir, fileName);
+                thumbnailImage.transferTo(dest);
+
+                // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
+                savedPath = category + "/" + fileName;
+
+                // DTO에 썸네일 경로 세팅
+                introductionSaveDto.setThumbnailImage(savedPath);
+
+
+            // DTO → Entity 변환 후 저장
+            IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname());
+            introductionBoardRepository.save(entity);
+
+            // 성공 응답 반환
+            return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
+
+        } catch (IOException e) { // 예외 발생 시 에러 로그 남기고 실패 응답
+            log.error("썸네일 저장 실패: {}", e.getMessage());
+            return new CommonResDto(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류 발생", null);
+        } catch (IllegalArgumentException e) { // 썸네일이 null 이거나 비어있을 때 여기서 응답
+            return new CommonResDto(HttpStatus.BAD_REQUEST, e.getMessage(), null);
+        }
+    }
+}
+
+
+
+

@@ -1,0 +1,66 @@
+package com.playdata.boardservice.board.controller;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.service.BoardService;
+import com.playdata.boardservice.common.auth.TokenUserInfo;
+import com.playdata.boardservice.common.dto.CommonResDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/board")
+@RequiredArgsConstructor
+@Slf4j
+public class BoardController {
+
+    private final BoardService boardService;
+
+    // 정보 게시판 게시물 생성
+    @PostMapping(value = "/information/create", consumes = "multipart/form-data")
+    public ResponseEntity<?> InformationCreate (@AuthenticationPrincipal TokenUserInfo userInfo
+            , @RequestPart("context") String context,
+                                                @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage)
+    throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // JSON String 을 Dto 객체로 변환
+        InformationBoardSaveReqDto informationSaveDto
+                = objectMapper.readValue(context, InformationBoardSaveReqDto.class);
+
+        // boardService로 전달
+        CommonResDto resDto
+                = boardService.informationCreate(informationSaveDto, thumbnailImage, userInfo);
+
+        // 성공 시 응답
+       return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 소개 게시판 게시물 생성
+    @PostMapping(value = "introduction/create", consumes = "multipart/form-data")
+    public ResponseEntity<?> introductionCreate (@AuthenticationPrincipal TokenUserInfo userInfo
+            , @RequestPart("context") String context,
+                                          @RequestPart(name = "thumbnailImage", required = true) MultipartFile thumbnailImage)
+            throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // JSON String 을 Dto 객체로 변환
+        IntroductionBoardSaveReqDto introductionSaveDto
+                = objectMapper.readValue(context, IntroductionBoardSaveReqDto.class);
+
+        // boardService로 전달
+        CommonResDto resDto = boardService.introductionCreate(introductionSaveDto, thumbnailImage, userInfo);
+
+        // 성공 시 응답
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+}
