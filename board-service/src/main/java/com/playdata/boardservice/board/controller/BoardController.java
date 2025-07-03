@@ -82,5 +82,19 @@ public class BoardController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    // 게시물 삭제 (공통)
+    @DeleteMapping("/{category}/delete/{postId}")
+    public ResponseEntity<?> deleteBoard(@PathVariable String category,
+                                         @PathVariable Long postId,
+                                         @AuthenticationPrincipal TokenUserInfo userInfo) {
 
+            // 대소문자 구분 없이 enum 변환
+            Category categoryEnum = Category.valueOf(category.toUpperCase());
+
+            // 서비스에 삭제 요청
+            boardService.deleteBoard(userInfo, categoryEnum, postId);
+
+            // 삭제 성공 응답
+            return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

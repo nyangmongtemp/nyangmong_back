@@ -100,28 +100,28 @@ public class BoardService {
                 throw new IllegalArgumentException("썸네일 이미지는 필수입니다.");
             }
 
-                // 원래 업로드된 파일명
-                String originalName = thumbnailImage.getOriginalFilename();
+            // 원래 업로드된 파일명
+            String originalName = thumbnailImage.getOriginalFilename();
 
-                // 고유한 파일명을 만들기 위해 UUID 사용
-                String fileName = UUID.randomUUID() + "_" + originalName;
+            // 고유한 파일명을 만들기 위해 UUID 사용
+            String fileName = UUID.randomUUID() + "_" + originalName;
 
-                // 카테고리 = "INTRODUCTION"
-                String category = "INTRODUCTION";
+            // 카테고리 = "INTRODUCTION"
+            String category = "INTRODUCTION";
 
-                // 카테고리별 폴더 구성
-                File dir = new File(thumbnailImagePath, category);
-                if (!dir.exists()) dir.mkdirs();
+            // 카테고리별 폴더 구성
+            File dir = new File(thumbnailImagePath, category);
+            if (!dir.exists()) dir.mkdirs();
 
-                // 최종 저장 경로
-                File dest = new File(dir, fileName);
-                thumbnailImage.transferTo(dest);
+            // 최종 저장 경로
+            File dest = new File(dir, fileName);
+            thumbnailImage.transferTo(dest);
 
-                // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
-                savedPath = category + "/" + fileName;
+            // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
+            savedPath = category + "/" + fileName;
 
-                // DTO에 썸네일 경로 세팅
-                introductionSaveDto.setThumbnailImage(savedPath);
+            // DTO에 썸네일 경로 세팅
+            introductionSaveDto.setThumbnailImage(savedPath);
 
 
             // DTO → Entity 변환 후 저장
@@ -139,11 +139,12 @@ public class BoardService {
         }
     }
 
+    // 게시물 수정 (공통)
     public void boardModify(BoardModiDto modiDto,
-                                   MultipartFile thumbnailImage,
-                                   TokenUserInfo userInfo,
-                                   Category category,
-                                   Long postId) {
+                            MultipartFile thumbnailImage,
+                            TokenUserInfo userInfo,
+                            Category category,
+                            Long postId) {
         try {
             // 썸네일 저장 경로 변수 (null이면 수정 안 함)
             String savedPath = null;
@@ -239,6 +240,62 @@ public class BoardService {
         }
     }
 
+    // 게시물 삭제 (공통)
+    public void deleteBoard(TokenUserInfo userInfo, Category category, Long postId) {
+        // 소개 게시판인 경우
+        if (category == Category.INTRODUCTION) {
+            // 게시글 조회 (없으면 예외)
+            IntroductionBoard board = introductionBoardRepository.findById(postId)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 소개 게시글이 존재하지 않습니다."));
+
+            // 작성자 검증 (다른 사람이 삭제 요청하면 차단)
+            if (!board.getUserId().equals(userInfo.getUserId())) {
+                throw new SecurityException("작성자만 삭제할 수 있습니다.");
+            }
+
+//                // 썸네일 이미지가 있다면 로컬 파일 시스템에서도 삭제
+//                if (board.getThumbnailImage() != null) {
+//                    File file = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
+//                    // 파일이 존재하면 삭제
+//                    if (file.exists()) file.delete();
+//                }
+
+            // 실제 삭제하지 않고 active 값을 false 로 변경 (소프트 삭제)
+            board.setActive(false);
+
+            // 변경된 상태를 DB에 저장
+            introductionBoardRepository.save(board);
+        }
+
+        // 질문/후기/자유 게시판인 경우
+        else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
+            // 게시글 조회 (없으면 예외)
+            InformationBoard board = informationBoardRepository.findById(postId)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 정보 게시글이 존재하지 않습니다."));
+
+            // 작성자 검증
+            if (!board.getUserId().equals(userInfo.getUserId())) {
+                throw new SecurityException("작성자만 삭제할 수 있습니다.");
+            }
+
+            // 썸네일이 있다면 로컬에서 삭제
+            if (board.getThumbnailImage() != null) {
+                File file = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
+                if (file.exists()) file.delete();
+            }
+
+            // active = false로 비활성화 처리
+            board.setActive(false);
+
+            // DB에 저장
+            informationBoardRepository.save(board);
+        }
+
+        // 지원하지 않는 카테고리
+        else {
+            throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
+        }
+    }
 }
 
 
