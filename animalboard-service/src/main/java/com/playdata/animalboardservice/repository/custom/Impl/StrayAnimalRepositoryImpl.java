@@ -1,0 +1,100 @@
+package com.playdata.animalboardservice.repository.custom.Impl;
+
+import com.playdata.animalboardservice.dto.SearchDto;
+import com.playdata.animalboardservice.entity.StrayAnimal;
+import com.playdata.animalboardservice.repository.custom.StrayAnimalRepositoryCustom;
+import com.querydsl.core.BooleanBuilder;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.util.CollectionUtils;
+
+import static com.playdata.animalboardservice.entity.QStrayAnimal.*;
+
+@RequiredArgsConstructor
+public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
+
+    private final JPAQueryFactory jpaQueryFactory;
+
+    @Override
+    public Page<StrayAnimal> findList(SearchDto searchDto, Pageable pageable) {
+        // 조건에 맞는 유기동물 데이터 조회 (페이징 적용)
+        List<StrayAnimal> list = jpaQueryFactory.select(strayAnimal)
+                .from(strayAnimal)
+                .where(builderCondition(searchDto))
+                .offset(pageable.getOffset())       // 페이지 번호 기반 오프셋 적용
+                .limit(pageable.getPageSize())      // 한 페이지 크기 제한
+                .fetch();
+
+        // 전체 데이터 개수 조회 (페이징을 위해 필요)
+        Long count = 0L;
+        if (!CollectionUtils.isEmpty(list)) {
+            count = jpaQueryFactory.select(strayAnimal.count().coalesce(0L).as("cnt"))
+                    .from(strayAnimal)
+                    .where(builderCondition(searchDto))
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetchOne();
+        }
+
+        // Page 객체로 변환하여 반환
+        return new PageImpl<>(list, pageable, count);
+    }
+
+    // 검색 조건(QueryDSL)을 구성하는 메서드
+    private BooleanBuilder builderCondition(SearchDto searchDto) {
+        BooleanBuilder builder = new BooleanBuilder();
+
+        // 보호소 주소 검색 (시/도 단위부터 검색 가능)
+        if (searchDto.getCareAddr() != null) {
+            builder.and(strayAnimal.careAddr.startsWithIgnoreCase(searchDto.getCareAddr()));
+        }
+
+        // 축종명(개/고양이 등) 필터
+        if (searchDto.getUpKindNm() != null) {
+            builder.and(strayAnimal.upKindNm.eq(searchDto.getUpKindNm()));
+        }
+
+        // 통합 검색어가 있는 경우
+        if (searchDto.getSearchWord() != null && !searchDto.getSearchWord().isBlank()) {
+            String keyword = searchDto.getSearchWord();
+            BooleanBuilder searchBuilder = new BooleanBuilder();
+
+            // 한글 → Enum 코드 변환 맵
+            Map<String, String> sexCodeMap = Map.of(
+                    "수컷", "M", "암컷", "F", "미상", "Q"
+            );
+            Map<String, String> neuterYnMap = Map.of(
+                    "중성화", "Y", "비중성화", "N", "미상", "U"
+            );
+
+            // 사용자가 입력한 검색어가 다음 필드들에 포함되는지 검사
+            searchBuilder.or(strayAnimal.upKindNm.containsIgnoreCase(keyword));   // 축종명
+            searchBuilder.or(strayAnimal.kindNm.containsIgnoreCase(keyword));     // 품종명
+            searchBuilder.or(strayAnimal.colorCd.containsIgnoreCase(keyword));    // 색상
+            searchBuilder.or(strayAnimal.age.containsIgnoreCase(keyword));        // 나이
+            searchBuilder.or(strayAnimal.careNm.containsIgnoreCase(keyword));     // 보호소 이름
+            searchBuilder.or(strayAnimal.careAddr.containsIgnoreCase(keyword));   // 보호소 주소
+            searchBuilder.or(strayAnimal.orgNm.containsIgnoreCase(keyword));      // 관할 기관
+
+            // 성별: 한글 → Enum 코드로 변환하여 일치 여부 검색
+            if (sexCodeMap.containsKey(keyword)) {
+                searchBuilder.or(strayAnimal.sexCd.stringValue().eq(sexCodeMap.get(keyword)));
+            }
+
+            // 중성화 여부: 한글 → Enum 코드로 변환하여 일치 여부 검색
+            if (neuterYnMap.containsKey(keyword)) {
+                searchBuilder.or(strayAnimal.neuterYn.stringValue().eq(neuterYnMap.get(keyword)));
+            }
+
+            // 모든 조건을 하나의 BooleanBuilder에 and로 묶음
+            builder.and(searchBuilder);
+        }
+
+        return builder;
+    }
+}
