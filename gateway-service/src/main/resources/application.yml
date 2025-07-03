@@ -42,4 +42,10 @@ spring:
             - RewritePath=/scheduler-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
-
+        - id: festival-service
+          uri: lb://FESTIVAL-SERVICE
+          predicates:
+            - Path=/festival-service/**
+          filters:
+            - RewritePath=/festival-service/(?<segment>.*), /${segment}
+            - AuthorizationHeaderFilter
