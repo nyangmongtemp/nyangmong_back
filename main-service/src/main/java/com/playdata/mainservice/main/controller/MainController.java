@@ -40,7 +40,7 @@ public class MainController {
     }
     
     // 댓글 삭제
-    @GetMapping("/comment/delete/{id}")
+    @DeleteMapping("/comment/delete/{id}")
     public ResponseEntity<?> deleteComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @PathVariable(name = "id") Long commentId) {
         CommonResDto resDto = mainService.deleteComment(commentId, userInfo.getUserId());
@@ -49,7 +49,7 @@ public class MainController {
     }
 
     // 댓글 수정
-    @PostMapping("/comment/modify")
+    @PatchMapping("/comment/modify")
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody ComModiReqDto reqDto){
         CommonResDto resDto
@@ -68,7 +68,7 @@ public class MainController {
     }
 
     // 대댓글 삭제
-    @GetMapping("/reply/delete/{id}")
+    @DeleteMapping("/reply/delete/{id}")
     public ResponseEntity<?> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@PathVariable(name = "id") Long replyId) {
         CommonResDto resDto = mainService.deleteReply(userInfo.getUserId(), replyId);
@@ -77,7 +77,7 @@ public class MainController {
     }
 
     // 대댓글 수정
-    @PostMapping("/reply/modify")
+    @PatchMapping("/reply/modify")
     public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody ReplyModiReqDto reqDto){
         CommonResDto resDto = mainService.modifyReply(userInfo, reqDto);
@@ -87,7 +87,7 @@ public class MainController {
 
     // feign 요청을 받는 메소드들입니다.
     // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
-    @GetMapping("/deleteUser/{id}")
+    @DeleteMapping("/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
         CommonResDto resDto = mainService.deleteUserAll(userId);
 
@@ -95,7 +95,7 @@ public class MainController {
     }
 
     // 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
-    @GetMapping("/modifyNickname/{id}/{nickname}")
+    @PatchMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
 

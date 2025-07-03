@@ -30,7 +30,7 @@ public class MainService {
 
     private final ReplyRepository replyRepository;
 
-    // 들어온 url의 값의 유효성을 확인용
+    // 들어온 url의 값의 유효성 확인용
     private List<String> categoryList = List.of("free", "adopt", "children", "review", "question");
     private List<String> typeList = List.of("post", "comment", "reply");
 
@@ -151,7 +151,7 @@ public class MainService {
     
     // 탈퇴한 회원의 모든 좋아요, 댓글, 대댓글의 active 값을 false 처리 하는 로직
     public CommonResDto deleteUserAll(Long userId) {
-
+/*
         // 좋아요
         Optional<List<Like>> foundLike = likeRepository.findByUserId(userId);
         // 사용자가 만든 좋아요가 있는 경우에만 active false 작업 수행
@@ -160,6 +160,7 @@ public class MainService {
             likes.forEach(Like::deleteLike); // 상태만 먼저 수정
             likeRepository.saveAll(likes);   // 일괄 저장
         }
+        */
         // 댓글
         Optional<List<Comment>> foundComment = commentRepository.findByUserId(userId);
         // 사용자가 작성한 댓글이 있는 경우에만 active false 작업 수행
@@ -192,6 +193,7 @@ public class MainService {
         // 사용자가 작성한 댓글이 있는 경우에만 닉네임 변경 작업 수행
         if(foundComment.isPresent()) {
             List<Comment> comments = foundComment.get();
+            // 활성화가 된 댓글들만 닉네임 변경시키기
             comments.stream().filter(Comment::isActive).forEach(comment -> {
                 comment.modifyNickname(nickname);
             });
@@ -203,6 +205,7 @@ public class MainService {
         // 사용자가 작성한 대댓글이 있는 경우에만, 닉네임 변경 작업 수행
         if(foundReply.isPresent()) {
             List<Reply> replies = foundReply.get();
+            // 활성화된 대댓글들만 닉네임 변경
             replies.stream().filter(Reply::isActive).forEach(reply -> {
                 reply.modifyNickname(nickname);
             });

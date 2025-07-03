@@ -148,7 +148,7 @@ public class UserController {
     }
 
     // 회원 탈퇴 요청 메소드
-    @GetMapping("/resign")
+    @DeleteMapping("/resign")
     public ResponseEntity<?> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.resignUser(userInfo.getUserId());
 
