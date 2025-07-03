@@ -1,6 +1,5 @@
 package com.playdata.animalboardservice.entity;
 
-import com.playdata.animalboardservice.dto.StrayAnimalResDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -191,19 +190,5 @@ public class StrayAnimal {
         if (source.getEtcBigo() != null && !source.getEtcBigo().equals(this.etcBigo)) {
             this.etcBigo = source.getEtcBigo();
         }
-    }
-
-    // 성별 코드 enum (M: 수컷, F: 암컷, Q: 미상)
-    public enum SexCode {
-        M,
-        F,
-        Q
-    }
-
-    // 중성화 여부 enum (Y: 예, N: 아니오, U: 미상)
-    public enum NeuterYn {
-        Y,
-        N,
-        U
     }
 }

@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.dto;
 
+import com.playdata.animalboardservice.entity.SexCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,4 +19,6 @@ public class SearchDto {
     private String upKindNm;
     // 보호소 주소 필터링용
     private String careAddr;
+    // 성별 (M,F,Q)
+    private SexCode sexCode;
 }

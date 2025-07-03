@@ -20,6 +20,12 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    /**
+     * 유기동물 목록 조회 (검색 조건 및 페이징 처리 포함)
+     * @param searchDto
+     * @param pageable
+     * @return
+     */
     @Override
     public Page<StrayAnimal> findList(SearchDto searchDto, Pageable pageable) {
         // 조건에 맞는 유기동물 데이터 조회 (페이징 적용)
@@ -50,27 +56,24 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 보호소 주소 검색 (시/도 단위부터 검색 가능)
-        if (searchDto.getCareAddr() != null) {
+        if (searchDto.getCareAddr() != null && !searchDto.getCareAddr().isBlank()) {
             builder.and(strayAnimal.careAddr.startsWithIgnoreCase(searchDto.getCareAddr()));
         }
 
         // 축종명(개/고양이 등) 필터
-        if (searchDto.getUpKindNm() != null) {
+        if (searchDto.getUpKindNm() != null && !searchDto.getUpKindNm().isBlank()) {
             builder.and(strayAnimal.upKindNm.eq(searchDto.getUpKindNm()));
+        }
+
+        // 성별(M,F,Q) 필터
+        if (searchDto.getSexCode() != null) {
+            builder.and(strayAnimal.sexCd.eq(searchDto.getSexCode()));
         }
 
         // 통합 검색어가 있는 경우
         if (searchDto.getSearchWord() != null && !searchDto.getSearchWord().isBlank()) {
             String keyword = searchDto.getSearchWord();
             BooleanBuilder searchBuilder = new BooleanBuilder();
-
-            // 한글 → Enum 코드 변환 맵
-            Map<String, String> sexCodeMap = Map.of(
-                    "수컷", "M", "암컷", "F", "미상", "Q"
-            );
-            Map<String, String> neuterYnMap = Map.of(
-                    "중성화", "Y", "비중성화", "N", "미상", "U"
-            );
 
             // 사용자가 입력한 검색어가 다음 필드들에 포함되는지 검사
             searchBuilder.or(strayAnimal.upKindNm.containsIgnoreCase(keyword));   // 축종명
@@ -80,16 +83,6 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
             searchBuilder.or(strayAnimal.careNm.containsIgnoreCase(keyword));     // 보호소 이름
             searchBuilder.or(strayAnimal.careAddr.containsIgnoreCase(keyword));   // 보호소 주소
             searchBuilder.or(strayAnimal.orgNm.containsIgnoreCase(keyword));      // 관할 기관
-
-            // 성별: 한글 → Enum 코드로 변환하여 일치 여부 검색
-            if (sexCodeMap.containsKey(keyword)) {
-                searchBuilder.or(strayAnimal.sexCd.stringValue().eq(sexCodeMap.get(keyword)));
-            }
-
-            // 중성화 여부: 한글 → Enum 코드로 변환하여 일치 여부 검색
-            if (neuterYnMap.containsKey(keyword)) {
-                searchBuilder.or(strayAnimal.neuterYn.stringValue().eq(neuterYnMap.get(keyword)));
-            }
 
             // 모든 조건을 하나의 BooleanBuilder에 and로 묶음
             builder.and(searchBuilder);
