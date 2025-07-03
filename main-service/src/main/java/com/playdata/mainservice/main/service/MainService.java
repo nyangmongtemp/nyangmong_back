@@ -14,10 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -215,18 +215,47 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 닉네임이 변경되었습니다.", true);
     }
 
+    public CommonResDto getLikeCount(List<MainLikeReqDto> contentList) {
+        List<LikeCountResDto> result = contentList.stream()
+                .map((req) -> {
+                    // 입력된 contentType과 category의 유효성 확인
+                    isValidContentType(req.getContentType());
+                    isValidCategory(req.getCategory());
+
+                    // 입력값 ENUM화
+                    ContentType contentType = ContentType.valueOf(req.getContentType().toUpperCase());
+                    Category category = Category.valueOf(req.getCategory().toUpperCase());
+
+                    // 해당 게시물 혹은 댓글, 대댓글 중에서 활성화된 좋아요의 개수만 카운팅
+                    Long count = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(
+                            contentType, category, req.getContentId());
+
+                    // dto로 리턴
+                    return LikeCountResDto.builder()
+                            .contentId(req.getContentId())
+                            .contentType(req.getContentType())
+                            .category(req.getCategory())
+                            .likeCount(count)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "해당 컨텐츠들의 좋아요 개수를 모두 찾았습니다.", result);
+    }
+
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
+
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }
-
     // 카테고리의 유효성 확인
+
     private boolean isValidCategory(String category) {
         return categoryList.contains(category);
     }
-
     // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
+
     private Comment isValidComment(Long commentId, Long userId) {
         Optional<Comment> foundComment = commentRepository.findById(commentId);
         // 삭제하려는 댓글이 존재하지 않는 경우
@@ -239,8 +268,8 @@ public class MainService {
         }
         return foundComment.get();
     }
-
     // 대댓글을 작성할 댓글이 유효한지 판별해주는 메소드
+
     private Comment isPresentComment(ReplySaveReqDto reqDto) {
         Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
         // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우

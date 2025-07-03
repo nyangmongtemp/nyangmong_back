@@ -14,4 +14,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     Optional<List<Like>> findByUserId(Long userId);
 
+    // contentType, category, contentId가 모두 일치하고 active가 true인 데이터 개수 조회
+    Long countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType contentType, Category category, Long contentId);
 }

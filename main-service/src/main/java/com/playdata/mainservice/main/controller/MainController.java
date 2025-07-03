@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/main")
 @RequiredArgsConstructor
@@ -84,6 +86,26 @@ public class MainController {
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
+
+    // 게시물 좋아요 개수 조회 -> 리스트 형태로 올 경우
+    @PostMapping("/like/list")
+    public ResponseEntity<?> getPostListLikeCount(@RequestBody List<MainLikeReqDto> contentList) {
+        CommonResDto resDto = mainService.getLikeCount(contentList);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 게시물 댓글 개수 조회 -> 리스트 형태로 올 경우
+
+    // 게시물 상세 조회 시 모든 좋아요 개수 리턴
+    
+    // 게시물 상세 조회 시 모든 댓글 개수 리턴
+    
+    // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
+    
+    // 게시물의 댓글 조회 시 대댓글 조회
+    
+    // 비공개 댓글 조회 권한 확인
 
     // feign 요청을 받는 메소드들입니다.
     // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
