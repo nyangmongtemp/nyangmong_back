@@ -259,12 +259,7 @@ public class MainService {
                     totalCount += replyCount;
 
                     // dto로 리턴
-                    return LikeComCountResDto.builder()
-                            .contentId(req.getContentId())
-                            .category(req.getCategory())
-                            .likeCount(count)
-                            .commentCount(totalCount)
-                            .build();
+                    return getLikeComCountResDto(req, count, totalCount);
                 })
                 .collect(Collectors.toList());
         return new CommonResDto(HttpStatus.OK, "모든 댓글수, 좋아요 수 구함.", result);
@@ -297,12 +292,7 @@ public class MainService {
         // 댓글 개수에 대댓글 합산
         totalCount += replyCount;
 
-        LikeComCountResDto result = LikeComCountResDto.builder()
-                .contentId(req.getContentId())
-                .commentCount(totalCount)
-                .likeCount(likeCount)
-                .category(req.getCategory())
-                .build();
+        LikeComCountResDto result = getLikeComCountResDto(req, likeCount, totalCount);
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 좋아요, 댓글 개수 리턴", result);
     }
@@ -320,17 +310,7 @@ public class MainService {
             Long likeCount = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType.COMMENT,
                     category, comment.getContentId());
 
-            return detailResDto.builder()
-                    .contentId(comment.getCommentId())
-                    .category(String.valueOf(comment.getCategory()))
-                    .content(comment.getContent())
-                    .isReply(!comment.getReplyList().isEmpty())
-                    .createTime(comment.getCreateTime())
-                    .likeCount(likeCount)
-                    .nickname(comment.getNickname())
-                    .userId(comment.getUserId())
-                    .commentId(comment.getCommentId())
-                    .build();
+            return getDetailResDto(comment, likeCount);
         }).collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 모든 댓글 정보 조회", commentList);
@@ -386,5 +366,28 @@ public class MainService {
             throw new IllegalArgumentException("해당 대댓글의 수정 및 삭제 권한이 없습니다.");
         }
         return foundReply.get();
+    }
+
+    private static LikeComCountResDto getLikeComCountResDto(LikeComCountReqDto req, Long count, long totalCount) {
+        return LikeComCountResDto.builder()
+                .contentId(req.getContentId())
+                .category(req.getCategory())
+                .likeCount(count)
+                .commentCount(totalCount)
+                .build();
+    }
+
+    private static detailResDto getDetailResDto(Comment comment, Long likeCount) {
+        return detailResDto.builder()
+                .contentId(comment.getCommentId())
+                .category(String.valueOf(comment.getCategory()))
+                .content(comment.getContent())
+                .isReply(!comment.getReplyList().isEmpty())
+                .createTime(comment.getCreateTime())
+                .likeCount(likeCount)
+                .nickname(comment.getNickname())
+                .userId(comment.getUserId())
+                .commentId(comment.getCommentId())
+                .build();
     }
 }

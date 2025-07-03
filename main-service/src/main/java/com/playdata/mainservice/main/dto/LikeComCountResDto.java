@@ -1,5 +1,6 @@
 package com.playdata.mainservice.main.dto;
 
+import com.playdata.mainservice.main.entity.Comment;
 import lombok.Builder;
 import lombok.Getter;
 

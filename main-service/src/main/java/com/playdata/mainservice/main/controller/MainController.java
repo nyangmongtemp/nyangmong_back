@@ -22,6 +22,13 @@ public class MainController {
     private final MainService mainService;
 
     // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
+
+    /**
+     *
+     * @param userInfo
+     * @param reqDto  --> contentId, contentType, category
+     * @return
+     */
     @PostMapping("/like")
     public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody MainLikeReqDto reqDto) {
@@ -33,6 +40,12 @@ public class MainController {
                 HttpStatusCode.valueOf(likePost.getStatusCode()));
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param reqDto --> categoty, hidden, contentType, contentId
+     * @return
+     */
     // 댓글 생성
     @PostMapping("/comment/create")
     public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
@@ -58,6 +71,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param reqDto  --> content, commentId
+     * @return
+     */
     // 댓글 수정
     @PatchMapping("/comment/modify")
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
@@ -68,6 +87,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param reqDto  --> content, commentId
+     * @return
+     */
     // 대댓글 생성
     @PostMapping("/reply/create")
     public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
@@ -77,6 +102,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param replyId
+     * @return
+     */
     // 대댓글 삭제
     @DeleteMapping("/reply/delete/{id}")
     public ResponseEntity<?> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
@@ -86,6 +117,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param reqDto  --> content, commentId
+     * @return
+     */
     // 대댓글 수정
     @PatchMapping("/reply/modify")
     public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
@@ -95,6 +132,11 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param contentList  --> List<contentId, category>
+     * @return
+     */
     // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
     @PostMapping("/list")
     public ResponseEntity<?> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
@@ -103,6 +145,11 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param reqDto  ->> contentId, category
+     * @return
+     */
     // 게시물 상세 조회 시 모든 좋아요, 댓글 개수 리턴
     @PostMapping("/detail")
     public ResponseEntity<?> getDetailLikeCommentCount(@RequestBody LikeComCountReqDto reqDto) {
@@ -111,6 +158,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param reqDto  --> contentId, category
+     * @param pageable
+     * @return
+     */
     // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
     @PostMapping("/comment/list")
     public ResponseEntity<?> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
@@ -119,10 +172,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
 
     // 게시물의 댓글 조회 시 대댓글 조회
-    
+
     // 비공개 댓글 조회 권한 확인
+
 
     // feign 요청을 받는 메소드들입니다.
     // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드

@@ -2,6 +2,7 @@ package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
 import com.playdata.mainservice.main.dto.ComSaveResDto;
+import com.playdata.mainservice.main.dto.LikeComCountResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
