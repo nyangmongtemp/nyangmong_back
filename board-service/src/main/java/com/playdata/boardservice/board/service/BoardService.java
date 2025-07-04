@@ -1,8 +1,6 @@
 package com.playdata.boardservice.board.service;
 
-import com.playdata.boardservice.board.dto.BoardModiDto;
-import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
-import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.board.entity.IntroductionBoard;
@@ -13,6 +11,8 @@ import com.playdata.boardservice.common.dto.CommonResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -253,13 +253,6 @@ public class BoardService {
                 throw new SecurityException("작성자만 삭제할 수 있습니다.");
             }
 
-//                // 썸네일 이미지가 있다면 로컬 파일 시스템에서도 삭제
-//                if (board.getThumbnailImage() != null) {
-//                    File file = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
-//                    // 파일이 존재하면 삭제
-//                    if (file.exists()) file.delete();
-//                }
-
             // 실제 삭제하지 않고 active 값을 false 로 변경 (소프트 삭제)
             board.setActive(false);
 
@@ -295,6 +288,32 @@ public class BoardService {
         else {
             throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
         }
+    }
+
+    // 정보 게시판 게시물 목록 조회
+    public Page<InformationBoardListResDto> findInformationBoardList(BoardSearchDto boardSearchDto,
+                                                                     Category category,
+                                                                     Pageable pageable) {
+
+        // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
+        Page<InformationBoard> informationBoardList = informationBoardRepository.findList(boardSearchDto,
+                category,
+                pageable);
+
+        // Entity → DTO 변환
+        return informationBoardList.map(InformationBoardListResDto::new);
+
+    }
+
+    // 소개 게시판 게시물 목록 조회
+    public Page<IntroductionBoardListResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
+
+        // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
+        Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findList(boardSearchDto, pageable);
+
+        // Entity → DTO 변환
+        return introductionBoardList.map(IntroductionBoardListResDto::new);
+
     }
 }
 

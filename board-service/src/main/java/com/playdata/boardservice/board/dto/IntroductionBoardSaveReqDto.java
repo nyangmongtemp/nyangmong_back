@@ -16,6 +16,7 @@ public class IntroductionBoardSaveReqDto {
 
     private String thumbnailImage;
     private String content;
+    private String title;
 
 
     public IntroductionBoard toEntity(Long userId, String nickname) {
@@ -26,6 +27,7 @@ public class IntroductionBoardSaveReqDto {
                 .viewCount(0)
                 .content(content)
                 .active(true)
+                .title(title)
                 .build();
     }
 }

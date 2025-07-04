@@ -38,9 +38,14 @@ public class InformationBoard extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean active; // 게시글 업로드 상태(남아 있는지, 삭제 되었는지)
 
+    @Column(nullable = false)
     private String nickname; // 사용자 닉네임
 
+    @Column(nullable = false)
     private String profileImage; // 사용자 프로필 이미지
+
+    @Column(nullable = false)
+    private String title; // 게시글 제목
 
     public InformationBoardResDto fromEntity(InformationBoard Board) {
         return InformationBoardResDto.builder()
@@ -54,6 +59,7 @@ public class InformationBoard extends BaseTimeEntity {
                 .viewcount(viewCount)
                 .nickname(nickname)
                 .profileImage(profileImage)
+                .title(title)
                 .build();
 
     }

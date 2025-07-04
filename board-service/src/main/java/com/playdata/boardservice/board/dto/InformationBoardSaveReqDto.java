@@ -17,6 +17,7 @@ public class InformationBoardSaveReqDto {
     private String category;
     private String thumbnailImage;
     private String content;
+    private  String title;
 
 
     public InformationBoard toEntity(Long userId, String nickname) {
@@ -28,6 +29,7 @@ public class InformationBoardSaveReqDto {
                 .nickname(nickname)
                 .viewCount(0)
                 .active(true)
+                .title(title)
                 .build();
     }
 }
