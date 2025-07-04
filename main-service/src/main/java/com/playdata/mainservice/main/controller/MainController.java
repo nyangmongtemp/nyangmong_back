@@ -159,7 +159,7 @@ public class MainController {
     /**
      *
      * @param reqDto  --> contentId, category
-     * @param pageable
+     * @param pageable  --> ?page=2&size=10&sort=createTime
      * @return
      */
     // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
@@ -170,6 +170,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param pageable  -->  ?page=2&size=10&sort=createTime
+     * @return
+     */
     // 마이페이지에서 내가 쓴 댓글 목록 조회
     @GetMapping("/comment/mypage")
     public ResponseEntity<?> getMyComment(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
@@ -178,6 +184,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param pageable  --> ?page=2&size=10&sort=createTime
+     * @return
+     */
     // 마이페이지에서 내가 쓴 대댓글의 댓글 목록 조회
     @GetMapping("/reply/mypage")
     public ResponseEntity<?> getMyReply(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
@@ -186,6 +198,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param reqDto  --> commentId, userId (작성자 id)
+     * @return
+     */
     // 화면단에서 commentId 와 게시물 작성자 userId를 줘야함.
     @PostMapping("/comment/hidden")
     public ResponseEntity<?> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
@@ -196,11 +214,30 @@ public class MainController {
     }
 
 
+////// feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
 
-    // feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
-    
+    /**
+     *
+     * @param userId
+     * @param profileImage
+     * @return
+     */
+    // 회원의 프로필 사진이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 profileImage 값을 변경하는 메소드
+    @PutMapping("/modifyProfileImage/{id}/{profileImage}")
+        ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
+                                     @PathVariable("profileImage") String profileImage) {
+        CommonResDto resDto = mainService.changeUserProfile(userId, profileImage);
 
-    // feign 요청을 받는 메소드들입니다.
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+//////// feign 요청을 받는 메소드들입니다.
+
+    /**
+     *
+     * @param userId
+     * @return
+     */
     // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
     @DeleteMapping("/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
@@ -209,19 +246,16 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userId
+     * @param nickname
+     * @return
+     */
     // 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
-
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
-
-    // 회원의 프로필 사진이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 profileImage 값을 변경하는 메소드
-    @PutMapping("/modifyProfileImage/{id}/{profileImage}")
-    ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
-                                              @PathVariable("profileImage") String profileImage) {
-        CommonResDto resDto = mainService.changeUserProfile(userId, profileImage);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

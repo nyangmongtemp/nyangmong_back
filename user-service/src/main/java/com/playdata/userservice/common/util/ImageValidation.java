@@ -23,7 +23,8 @@ public class ImageValidation {
         if (filename != null && !filename.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
             throw new IllegalArgumentException("허용되지 않는 이미지 확장자입니다.");
         }
-
+        
+        // 아래의 검사 과정까지는 불필요한 듯하여, 추후에 필요할 경우 주석해제
         /*
         // 3. 실제 이미지 디코딩 검사
         try {

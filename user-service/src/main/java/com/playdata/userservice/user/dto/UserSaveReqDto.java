@@ -28,6 +28,8 @@ public class UserSaveReqDto {
 
     private String nickname;
 
+    private String address;
+
 
     public User toEntity(String encodedPassword, String profileImagePath) {
         return User.builder()
@@ -37,6 +39,7 @@ public class UserSaveReqDto {
                 .profileImage(profileImagePath)
                 .phone(phone)
                 .nickname(nickname)
+                .address(address)
                 .active(true)
                 .reportCount(0)
                 .passwordFaultCount(0)

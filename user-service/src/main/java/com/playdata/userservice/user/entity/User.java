@@ -64,9 +64,15 @@ public class User extends BaseTimeEntity {
         if(newProfileImage != null) {
             this.profileImage = newProfileImage;
         }
-        this.nickname = modiDto.getNickname();
-        this.address = modiDto.getAddress();
-        this.phone = modiDto.getPhone();
+        if(modiDto.getNickname() != null) {
+            this.nickname = modiDto.getNickname();
+        }
+        if(modiDto.getAddress() != null) {
+            this.address = modiDto.getAddress();
+        }
+        if(modiDto.getPhone() != null) {
+            this.phone = modiDto.getPhone();
+        }
     }
 
     // 인증이 필요한 이메일 정보를 변경하는 메소드
@@ -88,6 +94,7 @@ public class User extends BaseTimeEntity {
                 .userName(this.userName)
                 .phone(this.phone)
                 .createtime(this.getCreateTime())
+                .address(this.address)
                 .build();
     }
 
