@@ -99,7 +99,11 @@ public class Animal extends BaseTimeEntity {
         this.neuterYn = animalRequestDto.getNeuterYn();
         this.address = animalRequestDto.getAddress();
         this.fee = animalRequestDto.getFee();
+    }
 
+    // 삭제
+    public void deleteAnimal() {
+        this.active = false;
     }
 
 }

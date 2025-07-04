@@ -74,7 +74,7 @@ public class AnimalService {
      */
     public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
         // 게시물 존재 여부 확인 (예외 처리 포함)
-        Animal animal = animalRepository.findByPostId(postId);
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
         Optional.ofNullable(animal)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
@@ -117,10 +117,15 @@ public class AnimalService {
      * @return
      */
     @Transactional
-    public void updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage) {
+    public void updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage, TokenUserInfo userInfo) {
         // 조회
-        Animal animal = animalRepository.findByPostId(postId);
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
         Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        // 글쓴사람과 로그인한 사람이 같은지 비교
+        if (!userInfo.getUserId().equals(animal.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
+        }
 
         // 이미지 유효성 검사 (용량, 확장자 등)
         ImageValidation.validateImageFile(thumbnailImage);
@@ -129,7 +134,26 @@ public class AnimalService {
 
         // 수정
         animal.updateAnimal(animalRequestDto, newThumbnailImage);
+    }
 
+    /**
+     * 분양게시굴 삭제
+     * @param postId 게시판 번호
+     * @return
+     */
+    @Transactional
+    public void deleteAnimal(Long postId, TokenUserInfo userInfo) {
+        // 조회
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        // 글쓴사람과 로그인한 사람이 같은지 비교
+        if (!userInfo.getUserId().equals(animal.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 삭제
+        animal.deleteAnimal();
     }
 
     /**

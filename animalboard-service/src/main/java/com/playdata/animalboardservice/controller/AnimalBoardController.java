@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -104,14 +105,21 @@ public class AnimalBoardController {
      */
     @PatchMapping("/{postId}")
     public ResponseEntity<Void> updateAnimal(@PathVariable Long postId,
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-        animalService.updateAnimal(postId, animalRequestDto, thumbnailImage);
+        animalService.updateAnimal(postId, animalRequestDto, thumbnailImage, userInfo);
         return ResponseEntity.ok().build();
     }
 
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteAnimal(@PathVariable Long id) {
-//        // TODO: 게시물 삭제 API
-//    }
+    /**
+     * 분양게시굴 삭제
+     * @param postId 게시판 번호
+     * @return
+     */
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deleteAnimal(@PathVariable Long postId, @AuthenticationPrincipal TokenUserInfo userInfo) {
+        animalService.deleteAnimal(postId, userInfo);
+        return ResponseEntity.ok().build();
+    }
 }
