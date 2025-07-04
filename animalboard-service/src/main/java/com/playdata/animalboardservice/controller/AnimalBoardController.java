@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,7 +42,7 @@ public class AnimalBoardController {
      * @return 페이징된 동물 목록 데이터 (AnimalListResDto)
      */
     @GetMapping("/list")
-    public ResponseEntity<Page<AnimalListResDto>> getAnimalBoardList(SearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<Page<AnimalListResDto>> getAnimalList(SearchDto searchDto, Pageable pageable) {
         // 검색 조건과 페이지 정보를 바탕으로 목록 조회
         Page<AnimalListResDto> resDto = animalService.findStrayAnimalList(searchDto, pageable);
         return ResponseEntity.ok().body(resDto);
@@ -85,23 +86,22 @@ public class AnimalBoardController {
      * @return
      */
     @PostMapping("")
-    public ResponseEntity<AnimalInsertRequestDto> createAnimalBoard(
+    public ResponseEntity<AnimalInsertRequestDto> createAnimal(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-
         animalService.insertAnimal(userInfo, animalRequestDto, thumbnailImage);
-
         return ResponseEntity.ok().build();
     }
 
-//    @PatchMapping("/{id}")
-//    public ResponseEntity<Void> updateAnimalBoard() {
-//        // TODO: 게시물 수정 API
-//    }
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateAnimal() {
+        // TODO: 게시물 수정 API
+        return null;
+    }
 
 //    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteAnimalBoard(@PathVariable Long id) {
+//    public ResponseEntity<Void> deleteAnimal(@PathVariable Long id) {
 //        // TODO: 게시물 삭제 API
 //    }
 }
