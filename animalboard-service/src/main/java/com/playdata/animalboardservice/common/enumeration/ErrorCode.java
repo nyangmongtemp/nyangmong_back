@@ -141,11 +141,11 @@ public enum ErrorCode {
     FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "FILE-002", "요청 파일이 서버에 존재하지 않습니다."),
     EMPTY_FILE(HttpStatus.INTERNAL_SERVER_ERROR, "FILE-003", "파일이 비어있습니다."),
     INVALID_FILE_NAME(HttpStatus.INTERNAL_SERVER_ERROR, "FILE-004", "파일명이 올바르지 않습니다."),
-
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "FILE-005", "업로드 가능한 파일 사이즈를 초과하였습니다."),
     FILE_COUNT_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "FILE-006", "업로드 가능한 파일 개수를 초과하였습니다."),
-
     UNSUPPORTED_FILE_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE-007", "업로드 할 수 없는 파일 형식입니다."),
+    MIME_FILE_TYPE(HttpStatus.BAD_REQUEST, "FILE-008", "업로드한 파일은 이미지가 아닙니다. (contentType 검사 실패)."),
+    MATCHES_FILE_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE-009", "허용되지 않는 이미지 확장자입니다."),
 
     /*******************************************************************************************************************
      *                                                      메일 관련 에러

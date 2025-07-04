@@ -1,30 +1,41 @@
 package com.playdata.animalboardservice.service;
 
+import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
+import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
+import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.repository.AnimalRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
     private final RedisTemplate<String, String> redisTemplate;
+
+    @Value("${imagePath.url}")
+    private String imageSaveUrl;
 
     private static final String BOARD_TYPE = "animal"; // 게시판 타입 지정
 
@@ -68,6 +79,21 @@ public class AnimalService {
         // Redis에 없으면 조회수 증가 및 Redis 등록
         increaseViewCountIfFirstTime(redisKey, animal);
         return animal;
+    }
+
+    /**
+     * 분양 게시물 등록
+     * @param userInfo
+     * @param animalRequestDto
+     * @param thumbnailImage
+     * @return
+     */
+    @Transactional
+    public void insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
+        Long userId = userInfo.getUserId();
+        ImageValidation.validateImageFile(thumbnailImage);
+        String newThumbnailImage = setProfileImage(thumbnailImage);
+        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage));
     }
 
     /**
@@ -138,5 +164,34 @@ public class AnimalService {
             ip = ip.split(",")[0].trim();
         }
         return ip;
+    }
+
+    /**
+     * 이미지를 저장하는 로직
+     * @param imageFile
+     * @return
+     */
+    private String setProfileImage(MultipartFile imageFile) {
+        String profileImagePath = null;
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                String originalFilename = imageFile.getOriginalFilename();
+                String fileName = UUID.randomUUID() + "_" + originalFilename;
+
+                File dir = new File(imageSaveUrl);
+                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
+
+                File dest = new File(imageSaveUrl, fileName);
+                imageFile.transferTo(dest);
+
+                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
+            } catch (IOException e) {
+                // 저장 실패 처리
+                e.printStackTrace();
+                throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
+            }
+        }
+        return profileImagePath;
     }
 }

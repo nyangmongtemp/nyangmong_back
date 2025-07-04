@@ -1,21 +1,29 @@
 package com.playdata.animalboardservice.controller;
 
 import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
+import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.dto.SearchDto;
+import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
+import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.service.AnimalService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,14 +48,14 @@ public class AnimalBoardController {
     }
 
     /**
-     * 공개 분양 게시물 상세 조회
+     * 분양 게시물 상세 조회
      * @param postId 게시물 ID
      * @param authHeader Authorization 헤더 (Bearer {accessToken})
      * @param request 클라이언트 요청 정보(IP, 브라우저 등 추출용)
      * @return Animal 상세 정보
      */
     @GetMapping("/public/{postId}")
-    public ResponseEntity<Animal> getAnimal(@PathVariable Long postId,
+    public ResponseEntity<AnimalDetailResDto> getAnimal(@PathVariable Long postId,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             HttpServletRequest request) {
 
@@ -66,13 +74,26 @@ public class AnimalBoardController {
 
         // 서비스 로직 호출 → 게시물 조회 및 조회수 증가 처리
         Animal animal = animalService.findByAnimal(postId, email, request);
-        return ResponseEntity.ok(animal);
+        return ResponseEntity.ok().body(new AnimalDetailResDto(animal));
     }
 
-//    @PostMapping
-//    public ResponseEntity<Long> createAnimalBoard() {
-//        // TODO: 게시물 생성 API
-//    }
+    /**
+     * 분양 게시물 등록
+     * @param userInfo
+     * @param animalRequestDto
+     * @param thumbnailImage
+     * @return
+     */
+    @PostMapping("")
+    public ResponseEntity<AnimalInsertRequestDto> createAnimalBoard(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
+            @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
+
+        animalService.insertAnimal(userInfo, animalRequestDto, thumbnailImage);
+
+        return ResponseEntity.ok().build();
+    }
 
 //    @PatchMapping("/{id}")
 //    public ResponseEntity<Void> updateAnimalBoard() {
