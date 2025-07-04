@@ -24,6 +24,7 @@ public class ImageValidation {
             throw new IllegalArgumentException("허용되지 않는 이미지 확장자입니다.");
         }
 
+        /*
         // 3. 실제 이미지 디코딩 검사
         try {
             BufferedImage image = ImageIO.read(file.getInputStream());
@@ -33,6 +34,7 @@ public class ImageValidation {
         } catch (IOException e) {
             throw new IllegalArgumentException("이미지 파일을 읽는 중 오류가 발생했습니다.");
         }
+        */
     }
 
 }
