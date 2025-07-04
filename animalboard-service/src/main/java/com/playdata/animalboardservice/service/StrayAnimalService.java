@@ -2,9 +2,8 @@ package com.playdata.animalboardservice.service;
 
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
-import com.playdata.animalboardservice.dto.SearchDto;
-import com.playdata.animalboardservice.dto.StrayAnimalListResDto;
-import com.playdata.animalboardservice.dto.StrayAnimalResDto;
+import com.playdata.animalboardservice.dto.StraySearchDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.repository.StrayAnimalRepository;
 import java.util.Optional;
@@ -25,13 +24,13 @@ public class StrayAnimalService {
 
     /**
      * 유기동물 목록을 조회하고 응답 DTO로 매핑
-     * @param searchDto
+     * @param straySearchDto
      * @param pageable
      * @return
      */
-    public Page<StrayAnimalListResDto> findStrayAnimalList(SearchDto searchDto, Pageable pageable) {
+    public Page<StrayAnimalListResDto> findStrayAnimalList(StraySearchDto straySearchDto, Pageable pageable) {
         // 검색 조건과 페이징 정보를 통해 DB에서 유기동물 목록 조회
-        Page<StrayAnimal> strayAnimalList = strayAnimalRepository.findList(searchDto, pageable);
+        Page<StrayAnimal> strayAnimalList = strayAnimalRepository.findList(straySearchDto, pageable);
 
         // Entity → DTO 변환
         return strayAnimalList.map(strayAnimal ->

@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.entity;
 
+import com.playdata.animalboardservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -37,7 +38,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "stray_animal")
 @EntityListeners(AuditingEntityListener.class)
-public class StrayAnimal {
+public class StrayAnimal extends BaseTimeEntity {
 
     @Id
     @Column(name = "desertion_no", nullable = false, unique = true)
@@ -110,14 +111,6 @@ public class StrayAnimal {
 
     @Column(name = "etc_bigo", columnDefinition = "TEXT")
     private String etcBigo; // 기타 비고
-
-    @CreatedDate
-    @Column(name = "create_at", updatable = false)
-    private LocalDateTime createAt; // 생성 일시 (자동 관리)
-
-    @LastModifiedDate
-    @Column(name = "update_at")
-    private LocalDateTime updateAt; // 수정 일시 (자동 관리)
 
     /**
      * 기존 엔티티 필드와 비교해 source 값이 다르고 null이 아닐 때만 업데이트

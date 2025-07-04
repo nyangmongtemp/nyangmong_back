@@ -1,12 +1,8 @@
-package com.playdata.animalboardservice.dto;
+package com.playdata.animalboardservice.dto.res;
 
 import com.playdata.animalboardservice.entity.NeuterYn;
 import com.playdata.animalboardservice.entity.SexCode;
 import com.playdata.animalboardservice.entity.StrayAnimal;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 

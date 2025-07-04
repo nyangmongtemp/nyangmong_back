@@ -12,13 +12,13 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SearchDto {
+public class StraySearchDto {
     // 통합 검색어 (나이, 품종, 보호소명 등 여러 필드에 적용됨)
     private String searchWord;
     // 축종 (개/고양이 등) 필터링용
-    private String petCategory;
+    private String upKindNm;
     // 보호소 주소 필터링용
-    private String address;
+    private String careAddr;
     // 성별 (M,F,Q)
-    private SexCode sex;
+    private SexCode sexCode;
 }
