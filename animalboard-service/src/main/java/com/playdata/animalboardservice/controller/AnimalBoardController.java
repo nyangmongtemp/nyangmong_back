@@ -4,6 +4,7 @@ import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
+import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
@@ -16,7 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,7 +44,7 @@ public class AnimalBoardController {
      * @return 페이징된 동물 목록 데이터 (AnimalListResDto)
      */
     @GetMapping("/list")
-    public ResponseEntity<Page<AnimalListResDto>> getAnimalBoardList(SearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<Page<AnimalListResDto>> getAnimalList(SearchDto searchDto, Pageable pageable) {
         // 검색 조건과 페이지 정보를 바탕으로 목록 조회
         Page<AnimalListResDto> resDto = animalService.findStrayAnimalList(searchDto, pageable);
         return ResponseEntity.ok().body(resDto);
@@ -79,29 +82,44 @@ public class AnimalBoardController {
 
     /**
      * 분양 게시물 등록
-     * @param userInfo
-     * @param animalRequestDto
-     * @param thumbnailImage
+     * @param userInfo 토큰에 저장된 유저정보
+     * @param animalRequestDto 셍성할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
     @PostMapping("")
-    public ResponseEntity<AnimalInsertRequestDto> createAnimalBoard(
+    public ResponseEntity<AnimalInsertRequestDto> createAnimal(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-
         animalService.insertAnimal(userInfo, animalRequestDto, thumbnailImage);
-
         return ResponseEntity.ok().build();
     }
 
-//    @PatchMapping("/{id}")
-//    public ResponseEntity<Void> updateAnimalBoard() {
-//        // TODO: 게시물 수정 API
-//    }
+    /**
+     * 분양 게시글 수정
+     * @param postId 게시판 번호
+     * @param animalRequestDto 수정할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
+     * @return
+     */
+    @PatchMapping("/{postId}")
+    public ResponseEntity<Void> updateAnimal(@PathVariable Long postId,
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
+            @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
+        animalService.updateAnimal(postId, animalRequestDto, thumbnailImage, userInfo);
+        return ResponseEntity.ok().build();
+    }
 
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteAnimalBoard(@PathVariable Long id) {
-//        // TODO: 게시물 삭제 API
-//    }
+    /**
+     * 분양게시굴 삭제
+     * @param postId 게시판 번호
+     * @return
+     */
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deleteAnimal(@PathVariable Long postId, @AuthenticationPrincipal TokenUserInfo userInfo) {
+        animalService.deleteAnimal(postId, userInfo);
+        return ResponseEntity.ok().build();
+    }
 }

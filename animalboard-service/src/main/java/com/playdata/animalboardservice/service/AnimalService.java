@@ -6,9 +6,11 @@ import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
+import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.repository.AnimalRepository;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.File;
@@ -16,14 +18,17 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -34,22 +39,24 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
+    // application.yml에서 설정한 이미지 저장 경로를 주입받음
     @Value("${imagePath.url}")
     private String imageSaveUrl;
 
-    private static final String BOARD_TYPE = "animal"; // 게시판 타입 지정
+    private static final String BOARD_TYPE = "animal"; // 게시판 구분용 상수 (조회수 Redis 키 구분에 사용)
 
     /**
-     * 분양 목록을 조회하고 응답 DTO로 매핑
-     * @param searchDto 검색 조건
-     * @param pageable 페이징 정보
-     * @return 분양 동물 목록 페이지
+     * 분양 게시물 목록 조회 (검색 및 페이징 포함)
+     *
+     * @param searchDto 검색 필터 조건
+     * @param pageable 페이징 조건 (페이지 번호, 사이즈, 정렬 등)
+     * @return AnimalListResDto로 매핑된 Page 객체 반환
      */
     public Page<AnimalListResDto> findStrayAnimalList(SearchDto searchDto, Pageable pageable) {
-        // 검색 조건과 페이징 정보를 통해 DB에서 분양 동물 목록 조회
+        // animalRepository에서 커스텀 쿼리로 조건에 맞는 목록을 조회
         Page<Animal> animalList = animalRepository.findList(searchDto, pageable);
 
-        // Entity -> DTO 변환 후 반환
+        // Entity → DTO로 변환 (View에 필요한 필드만 노출)
         return animalList.map(animal ->
                 AnimalListResDto.builder()
                         .animal(animal)
@@ -58,83 +65,143 @@ public class AnimalService {
     }
 
     /**
-     * 게시물 단건 조회 + 조회수 중복 방지 및 증가 처리
+     * 게시물 상세 조회 (조회수 중복 방지 및 증가 포함)
+     *
      * @param postId 게시물 ID
-     * @param email 로그인 사용자 이메일 (비로그인일 경우 null)
-     * @param request HttpServletRequest: IP와 브라우저 정보 추출용
-     * @return Animal 엔티티
+     * @param email 로그인 사용자 이메일 (null 가능)
+     * @param request 사용자 요청 정보 (IP, User-Agent 추출용)
+     * @return 조회된 Animal Entity
      */
     public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
-        // DB에서 게시물 조회 (없으면 예외 발생)
-        Animal animal = animalRepository.findByPostId(postId);
-        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        // 게시물 존재 여부 확인 (예외 처리 포함)
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+        Optional.ofNullable(animal)
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-        // 중복 방지를 위한 사용자 구분 정보 추출
+        // 사용자 식별 정보 생성
         String ip = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
 
-        // Redis Key 구성
+        // Redis 중복 조회 방지를 위한 Key 생성
         String redisKey = generateRedisKey(email, ip, userAgent, BOARD_TYPE, postId);
 
-        // Redis에 없으면 조회수 증가 및 Redis 등록
+        // Redis에 기록이 없으면 첫 조회 → 조회수 증가 처리
         increaseViewCountIfFirstTime(redisKey, animal);
+
         return animal;
     }
 
     /**
-     * 분양 게시물 등록
-     * @param userInfo
-     * @param animalRequestDto
-     * @param thumbnailImage
-     * @return
+     * 게시물 등록 (동물 분양 게시글 생성)
+     *
+     * @param userInfo JWT 토큰에서 파싱된 로그인 사용자 정보 (userId 포함)
+     * @param animalRequestDto 클라이언트로부터 받은 게시글 요청 DTO
+     * @param thumbnailImage 썸네일 이미지 (Multipart 형식)
      */
     @Transactional
     public void insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
-        Long userId = userInfo.getUserId();
+        Long userId = userInfo.getUserId(); // 사용자 ID 추출
+        // 이미지 유효성 검사 (용량, 확장자 등)
         ImageValidation.validateImageFile(thumbnailImage);
+        // 이미지 저장 후, 저장된 파일명 반환
         String newThumbnailImage = setProfileImage(thumbnailImage);
+        // DTO → Entity 변환 후 저장
         animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage));
     }
 
     /**
-     * Redis에 처음 조회한 사용자만 조회수 증가 (자정 기준으로 키 만료)
+     * 분양 게시글 수정
+     * @param postId 게시판 번호
+     * @param animalRequestDto 수정할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
+     * @return
+     */
+    @Transactional
+    public void updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage, TokenUserInfo userInfo) {
+        // 조회
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        // 글쓴사람과 로그인한 사람이 같은지 비교
+        if (!userInfo.getUserId().equals(animal.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 이미지 유효성 검사 (용량, 확장자 등)
+        ImageValidation.validateImageFile(thumbnailImage);
+        // 이미지 저장 후, 저장된 파일명 반환
+        String newThumbnailImage = setProfileImage(thumbnailImage);
+
+        // 수정
+        animal.updateAnimal(animalRequestDto, newThumbnailImage);
+    }
+
+    /**
+     * 분양게시굴 삭제
+     * @param postId 게시판 번호
+     * @return
+     */
+    @Transactional
+    public void deleteAnimal(Long postId, TokenUserInfo userInfo) {
+        // 조회
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        // 글쓴사람과 로그인한 사람이 같은지 비교
+        if (!userInfo.getUserId().equals(animal.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 삭제
+        animal.deleteAnimal();
+    }
+
+    /**
+     * Redis를 활용하여 하루 1회만 조회수 증가 처리
      *
-     * @param redisKey Redis에 저장할 키
-     * @param animal   조회수 증가 대상 엔티티
+     * @param redisKey Redis 중복 조회 방지용 키
+     * @param animal 조회 대상 엔티티 (조회수 업데이트 대상)
      */
     private void increaseViewCountIfFirstTime(String redisKey, Animal animal) {
+        // Redis에 키가 없을 경우만 조회수 증가
         if (!redisTemplate.hasKey(redisKey)) {
-            // 조회수 1 증가 및 저장
+            // 현재 조회수를 1 증가시킨 후 저장
             animal.viewCountUp(animal.getViewCount() + 1);
             animalRepository.save(animal);
 
-            // Redis에 기록 ("1" 값 저장) + 자정까지 유효
+            // Redis에 키 등록 (value: "1") → 자정 만료
             redisTemplate.opsForValue().set(redisKey, "1");
+
+            // 자정까지 유효하도록 만료 시간 설정
             redisTemplate.expireAt(redisKey,
-                    java.util.Date.from(LocalDate.now().plusDays(1).atStartOfDay(
-                            java.time.ZoneId.systemDefault()).toInstant()));
+                    java.util.Date.from(LocalDate.now()
+                            .plusDays(1) // 다음날
+                            .atStartOfDay(java.time.ZoneId.systemDefault()) // 자정
+                            .toInstant()));
         }
     }
 
     /**
-     * 사용자 고유 식별값을 위한 Redis Key 생성
-     * 로그인 유저는 이메일 기반, 비로그인 유저는 IP + UserAgent 기반
-     * @param email 로그인 이메일 (nullable)
+     * Redis Key를 생성하는 로직
+     *
+     * 로그인 사용자는 이메일 기준, 비로그인 사용자는 IP + 브라우저 정보로 구분
+     *
+     * @param email 로그인 사용자 이메일 (nullable)
      * @param ip 사용자 IP 주소
-     * @param userAgent 브라우저 정보
+     * @param userAgent 사용자 브라우저 정보
      * @param boardType 게시판 타입 (ex. animal)
      * @param postId 게시물 ID
-     * @return Redis Key
+     * @return 고유 Redis Key
      */
     private String generateRedisKey(String email, String ip, String userAgent, String boardType, Long postId) {
         StringBuilder key = new StringBuilder("viewCount:");
         key.append(boardType).append(":").append(postId).append(":");
 
-        // 로그인한 사용자라면 이메일 기준 키 생성
+        // 로그인 사용자는 이메일 기반으로 구분
         if (email != null && !email.isEmpty()) {
             key.append("email:").append(email);
         } else {
-            // 비로그인 사용자는 IP + 브라우저 정보 기반
+            // 비로그인 사용자는 IP + UserAgent 해시로 구분
             key.append("ip:").append(ip != null ? ip : "unknown")
                     .append(":ua:").append(userAgent != null ? userAgent.hashCode() : "unknown");
         }
@@ -143,12 +210,15 @@ public class AnimalService {
     }
 
     /**
-     * 클라이언트의 실제 IP 주소 추출
-     * (프록시 서버나 로드밸런서를 통한 요청 고려)
-     * @param request HttpServletRequest
-     * @return IP 주소
+     * 사용자의 실제 IP 주소 추출
+     *
+     * 프록시, 로드밸런서 등을 통해 들어오는 요청 고려
+     *
+     * @param request HttpServletRequest 객체
+     * @return 추출된 IP 주소 (최종 사용자)
      */
     private String extractClientIp(HttpServletRequest request) {
+        // X-Forwarded-For 헤더는 프록시를 통한 실제 사용자 IP를 포함
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
@@ -157,19 +227,24 @@ public class AnimalService {
             ip = request.getHeader("WL-Proxy-Client-IP");
         }
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr(); // 마지막 수단으로 실제 연결된 IP 사용
+            ip = request.getRemoteAddr(); // 최종 수단으로 실제 접속된 IP 사용
         }
-        // IP가 복수개일 경우 (ex. 프록시 체인), 첫 번째 값 사용
+
+        // 여러 IP가 있을 경우 첫 번째 IP만 사용
         if (ip != null && ip.contains(",")) {
             ip = ip.split(",")[0].trim();
         }
+
         return ip;
     }
 
     /**
-     * 이미지를 저장하는 로직
-     * @param imageFile
-     * @return
+     * 이미지 저장 처리
+     *
+     * 서버에 이미지를 저장하고, 저장된 파일명을 반환함
+     *
+     * @param imageFile Multipart 파일 객체
+     * @return 저장된 파일명 (DB에 저장될 상대 경로)
      */
     private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
@@ -177,21 +252,26 @@ public class AnimalService {
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
                 String originalFilename = imageFile.getOriginalFilename();
+
+                // UUID + 원본 파일명으로 저장 (중복 방지)
                 String fileName = UUID.randomUUID() + "_" + originalFilename;
 
+                // 저장 경로 확인 후 디렉토리 생성
                 File dir = new File(imageSaveUrl);
-                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
+                if (!dir.exists()) dir.mkdirs();
 
+                // 파일 저장
                 File dest = new File(imageSaveUrl, fileName);
                 imageFile.transferTo(dest);
 
-                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
+                // 저장된 상대 파일명 반환 (DB 저장용)
+                profileImagePath = fileName;
             } catch (IOException e) {
-                // 저장 실패 처리
-                e.printStackTrace();
+                log.error("이미지 저장 중 오류 발생", e);
                 throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
             }
         }
+
         return profileImagePath;
     }
 }
