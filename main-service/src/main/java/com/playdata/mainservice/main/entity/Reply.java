@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.main.dto.ReplyDetailResDto;
 import com.playdata.mainservice.main.dto.ReplySaveResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,15 +46,15 @@ public class Reply extends BaseTimeEntity {
         this.profileImage = profileImage;
     }
 
-    // 대댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
-    public ReplySaveResDto fromEntity() {
-        return ReplySaveResDto.builder()
+    public ReplyDetailResDto fromEntity(Long likeCount) {
+        return ReplyDetailResDto.builder()
+                .commentId(comment.getCommentId())
+                .likeCount(likeCount)
                 .replyId(replyId)
                 .userId(userId)
                 .content(content)
-                .commentId(this.comment.getCommentId())
-                .nickname(this.nickname)
-                .profileImage(this.profileImage)
+                .nickname(nickname)
+                .profileImage(profileImage)
                 .build();
     }
 

@@ -1,27 +1,25 @@
 package com.playdata.mainservice.main.dto;
 
-import com.playdata.mainservice.main.entity.Category;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class ComSaveResDto {
+public class ReplyDetailResDto {
 
-    private Long commentId;
-
-    private Category category;
+    private Long replyId;
 
     private String content;
 
-    private boolean hidden;
-
-    private Long contentId;
+    private Long commentId;
 
     private Long userId;
 
     private String nickname;
 
     private String profileImage;
+
+    private Long likeCount;
+
 
 }

@@ -4,11 +4,10 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Builder
-public class detailResDto {
+public class CommentDetailResDto {
 
     private Long userId;
 
@@ -24,8 +23,12 @@ public class detailResDto {
 
     private LocalDateTime createTime;
 
+    private String profileImage;
+
     private Long likeCount;
 
     private boolean isReply;
+
+    private boolean hidden;
 
 }

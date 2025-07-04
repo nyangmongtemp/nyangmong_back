@@ -4,6 +4,7 @@ import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.common.util.ImageValidation;
 import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.repository.UserRepository;
@@ -83,6 +84,8 @@ public class UserService {
         String profileImagePath = null;
         // 이미지가 있는 경우 이미지를 지정한 경로에 저장
         if(profileImage != null) {
+            // 이미지 진위여부 검증
+            ImageValidation.validateImageFile(profileImage);
             profileImagePath = setProfileImage(profileImage);
         }
         // DB에 저장을 위해 패스워드 인코딩
@@ -194,6 +197,9 @@ public class UserService {
         String newProfileImage = null;
         // 변경할 프로필 이미지가 왔다면, 새로 저장
         if(profileImage != null) {
+            // 이미지 진위 여부 검증
+            ImageValidation.validateImageFile(profileImage);
+            
             newProfileImage = setProfileImage(profileImage);
             ResponseEntity<?> res = mainClient.modifyProfileImage(userInfo.getUserId(), newProfileImage);
 

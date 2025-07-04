@@ -27,4 +27,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c WHERE c.category = :category AND c.contentId = :contentId AND c.active = true")
     Page<Comment> findActiveByCategoryAndContentId(@Param("category") Category category,
                                                    @Param("contentId") Long contentId, Pageable pageable);
+
+    Page<Comment> findActiveByUserId(Long userId, Pageable pageable);
+
 }

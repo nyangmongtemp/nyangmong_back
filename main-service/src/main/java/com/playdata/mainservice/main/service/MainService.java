@@ -102,7 +102,7 @@ public class MainService {
 
         return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨",
                 // Dto 변환 해서 화면단으로 리턴
-                newComment.fromEntity());
+                getDetailResDto(newComment, 0L));
     }
     
     // 댓글 삭제 메소드
@@ -133,9 +133,13 @@ public class MainService {
 
         Comment comment = isValidComment(reqDto.getCommentId(), userId);
         comment.mofifyComment(reqDto.getContent());
-        ComSaveResDto dto = commentRepository.save(comment).fromEntity();
+        Comment saved = commentRepository.save(comment);
 
-        return new CommonResDto(HttpStatus.OK, "댓글 내용이 수정되었습니다.", dto);
+        Long likeCount
+                = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.COMMENT, comment.getCommentId());
+
+        return new CommonResDto(HttpStatus.OK,
+                "댓글 내용이 수정되었습니다.", getDetailResDto(saved, likeCount));
     }
 
     public CommonResDto createReply(TokenUserInfo userInfo, ReplySaveReqDto reqDto) {
@@ -151,7 +155,7 @@ public class MainService {
         Reply createdReply = new Reply(userInfo.getUserId(), reqDto.getContent(), foundComment,
                 userInfo.getNickname(), res.getBody());
 
-        ReplySaveResDto resDto = replyRepository.save(createdReply).fromEntity();
+        ReplyDetailResDto resDto = replyRepository.save(createdReply).fromEntity(0L);
 
         return new CommonResDto(HttpStatus.CREATED, "대댓글이 생성되었습니다.", resDto);
     }
@@ -180,7 +184,11 @@ public class MainService {
         validReply.modifyReply(reqDto.getContent());
         replyRepository.save(validReply);
 
-        return new CommonResDto(HttpStatus.CREATED, "대댓글 수정이 완료되었습니다.", validReply.fromEntity());
+        Long likeCount
+                = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.REPLY, reqDto.getReplyId());
+
+        return new CommonResDto(HttpStatus.CREATED,
+                "대댓글 수정이 완료되었습니다.", validReply.fromEntity(likeCount));
     }
     
     // 탈퇴한 회원의 모든 좋아요, 댓글, 대댓글의 active 값을 false 처리 하는 로직
@@ -348,7 +356,7 @@ public class MainService {
         Page<Comment> foundComment
                 = commentRepository.findActiveByCategoryAndContentId(category, reqDto.getContentId(), pageable);
 
-        List<detailResDto> commentList = foundComment.stream().map(comment -> {
+        List<CommentDetailResDto> commentList = foundComment.stream().map(comment -> {
 
             Long likeCount = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType.COMMENT,
                     category, comment.getContentId());
@@ -360,11 +368,42 @@ public class MainService {
 
     }
 
+    public CommonResDto getMyComment(Long userId, Pageable pageable) {
+
+        Page<Comment> foundUserComment = commentRepository.findActiveByUserId(userId, pageable);
+
+        List<CommentDetailResDto> myCommentList = foundUserComment.stream().map(comment -> {
+            Long likeCount
+                    = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.COMMENT ,comment.getCommentId());
+
+            return getDetailResDto(comment, likeCount);
+        }).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글 정보 조회", myCommentList);
+    }
+
+    public CommonResDto getMyReply(Long userId, Pageable pageable) {
+
+        Page<Reply> foundUserReply = replyRepository.findActiveByUserId(userId, pageable);
+
+        List<ReplyDetailResDto> myReplyList = foundUserReply.stream().map(reply -> {
+            Long likeCount =
+                    likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.REPLY, reply.getReplyId());
+
+            return reply.fromEntity(likeCount);
+        }).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "사용자의 모든 대댓글 정보 조회", myReplyList);
+    }
+
+    ////////// 공통 사용 메소드들입니다.
+
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
     private boolean isValidContentType(String contentType) {
         return typeList.contains(contentType);
     }
+
     // 카테고리의 유효성 확인
 
     private boolean isValidCategory(String category) {
@@ -421,16 +460,18 @@ public class MainService {
                 .build();
     }
 
-    private static detailResDto getDetailResDto(Comment comment, Long likeCount) {
-        return detailResDto.builder()
+    private static CommentDetailResDto getDetailResDto(Comment comment, Long likeCount) {
+        return CommentDetailResDto.builder()
                 .contentId(comment.getCommentId())
                 .category(String.valueOf(comment.getCategory()))
                 .content(comment.getContent())
                 .isReply(!comment.getReplyList().isEmpty())
                 .createTime(comment.getCreateTime())
                 .likeCount(likeCount)
+                .profileImage(comment.getProfileImage())
                 .nickname(comment.getNickname())
                 .userId(comment.getUserId())
+                .hidden(comment.isHidden())
                 .commentId(comment.getCommentId())
                 .build();
     }

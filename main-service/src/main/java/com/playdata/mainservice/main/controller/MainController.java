@@ -22,7 +22,6 @@ public class MainController {
     private final MainService mainService;
 
     // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
-
     /**
      *
      * @param userInfo
@@ -56,7 +55,6 @@ public class MainController {
     }
     
     // 댓글 삭제
-
     /**
      * asdf
      * @param userInfo
@@ -172,18 +170,29 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 마이페이지에서 내가 쓴 댓글 조회
+    // 마이페이지에서 내가 쓴 댓글 목록 조회
+    @GetMapping("/comment/mypage")
+    public ResponseEntity<?> getMyComment(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
+        CommonResDto resDto = mainService.getMyComment(userInfo.getUserId(), pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 마이페이지에서 내가 쓴 대댓글의 댓글 목록 조회
+    @GetMapping("/reply/mypage")
+    public ResponseEntity<?> getMyReply(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
+        CommonResDto resDto = mainService.getMyReply(userInfo.getUserId(), pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 게시물 상세에서 비밀 댓글 보기 버튼 클릭 시 권한 확인 메소드
+    // 게시물 상세에서 가지고 있는 작성자 ID를 인자로 받음.
+    // 작성자 ID와 Token의 userId를 통해 비밀 댓글 보기 권한 확인 
     
-    // 마이페이지에서 내가 쓴 대댓글의 댓글 조회
     
     // feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
-
-    // 게시물의 댓글 조회 시 대댓글 조회
-
-
-
-    // 비공개 댓글 조회 권한 확인
-
+    
 
     // feign 요청을 받는 메소드들입니다.
     // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
