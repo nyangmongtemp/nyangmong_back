@@ -10,7 +10,9 @@ public interface MainServiceClient {
     @DeleteMapping("/main/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId);
 
-    @PatchMapping("/main/modifyNickname/{id}/{nickname}")
+    @PutMapping("/main/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long id, @PathVariable("nickname") String nickname);
 
+    @PutMapping("/main/modifyProfileImage/{id}/{profileImage}")
+    ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long id, @PathVariable("profileImage") String profileImage);
 }

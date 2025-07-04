@@ -39,12 +39,15 @@ public class Comment extends BaseTimeEntity {
 
     private String nickname;
 
+    private String profileImage;
+
     @OneToMany(mappedBy = "comment")
     private List<Reply> replyList;
 
     
     // 댓글 생성용 메소드
-    public Comment(Long userId, Category category, Long contentId, String content, boolean hidden, String nickname) {
+    public Comment(Long userId, Category category,
+                   Long contentId, String content, boolean hidden, String nickname, String profileImage) {
         this.userId = userId;
         this.category = category;
         this.contentId = contentId;
@@ -52,6 +55,7 @@ public class Comment extends BaseTimeEntity {
         this.hidden = hidden;
         this.active = true;
         this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 
     // 댓글 생성 및 수정 시 리턴할 Dto 변환 메소드
@@ -64,6 +68,7 @@ public class Comment extends BaseTimeEntity {
                 .content(content)
                 .hidden(hidden)
                 .nickname(nickname)
+                .profileImage(profileImage)
                 .build();
     }
 
@@ -88,5 +93,8 @@ public class Comment extends BaseTimeEntity {
     public void modifyNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    // 사용자의 프로필 이미지 변경 시 사용하는 메소드
+    public void modifyProfileImage(String profileImage) {this.profileImage = profileImage;}
 
 }

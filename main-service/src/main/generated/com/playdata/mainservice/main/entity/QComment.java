@@ -39,6 +39,8 @@ public class QComment extends EntityPathBase<Comment> {
 
     public final StringPath nickname = createString("nickname");
 
+    public final StringPath profileImage = createString("profileImage");
+
     public final ListPath<Reply, QReply> replyList = this.<Reply, QReply>createList("replyList", Reply.class, QReply.class, PathInits.DIRECT2);
 
     //inherited

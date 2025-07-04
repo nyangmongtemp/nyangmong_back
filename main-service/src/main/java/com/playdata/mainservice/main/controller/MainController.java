@@ -172,9 +172,15 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 마이페이지에서 내가 쓴 댓글 조회
+    
+    // 마이페이지에서 내가 쓴 대댓글의 댓글 조회
+    
     // feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
 
     // 게시물의 댓글 조회 시 대댓글 조회
+
+
 
     // 비공개 댓글 조회 권한 확인
 
@@ -189,9 +195,18 @@ public class MainController {
     }
 
     // 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
-    @PatchMapping("/modifyNickname/{id}/{nickname}")
+    @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 회원의 프로필 사진이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 profileImage 값을 변경하는 메소드
+    @PutMapping("/modifyProfileImage/{id}/{profileImage}")
+    ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
+                                              @PathVariable("profileImage") String profileImage) {
+        CommonResDto resDto = mainService.changeUserProfile(userId, profileImage);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

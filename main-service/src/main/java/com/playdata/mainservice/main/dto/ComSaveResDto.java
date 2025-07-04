@@ -22,4 +22,6 @@ public class ComSaveResDto {
 
     private String nickname;
 
+    private String profileImage;
+
 }

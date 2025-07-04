@@ -17,4 +17,6 @@ public class ReplySaveResDto {
 
     private String nickname;
 
+    private String profileImage;
+
 }

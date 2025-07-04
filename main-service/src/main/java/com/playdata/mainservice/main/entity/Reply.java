@@ -29,17 +29,20 @@ public class Reply extends BaseTimeEntity {
 
     private String nickname;
 
+    private String profileImage;
+
     @ManyToOne
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
     // 대댓글 생성 시 사용하는 메소드
-    public Reply(Long userId, String content, Comment comment, String nickname) {
+    public Reply(Long userId, String content, Comment comment, String nickname, String profileImage) {
         this.userId = userId;
         this.content = content;
         this.comment = comment;
         this.active = true;
         this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 
     // 대댓글 생성 후 화면단으로 전송할 dto 생성 시 사용하는 메소드
@@ -50,6 +53,7 @@ public class Reply extends BaseTimeEntity {
                 .content(content)
                 .commentId(this.comment.getCommentId())
                 .nickname(this.nickname)
+                .profileImage(this.profileImage)
                 .build();
     }
 
@@ -67,4 +71,7 @@ public class Reply extends BaseTimeEntity {
     public void modifyNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    // 사용자의 프로필 이미지 변경 시 사용하는 메소드
+    public void modifyProfileImage(String profileImage) {this.profileImage = profileImage;}
 }

@@ -1,5 +1,6 @@
 package com.playdata.mainservice.main.service;
 
+import com.playdata.mainservice.client.UserServiceClient;
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
 import com.playdata.mainservice.main.dto.*;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class MainService {
+
+    private final UserServiceClient userClient;
 
     private final LikeRepository likeRepository;
 
@@ -82,9 +86,17 @@ public class MainService {
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
         Category cate = Category.valueOf(reqDto.getCategory().toUpperCase());
 
+        // user-service로 부터 사용자의 프로필 이미지 수신
+        ResponseEntity<String> responseEntity = userClient.getUserProfileImage(userId);
+
+        if(responseEntity.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("댓글 생성 중 오류가 발생하였습니다");
+        }
+
         // 새로운 댓글 생성
         Comment newComment
-                = new Comment(userId, cate, reqDto.getContentId(), reqDto.getContent(), reqDto.isHidden(), nickname);
+                = new Comment(userId, cate, reqDto.getContentId()
+                , reqDto.getContent(), reqDto.isHidden(), nickname, responseEntity.getBody());
         // DB에 저장
         commentRepository.save(newComment);
 
@@ -130,7 +142,14 @@ public class MainService {
 
         Comment foundComment = isPresentComment(reqDto);
 
-        Reply createdReply = new Reply(userInfo.getUserId(), reqDto.getContent(), foundComment, userInfo.getNickname());
+        // user-service 에서 대댓글 작성자의 프로필 이미지를 전송 받음
+        ResponseEntity<String> res = userClient.getUserProfileImage(userInfo.getUserId());
+        if(res.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("대댓글 작성 중 오류가 발생하였습니다.");
+        }
+
+        Reply createdReply = new Reply(userInfo.getUserId(), reqDto.getContent(), foundComment,
+                userInfo.getNickname(), res.getBody());
 
         ReplySaveResDto resDto = replyRepository.save(createdReply).fromEntity();
 
@@ -230,6 +249,30 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 닉네임이 변경되었습니다.", true);
     }
 
+    // 회원의 프로필 이미지가 변경되었을 때, 해당 사용자가 작성한 댓글, 대댓글의 profileImage 값을 변경시키는 로직
+    public CommonResDto changeUserProfile(Long userId, String profileImage) {
+
+        Optional<List<Comment>> foundComment = commentRepository.findByUserId(userId);
+        // 사용자가 작성한 활성화된 댓글이 있는 경우에만 변경 수행
+        if(foundComment.isPresent()) {
+            List<Comment> comments = foundComment.get();
+            comments.stream().filter(Comment::isActive).forEach(comment -> {
+                comment.modifyProfileImage(profileImage);
+            });
+            commentRepository.saveAll(comments);
+        }
+        // 사용자가 작성한 활성화된 대댓글이 있는 경우에만 변경 수행
+        Optional<List<Reply>> foundReply = replyRepository.findByUserId(userId);
+        if(foundReply.isPresent()) {
+            List<Reply> replies = foundReply.get();
+            replies.stream().filter(Reply::isActive).forEach(reply -> {
+                reply.modifyProfileImage(profileImage);
+            });
+            replyRepository.saveAll(replies);
+        }
+        return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 프로필 이미지가 변경되었습니다.", true);
+    }
+
     // 게시물 목록 조회 시 사용할 댓글, 좋아요 개수 조회
     public CommonResDto getLikeCommentCount(List<LikeComCountReqDto> contentList) {
 
@@ -323,6 +366,7 @@ public class MainService {
         return typeList.contains(contentType);
     }
     // 카테고리의 유효성 확인
+
     private boolean isValidCategory(String category) {
         return categoryList.contains(category);
     }

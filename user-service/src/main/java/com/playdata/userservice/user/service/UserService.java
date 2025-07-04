@@ -195,6 +195,11 @@ public class UserService {
         // 변경할 프로필 이미지가 왔다면, 새로 저장
         if(profileImage != null) {
             newProfileImage = setProfileImage(profileImage);
+            ResponseEntity<?> res = mainClient.modifyProfileImage(userInfo.getUserId(), newProfileImage);
+
+            if(res.getStatusCode() != HttpStatus.OK) {
+                throw new RuntimeException("회원 정보 수정 중 오류가 발생하였습니다.");
+            }
         }
         // nickname을 변경하는 경우
         if(modiDto.getNickname() != null) {
@@ -301,7 +306,7 @@ public class UserService {
         User user = targetUser.get();
         user.resignUser();
         ResponseEntity<?> response = mainClient.deleteUser(userId);
-        
+
         // 댓글, 대댓글 비활성화 처리 중 오류 발생
         if(response.getStatusCode() != HttpStatus.OK) {
             throw new RuntimeException("회원 탈퇴 진행 중 오류가 발생하였습니다.");
@@ -310,7 +315,18 @@ public class UserService {
         userRepository.save(user);
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
     }
-    
+
+    public String getProfileImage(Long userId) {
+
+        Optional<User> foundUser = userRepository.findById(userId);
+        if(!foundUser.isPresent()) {
+            throw new EntityNotFoundException("회원이 없습니다.");
+        }
+        User user = foundUser.get();
+        return user.getProfileImage();
+
+    }
+
     // 프로필 이미지를 저장하는 로직
     private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
@@ -337,8 +353,8 @@ public class UserService {
         }
         return profileImagePath;
     }
-    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
 
+    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
     private String sendEmailAuthCode(String email) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
@@ -354,22 +370,22 @@ public class UserService {
         redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
         return authNum;
     }
-    // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
 
+    // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
     private boolean isBlocked(String email) {
         String key = VERIFICATION_BLOCK_KEY + email;
         return redisTemplate.hasKey(key);
     }
-    // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
 
+    // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
     private void blockUser(String email) {
 
         String key = VERIFICATION_BLOCK_KEY + email;
         redisTemplate.opsForValue().set(key, "blocked", Duration.ofMinutes(30));
 
     }
-    // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
 
+    // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
     private int incrementAttemptCount(String email) {
 
         String key = VERIFICATION_ATTEMPT_KEY + email;

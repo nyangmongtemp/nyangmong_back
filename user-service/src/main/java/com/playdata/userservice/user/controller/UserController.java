@@ -155,11 +155,21 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 토큰 검증용 메소드
+    // feign 요청을 받는 메소드 들입니다.
+    // 댓글 및 대댓글 생성 시 프로필 이미지 주소를 넘겨주는 메소드
+    @GetMapping("/profileImage/{id}")
+    ResponseEntity<String> getUserProfileImage(@PathVariable(name = "id") Long userId) {
+        String profileImage = userService.getProfileImage(userId);
+
+        return new ResponseEntity<String>(profileImage, HttpStatus.OK);
+    }
+
+    // 토큰 검증용 메소드 --> 추후 삭제 예정
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
         log.info(userInfo.toString());
         return ResponseEntity.ok(userInfo);
     }
+
 
 }

@@ -35,6 +35,8 @@ public class QReply extends EntityPathBase<Reply> {
 
     public final StringPath nickname = createString("nickname");
 
+    public final StringPath profileImage = createString("profileImage");
+
     public final NumberPath<Long> replyId = createNumber("replyId", Long.class);
 
     //inherited
