@@ -1,4 +1,4 @@
-package com.playdata.animalboardservice.dto;
+package com.playdata.animalboardservice.dto.res;
 
 import com.playdata.animalboardservice.entity.SexCode;
 import com.playdata.animalboardservice.entity.StrayAnimal;

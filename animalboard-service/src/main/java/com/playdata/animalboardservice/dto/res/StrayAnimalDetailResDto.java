@@ -1,17 +1,13 @@
-package com.playdata.animalboardservice.dto;
+package com.playdata.animalboardservice.dto.res;
 
 import com.playdata.animalboardservice.entity.NeuterYn;
 import com.playdata.animalboardservice.entity.SexCode;
 import com.playdata.animalboardservice.entity.StrayAnimal;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class StrayAnimalResDto {
+public class StrayAnimalDetailResDto {
 
     private String desertionNo; // 유기동물 고유번호, PK 역할
     private String rfidCd; // 내장 칩 RFID 코드 (없을 수 있음)
@@ -35,7 +31,7 @@ public class StrayAnimalResDto {
     private String etcBigo; // 기타 비고
 
     @Builder
-    public StrayAnimalResDto(StrayAnimal strayAnimal) {
+    public StrayAnimalDetailResDto(StrayAnimal strayAnimal) {
         this.desertionNo = strayAnimal.getDesertionNo();
         this.rfidCd = strayAnimal.getRfidCd();
         this.happenDt = strayAnimal.getHappenDt();

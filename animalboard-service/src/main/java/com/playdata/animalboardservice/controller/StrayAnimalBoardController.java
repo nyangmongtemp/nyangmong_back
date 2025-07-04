@@ -1,8 +1,8 @@
 package com.playdata.animalboardservice.controller;
 
-import com.playdata.animalboardservice.dto.SearchDto;
-import com.playdata.animalboardservice.dto.StrayAnimalListResDto;
-import com.playdata.animalboardservice.dto.StrayAnimalResDto;
+import com.playdata.animalboardservice.dto.StraySearchDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalDetailResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.service.StrayAnimalService;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +25,15 @@ public class StrayAnimalBoardController {
 
     /**
      * 유기동물 목록 조회 (검색 조건 및 페이징 처리 포함)
-     * @param searchDto 검색어
+     * @param straySearchDto 검색어
      * @param pageable 페이징
      * @return
      */
     @GetMapping("/list")
-    public ResponseEntity<Page<StrayAnimalListResDto>> findStrayAnimalList(SearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<Page<StrayAnimalListResDto>> findStrayAnimalList(
+            StraySearchDto straySearchDto, Pageable pageable) {
         // 서비스에서 조회된 유기동물 목록 반환
-        Page<StrayAnimalListResDto> resDto = strayAnimalService.findStrayAnimalList(searchDto, pageable);
+        Page<StrayAnimalListResDto> resDto = strayAnimalService.findStrayAnimalList(straySearchDto, pageable);
         return ResponseEntity.ok().body(resDto);
     }
 
@@ -42,8 +43,8 @@ public class StrayAnimalBoardController {
      * @return
      */
     @GetMapping("/{desertionNo}")
-    public ResponseEntity<StrayAnimalResDto> getAnimalBoard(@PathVariable String desertionNo) {
+    public ResponseEntity<StrayAnimalDetailResDto> getAnimalBoard(@PathVariable String desertionNo) {
         StrayAnimal resDto = strayAnimalService.findByStaryAnimal(desertionNo);
-        return ResponseEntity.ok().body(new StrayAnimalResDto(resDto));
+        return ResponseEntity.ok().body(new StrayAnimalDetailResDto(resDto));
     }
 }

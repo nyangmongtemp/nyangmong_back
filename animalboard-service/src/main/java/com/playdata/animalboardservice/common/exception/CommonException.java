@@ -11,15 +11,13 @@ public class CommonException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    private final String message;
-
     public CommonException(ErrorCode errorCode) {
+        super(errorCode.getMessage()); // Exception.getMessage()로 메시지를 전달
         this.errorCode = errorCode;
-        this.message = null;
     }
 
-    public CommonException(ErrorCode errorCode, String message) {
+    public CommonException(ErrorCode errorCode, String customMessage) {
+        super(customMessage); // Exception.getMessage()에 커스텀 메시지 전달
         this.errorCode = errorCode;
-        this.message = message;
     }
 }
