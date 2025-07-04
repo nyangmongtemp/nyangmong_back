@@ -14,6 +14,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/user")
@@ -151,6 +153,15 @@ public class UserController {
     @DeleteMapping("/resign")
     public ResponseEntity<?> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.resignUser(userInfo.getUserId());
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 리프레시 토큰을 통한 Access Token 재발급용 메소드
+    // localStorage에 사용자의 이메일을 저장해놓고 이 메소드의 요청값으로 넣자
+    @PostMapping("/refresh")
+    public ResponseEntity<?> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
+        CommonResDto resDto = userService.reProvideToken(userEmail.get("email"));
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

@@ -18,5 +18,5 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     Long countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType contentType, Category category, Long contentId);
     
     // 마이페이지에서 사용자가 작성한 활성화된 모든 댓글의 개수 조회
-    Long countByContentTypeAndContentIdAndActiveisTrue (ContentType contentType, Long contentId);
+    Long countByContentTypeAndContentIdAndActiveTrue (ContentType contentType, Long contentId);
 }

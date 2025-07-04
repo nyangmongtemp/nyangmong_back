@@ -136,7 +136,7 @@ public class MainService {
         Comment saved = commentRepository.save(comment);
 
         Long likeCount
-                = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.COMMENT, comment.getCommentId());
+                = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.COMMENT, comment.getCommentId());
 
         return new CommonResDto(HttpStatus.OK,
                 "댓글 내용이 수정되었습니다.", getDetailResDto(saved, likeCount));
@@ -185,7 +185,7 @@ public class MainService {
         replyRepository.save(validReply);
 
         Long likeCount
-                = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.REPLY, reqDto.getReplyId());
+                = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.REPLY, reqDto.getReplyId());
 
         return new CommonResDto(HttpStatus.CREATED,
                 "대댓글 수정이 완료되었습니다.", validReply.fromEntity(likeCount));
@@ -374,7 +374,7 @@ public class MainService {
 
         List<CommentDetailResDto> myCommentList = foundUserComment.stream().map(comment -> {
             Long likeCount
-                    = likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.COMMENT ,comment.getCommentId());
+                    = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.COMMENT ,comment.getCommentId());
 
             return getDetailResDto(comment, likeCount);
         }).collect(Collectors.toList());
@@ -388,12 +388,33 @@ public class MainService {
 
         List<ReplyDetailResDto> myReplyList = foundUserReply.stream().map(reply -> {
             Long likeCount =
-                    likeRepository.countByContentTypeAndContentIdAndActiveisTrue(ContentType.REPLY, reply.getReplyId());
+                    likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.REPLY, reply.getReplyId());
 
             return reply.fromEntity(likeCount);
         }).collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 대댓글 정보 조회", myReplyList);
+    }
+
+
+
+    public boolean canSeeHideComment(Long userId, SeeHideComReqDto reqDto) {
+
+        // 열람 요청자와 게시물 작성자가 동일한 경우
+        if(userId == reqDto.getUserId()) {
+            return true;
+        }
+        Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
+        // 열람할 비공개 댓글이 존재하지 않거나, 삭제되었거나, 비공개 댓글이 아닌 경우
+        if(!foundComment.isPresent() || !foundComment.get().isHidden() 
+                || !foundComment.get().isActive()) {
+            throw new EntityNotFoundException("열람할 비공개 댓글이 없습니다.");
+        }
+        // 열람 요청자가 댓글 작성자가 아닌 경우
+        if(foundComment.get().getUserId() != userId) {
+            throw new IllegalArgumentException("비공개 댓글을 열람할 권한이 없습니다.");
+        }
+        return true;
     }
 
     ////////// 공통 사용 메소드들입니다.

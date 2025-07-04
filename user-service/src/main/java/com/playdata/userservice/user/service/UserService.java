@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -118,9 +119,25 @@ public class UserService {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
             else{
-                String token = jwtTokenProvider.createToken(foundUser.get().getEmail(), "USER", foundUser.get().getNickname(), foundUser.get().getUserId());
+                User user = foundUser.get();
+                String token = jwtTokenProvider.createToken(user.getEmail(),
+                        "USER", user.getNickname(), user.getUserId());
+
+                String refreshToken =
+                        jwtTokenProvider.createRefreshToken(user.getEmail(),
+                                "USER", user.getUserId());
+                // key, value, 만료시간, 시간 단위를 넘겨주자.
+                redisTemplate.opsForValue().set(
+                        // key
+                        "user:refresh:"+user.getUserId(),
+                        // value
+                        refreshToken,
+                        // 만료 시간
+                        2,
+                        // 2일간 리프레쉬 토큰 저장
+                        TimeUnit.DAYS);
                 // 로그인 성공
-                return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", token);
+                return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", new UserLoginResDto(user.getEmail() ,token));
             }
         }
 
@@ -300,7 +317,7 @@ public class UserService {
 
         return new CommonResDto(HttpStatus.OK, "해당 유저의 정보를 찾음.", resDto);
     }
-    
+
     // 회원 탈퇴를 담당하는 로직
     public CommonResDto resignUser(Long userId) {
 
@@ -333,6 +350,29 @@ public class UserService {
 
     }
 
+    public CommonResDto reProvideToken(String email) {
+
+        Optional<User> foundUser = userRepository.findByEmail(email);
+
+        if(!foundUser.isPresent() || !foundUser.get().isActive()) {
+            throw new EntityNotFoundException("토큰을 발급할 사용자가 없습니다.");
+        }
+        User user = foundUser.get();
+        // redis에 해당 유저의 refresh token 조회
+        Object obj = redisTemplate.opsForValue().get("user:refresh:" + user.getUserId());
+        
+        // refresh 토큰이 만료된 경우
+        if(obj == null){
+            throw new IllegalArgumentException("다시 로그인을 진행하셔야 합니다.");
+        }
+
+        String token
+                = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
+
+        return new CommonResDto(HttpStatus.OK, "토큰 재발급이 이루어졌습니다."
+                , new UserLoginResDto(user.getEmail(), token));
+    }
+
     // 프로필 이미지를 저장하는 로직
     private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
@@ -359,8 +399,8 @@ public class UserService {
         }
         return profileImagePath;
     }
-
     // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
+
     private String sendEmailAuthCode(String email) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
@@ -376,22 +416,22 @@ public class UserService {
         redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
         return authNum;
     }
-
     // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
+
     private boolean isBlocked(String email) {
         String key = VERIFICATION_BLOCK_KEY + email;
         return redisTemplate.hasKey(key);
     }
-
     // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
+
     private void blockUser(String email) {
 
         String key = VERIFICATION_BLOCK_KEY + email;
         redisTemplate.opsForValue().set(key, "blocked", Duration.ofMinutes(30));
 
     }
-
     // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
+
     private int incrementAttemptCount(String email) {
 
         String key = VERIFICATION_ATTEMPT_KEY + email;

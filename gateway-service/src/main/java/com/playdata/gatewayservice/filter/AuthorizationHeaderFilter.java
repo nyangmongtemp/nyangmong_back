@@ -32,7 +32,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private final List<String> allowUrl = Arrays.asList(
             "/user/login", "/scheduler/crawler", "/scheduler/api"
             ,"/user/create", "/user/temp", "/user/templogin", "/user/verify-email",
-            "/user/verify-code", "/main/list", "/main/comment/list", "/main/detail"
+            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
     );
 
     @Override

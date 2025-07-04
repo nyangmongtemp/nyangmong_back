@@ -186,11 +186,17 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 게시물 상세에서 비밀 댓글 보기 버튼 클릭 시 권한 확인 메소드
-    // 게시물 상세에서 가지고 있는 작성자 ID를 인자로 받음.
-    // 작성자 ID와 Token의 userId를 통해 비밀 댓글 보기 권한 확인 
-    
-    
+    // 화면단에서 commentId 와 게시물 작성자 userId를 줘야함.
+    @PostMapping("/comment/hidden")
+    public ResponseEntity<?> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                              @RequestBody SeeHideComReqDto reqDto) {
+        boolean canSee = mainService.canSeeHideComment(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(canSee, HttpStatus.OK);
+    }
+
+
+
     // feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
     
 
