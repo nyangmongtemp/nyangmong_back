@@ -1,0 +1,9 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: animalboard-service
+
+imagePath:
+  url: /Users/ubing/Desktop/nyangmong/images/animal/
