@@ -2,7 +2,7 @@ package com.playdata.animalboardservice.controller;
 
 import com.playdata.animalboardservice.dto.StraySearchDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
-import com.playdata.animalboardservice.dto.res.StrayAnimalResDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalDetailResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.service.StrayAnimalService;
 import lombok.RequiredArgsConstructor;
@@ -43,8 +43,8 @@ public class StrayAnimalBoardController {
      * @return
      */
     @GetMapping("/{desertionNo}")
-    public ResponseEntity<StrayAnimalResDto> getAnimalBoard(@PathVariable String desertionNo) {
+    public ResponseEntity<StrayAnimalDetailResDto> getAnimalBoard(@PathVariable String desertionNo) {
         StrayAnimal resDto = strayAnimalService.findByStaryAnimal(desertionNo);
-        return ResponseEntity.ok().body(new StrayAnimalResDto(resDto));
+        return ResponseEntity.ok().body(new StrayAnimalDetailResDto(resDto));
     }
 }

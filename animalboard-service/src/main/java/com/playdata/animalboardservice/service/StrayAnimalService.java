@@ -42,7 +42,7 @@ public class StrayAnimalService {
 
     /**
      * 특정 유기동물 상세 조회
-     * @param desertionNo
+     * @param desertionNo 유기동물 번호
      * @return
      */
     public StrayAnimal findByStaryAnimal(String desertionNo) {

@@ -5,8 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -58,5 +58,15 @@ public class Animal extends BaseTimeEntity {
     private String fee; // 책임비
 
     private boolean active; // 게시물 활성화
+
+    @PrePersist
+    protected void onCreate() {
+        this.viewCount = 0;
+        this.active = true;
+    }
+
+    public void viewCountUp(int viewCount) {
+        this.viewCount = viewCount;
+    }
 
 }
