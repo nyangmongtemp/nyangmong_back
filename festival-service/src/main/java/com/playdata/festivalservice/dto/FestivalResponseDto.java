@@ -9,7 +9,12 @@ public record FestivalResponseDto(
         String title,
         String location,
         String festivalDate,
-        String imagePath
+        String imagePath,
+        String money,
+        String url,
+        String reservationDate,
+        String description,
+        String festivalTime
 ) {
     public static FestivalResponseDto from(FestivalEntity e) {
         return FestivalResponseDto.builder()
@@ -18,6 +23,11 @@ public record FestivalResponseDto(
                 .location(e.getLocation())
                 .festivalDate(e.getFestivalDate())
                 .imagePath(e.getImagePath())
+                .money(e.getMoney())
+                .url(e.getUrl())
+                .reservationDate(e.getReservationDate())
+                .description(e.getDescription())
+                .festivalTime(e.getFestivalTime())
                 .build();
     }
 

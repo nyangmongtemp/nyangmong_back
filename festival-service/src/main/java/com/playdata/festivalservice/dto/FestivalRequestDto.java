@@ -14,4 +14,5 @@ public class FestivalRequestDto {
     private String festivalTime;
     private String money;
     private String reservationDate;
+    private String description;
 }
