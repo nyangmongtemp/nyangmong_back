@@ -6,6 +6,7 @@ import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
+import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.repository.AnimalRepository;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -99,15 +101,35 @@ public class AnimalService {
     @Transactional
     public void insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
         Long userId = userInfo.getUserId(); // 사용자 ID 추출
+        // 이미지 유효성 검사 (용량, 확장자 등)
+        ImageValidation.validateImageFile(thumbnailImage);
+        // 이미지 저장 후, 저장된 파일명 반환
+        String newThumbnailImage = setProfileImage(thumbnailImage);
+        // DTO → Entity 변환 후 저장
+        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage));
+    }
+
+    /**
+     * 분양 게시글 수정
+     * @param postId 게시판 번호
+     * @param animalRequestDto 수정할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
+     * @return
+     */
+    @Transactional
+    public void updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage) {
+        // 조회
+        Animal animal = animalRepository.findByPostId(postId);
+        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
         // 이미지 유효성 검사 (용량, 확장자 등)
         ImageValidation.validateImageFile(thumbnailImage);
-
         // 이미지 저장 후, 저장된 파일명 반환
         String newThumbnailImage = setProfileImage(thumbnailImage);
 
-        // DTO → Entity 변환 후 저장
-        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage));
+        // 수정
+        animal.updateAnimal(animalRequestDto, newThumbnailImage);
+
     }
 
     /**

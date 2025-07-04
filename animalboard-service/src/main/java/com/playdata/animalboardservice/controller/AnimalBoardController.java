@@ -4,6 +4,7 @@ import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
+import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
@@ -80,9 +81,9 @@ public class AnimalBoardController {
 
     /**
      * 분양 게시물 등록
-     * @param userInfo
-     * @param animalRequestDto
-     * @param thumbnailImage
+     * @param userInfo 토큰에 저장된 유저정보
+     * @param animalRequestDto 셍성할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
     @PostMapping("")
@@ -94,10 +95,19 @@ public class AnimalBoardController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<Void> updateAnimal() {
-        // TODO: 게시물 수정 API
-        return null;
+    /**
+     * 분양 게시글 수정
+     * @param postId 게시판 번호
+     * @param animalRequestDto 수정할 데이터 DTO
+     * @param thumbnailImage 저장할 썸네일 이미지
+     * @return
+     */
+    @PatchMapping("/{postId}")
+    public ResponseEntity<Void> updateAnimal(@PathVariable Long postId,
+            @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
+            @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
+        animalService.updateAnimal(postId, animalRequestDto, thumbnailImage);
+        return ResponseEntity.ok().build();
     }
 
 //    @DeleteMapping("/{id}")
