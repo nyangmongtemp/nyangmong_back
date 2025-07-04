@@ -11,6 +11,6 @@ public interface AnimalRepository extends JpaRepository<Animal, Long>, AnimalRep
      * @param postId 게시물 번호
      * @return
      */
-    Animal findByPostId(Long postId);
+    Animal findByPostIdAndActiveTrue(Long postId);
 
 }

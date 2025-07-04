@@ -31,6 +31,7 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
         List<Animal> list = jpaQueryFactory.select(animal)
                 .from(animal)
                 .where(builderCondition(searchDto))
+                .where(animal.active.eq(true))
                 .offset(pageable.getOffset())       // 페이지 번호 기반 오프셋 적용
                 .limit(pageable.getPageSize())      // 한 페이지 크기 제한
                 .fetch();
@@ -41,6 +42,7 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
             count = jpaQueryFactory.select(animal.count().coalesce(0L).as("cnt"))
                     .from(animal)
                     .where(builderCondition(searchDto))
+                    .where(animal.active.eq(true))
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetchOne();

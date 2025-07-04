@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.entity;
 
 import com.playdata.animalboardservice.common.entity.BaseTimeEntity;
+import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @ToString
@@ -72,14 +74,36 @@ public class Animal extends BaseTimeEntity {
 
     private boolean active; // 게시물 활성화
 
+    // 디폴트
     @PrePersist
     protected void onCreate() {
         this.viewCount = 0;
         this.active = true;
     }
 
+    // 조회수 증가
     public void viewCountUp(int viewCount) {
         this.viewCount = viewCount;
+    }
+
+    // 업데이트
+    public void updateAnimal(AnimalUpdateRequestDto animalRequestDto, String newThumbnailImage) {
+        this.thumbnailImage = newThumbnailImage;
+        this.title = animalRequestDto.getTitle();
+        this.content = animalRequestDto.getContent();
+        this.petCategory = animalRequestDto.getPetCategory();
+        this.petKind = animalRequestDto.getPetKind();
+        this.age = animalRequestDto.getAge();
+        this.vaccine = animalRequestDto.getVaccine();
+        this.sexCode = animalRequestDto.getSexCode();
+        this.neuterYn = animalRequestDto.getNeuterYn();
+        this.address = animalRequestDto.getAddress();
+        this.fee = animalRequestDto.getFee();
+    }
+
+    // 삭제
+    public void deleteAnimal() {
+        this.active = false;
     }
 
 }
