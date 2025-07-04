@@ -32,7 +32,8 @@ public class Comment extends BaseTimeEntity {
     private String content;
 
     private boolean active;
-
+    
+    // 댓글의 비공개 여부  --> true: 비공개, false: 공개
     private boolean hidden;
 
     private String nickname;
