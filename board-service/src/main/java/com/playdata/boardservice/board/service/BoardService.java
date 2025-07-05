@@ -8,6 +8,7 @@ import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +35,8 @@ public class BoardService {
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
+
+    private List<String> categoryList = List.of("freedom", "introduction", "question", "review");
 
     // 질문, 후기, 자유 게시판 게시물 등록
     public CommonResDto informationCreate(InformationBoardSaveReqDto informationSaveDto
@@ -314,6 +319,39 @@ public class BoardService {
         // Entity → DTO 변환
         return introductionBoardList.map(IntroductionBoardListResDto::new);
 
+    }
+
+    public CommonResDto boardDetail(String category, Long postId) {
+
+        if(!isValidCategory(category)) {
+            throw new IllegalArgumentException("옳지 않은 카테고리 입력값입니다.");
+        }
+        Category cate = Category.valueOf(category.toUpperCase());
+
+        if(cate == Category.INTRODUCTION) {
+            // null 방지
+            Optional<IntroductionBoard> foundPost = introductionBoardRepository.findById(postId);
+            if(!foundPost.isPresent()) {
+                throw new EntityNotFoundException("조회하려는 게시물이 없습니다.");
+            }
+            IntroductionBoard board = foundPost.get();
+            IntroductionBoardResDto resDto = board.fromEntity(board);
+
+            return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
+        }
+        else {
+            // null 이면 들어올 수 없으니까 에러 던짐
+            InformationBoard board = informationBoardRepository.findById(postId)
+                    .orElseThrow(() -> new EntityNotFoundException("조회하려는 게시물이 없습니다."));
+            InformationBoardResDto resDto = board.fromEntity(board);
+
+            return new CommonResDto(HttpStatus.OK, "게시물 상세 조회 성공!", resDto);
+        }
+    }
+
+    // 입력받은 카테고리가 유효하냐
+    private boolean isValidCategory(String input) {
+        return categoryList.contains(input);
     }
 }
 

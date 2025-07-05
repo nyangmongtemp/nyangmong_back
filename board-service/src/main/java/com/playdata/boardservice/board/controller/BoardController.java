@@ -123,4 +123,12 @@ public class BoardController {
         return ResponseEntity.ok().body(resDto);
     }
 
+    // 게시물 상세 조회 (공통)
+    @GetMapping("/detail/{category}/{id}")
+    public ResponseEntity<?> getBoardDetail(@PathVariable String category, @PathVariable(name = "id") Long postId){
+        CommonResDto resDto = boardService.boardDetail(category, postId);
+
+        return new  ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
 }
