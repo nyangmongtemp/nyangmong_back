@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.entity.Category;
-import com.playdata.boardservice.board.entity.InformationBoard;
-import com.playdata.boardservice.board.entity.IntroductionBoard;
 import com.playdata.boardservice.board.service.BoardService;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
@@ -29,7 +27,7 @@ public class BoardController {
 
     // 정보 게시판 게시물 생성
     @PostMapping(value = "/information/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> InformationCreate (@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<?> informationCreate (@AuthenticationPrincipal TokenUserInfo userInfo
             , @RequestPart("context") String context,
                                                 @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage)
     throws JsonProcessingException {

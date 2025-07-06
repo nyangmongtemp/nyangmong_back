@@ -35,8 +35,8 @@ public class IntroductionBoardResDto {
                 .viewCount(Board.getViewCount())
                 .nickname(Board.getNickname())
                 .profileImage(Board.getProfileImage())
-                .createdAt(Board.getCreateTime())
-                .updatedAt(Board.getUpdateTime())
+                .createdAt(Board.getCreateAt())
+                .updatedAt(Board.getUpdateAt())
                 .build();
     }
 

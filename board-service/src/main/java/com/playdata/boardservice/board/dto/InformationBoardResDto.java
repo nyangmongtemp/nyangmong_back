@@ -37,8 +37,8 @@ public class InformationBoardResDto {
                 .nickname(Board.getNickname())
                 .profileImage(Board.getProfileImage())
                 .title(Board.getTitle())
-                .createdat(Board.getCreateTime())
-                .updatedat(Board.getUpdateTime())
+                .createdat(Board.getCreateAt())
+                .updatedat(Board.getUpdateAt())
                 .build();
 
     }

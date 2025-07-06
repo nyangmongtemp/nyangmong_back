@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 public class BaseTimeEntity {
 
     @CreationTimestamp
-    private LocalDateTime createTime;
+    private LocalDateTime createAt;
 
     @UpdateTimestamp
-    private LocalDateTime updateTime;
+    private LocalDateTime updateAt;
 }
 

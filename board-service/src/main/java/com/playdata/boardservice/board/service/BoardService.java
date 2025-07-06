@@ -48,6 +48,8 @@ public class BoardService {
                     ? informationSaveDto.getCategory().trim().toUpperCase()
                     : "default";
 
+//            StringUtils.isEmpty()
+
             // DTO → toEntity() 로 변환 -> DB
             informationSaveDto.setCategory(category);
 
@@ -321,6 +323,7 @@ public class BoardService {
 
     }
 
+    // 게시판 게시물 상세 조회
     public CommonResDto boardDetail(String category, Long postId) {
 
         if(!isValidCategory(category)) {

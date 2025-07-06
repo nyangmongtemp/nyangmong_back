@@ -8,10 +8,13 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+
+// 전역적으로 관리 해주겠다
 @RestControllerAdvice
 public class CommonExceptionHandler {
 
     // 옳지 않은 입력값 전달 시 호출되는 메서드
+    // ExceptionHandler 는 에러 관리
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> illegalHandler(IllegalArgumentException e) {
         e.printStackTrace();

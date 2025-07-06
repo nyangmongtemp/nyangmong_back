@@ -54,8 +54,8 @@ public class InformationBoard extends BaseTimeEntity {
                 .userid(userId)
                 .thumbnailimage(thumbnailImage)
                 .content(content)
-                .createdat(getCreateTime())
-                .updatedat(getUpdateTime())
+                .createdat(getCreateAt())
+                .updatedat(getUpdateAt())
                 .viewcount(viewCount)
                 .nickname(nickname)
                 .profileImage(profileImage)
@@ -63,6 +63,4 @@ public class InformationBoard extends BaseTimeEntity {
                 .build();
 
     }
-
-
 }
