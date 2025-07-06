@@ -30,14 +30,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private String adminKey;
 
     private final List<String> allowUrl = Arrays.asList(
-            "/user/login", "/scheduler/crawler", "/scheduler/api"
-            ,"/user/create", "/user/temp", "/user/templogin", "/user/verify-email",
+            "/user/create", "/user/verify-email",
             "/user/verify-code", "/board/information/list", "/board/introduction/list",
             "/board/detail/**",
             "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/**",
-            "/animal-board/list", "/animal-board/public/{postId}",
-            "/user/create", "/user/temp", "/user/templogin", "/user/verify-email",
-            "/user/verify-code"
+            "/animal-board/list", "/animal-board/public/{postId}"
     );
 
     @Override
