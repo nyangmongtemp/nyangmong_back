@@ -19,8 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -598,7 +597,7 @@ public class MainService {
                 .content(comment.getContent())
                 // 대댓글 존재 여부
                 .isReply(!comment.getReplyList().isEmpty())
-                .createTime(comment.getCreateTime())
+                .createTime(comment.getCreatedAt())
                 // 좋아요 개수
                 .likeCount(likeCount)
                 .profileImage(comment.getProfileImage())

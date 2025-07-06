@@ -1,5 +1,6 @@
-package com.playdata.mainservice.main.repository;
+package com.playdata.mainservice.main.repository.impl;
 
+import com.playdata.mainservice.main.repository.custom.CommentRepositoryCustom;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 

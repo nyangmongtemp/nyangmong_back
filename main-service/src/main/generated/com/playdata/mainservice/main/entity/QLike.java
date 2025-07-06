@@ -30,12 +30,12 @@ public class QLike extends EntityPathBase<Like> {
     public final EnumPath<ContentType> contentType = createEnum("contentType", ContentType.class);
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> createTime = _super.createTime;
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final NumberPath<Long> likeId = createNumber("likeId", Long.class);
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> updateTime = _super.updateTime;
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 

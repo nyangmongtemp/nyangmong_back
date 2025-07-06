@@ -33,7 +33,7 @@ public class QComment extends EntityPathBase<Comment> {
     public final NumberPath<Long> contentId = createNumber("contentId", Long.class);
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> createTime = _super.createTime;
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final BooleanPath hidden = createBoolean("hidden");
 
@@ -44,7 +44,7 @@ public class QComment extends EntityPathBase<Comment> {
     public final ListPath<Reply, QReply> replyList = this.<Reply, QReply>createList("replyList", Reply.class, QReply.class, PathInits.DIRECT2);
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> updateTime = _super.updateTime;
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 
