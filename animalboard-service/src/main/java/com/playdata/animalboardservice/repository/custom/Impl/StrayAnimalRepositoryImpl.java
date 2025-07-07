@@ -50,6 +50,17 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
         return new PageImpl<>(list, pageable, count);
     }
 
+    /**
+     * 유기동물 메인 노출될 리스트 목록 조회
+     * @return
+     */
+    public List<StrayAnimal> findMainList() {
+        return jpaQueryFactory.selectFrom(strayAnimal)
+                .orderBy(strayAnimal.desertionNo.desc())
+                .limit(9L)
+                .fetch();
+    }
+
     // 검색 조건(QueryDSL)을 구성하는 메서드
     private BooleanBuilder builderCondition(StraySearchDto straySearchDto) {
         BooleanBuilder builder = new BooleanBuilder();

@@ -5,6 +5,7 @@ import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalDetailResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.service.StrayAnimalService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,5 +47,15 @@ public class StrayAnimalBoardController {
     public ResponseEntity<StrayAnimalDetailResDto> getAnimalBoard(@PathVariable String desertionNo) {
         StrayAnimal resDto = strayAnimalService.findByStaryAnimal(desertionNo);
         return ResponseEntity.ok().body(new StrayAnimalDetailResDto(resDto));
+    }
+
+    /**
+     * 유기동물 메인 노출될 리스트 목록 조회
+     * @return
+     */
+    @GetMapping("/main")
+    public ResponseEntity<?> findStrayAnimalMainList() {
+        List<StrayAnimalListResDto> resDto = strayAnimalService.findStrayAnimalMainList();
+        return ResponseEntity.ok().body(resDto);
     }
 }
