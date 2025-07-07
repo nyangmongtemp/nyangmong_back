@@ -6,6 +6,7 @@ import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,23 +26,23 @@ public class UserController {
 
     private final UserService userService;
 
-    /***
+    /**
      *
-     * @param userJson   --> dto 변환 오류로 인한 String
-     * @param profileImage  --> 이미지 url, nullable
+     * @param userSaveReqDto
+     * @param profileImage
      * @return
      * @throws JsonProcessingException
      */
     // 회원가입
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> userCreate(
-            @RequestPart("user") String userJson,
+            @RequestPart("user") @Valid UserSaveReqDto userSaveReqDto,
             // 프로필 이미지는 필수가 아님
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) throws JsonProcessingException {
         // String으로 받은 값을 Dto로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        UserSaveReqDto userSaveReqDto = objectMapper.readValue(userJson, UserSaveReqDto.class);
+        /*ObjectMapper objectMapper = new ObjectMapper();
+        UserSaveReqDto userSaveReqDto = objectMapper.readValue(userJson, UserSaveReqDto.class);*/
 
         CommonResDto resDto = userService.userCreate(userSaveReqDto, profileImage);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);

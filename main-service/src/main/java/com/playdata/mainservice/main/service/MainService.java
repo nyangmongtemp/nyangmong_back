@@ -537,7 +537,7 @@ public class MainService {
     }
     
     // 메인 화면에 드러날 소개 게시판의 인기 게시물을 찾아서, 좋아요, 댓글 개수를 같이 리턴해주는 로직
-    public CommonResDto getMainIntroduction() {
+    public List<LikeComCountResDto> getMainIntroduction() {
         
         // 소개 게시물 중 한 달동안 생성된 좋아요 개수가 가장 많은 3개의 게시물을 조회
         List<Tuple> postList = likeImpl.getPostIdMainIntroductionPost();
@@ -555,7 +555,7 @@ public class MainService {
             return new LikeComCountResDto(tuple.get(like.contentId), "Introduction", tuple.get(like.count()), commentCount);
         }).collect(Collectors.toList());
 
-        return new CommonResDto(HttpStatus.OK, "인기 소개 게시물 정보 조회", resDtoList);
+        return resDtoList;
     }
 
     public CommonResDto getUserLiked(Long userId, MainLikeReqDto reqDto) {
