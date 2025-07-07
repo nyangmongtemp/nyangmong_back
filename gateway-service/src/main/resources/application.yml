@@ -51,6 +51,14 @@ spring:
             - RewritePath=/main-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
 
+        - id: festival-service
+          uri: lb://FESTIVAL-SERVICE
+          predicates:
+            - Path=/festival-service/**
+          filters:
+            - RewritePath=/festival-service/(?<segment>.*), /${segment}
+            - AuthorizationHeaderFilter
+
         - id: animalboard-service
           uri: lb://ANIMALBOARD-SERVICE
           predicates:
@@ -59,13 +67,3 @@ spring:
             - RemoveRequestHeader=Cookie
             - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
-
-        - id: board-service
-          uri: lb://BOARD-SERVICE
-          predicates:
-            - Path=/board-service/**
-          filters:
-            - RemoveRequestHeader=Cookie
-            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
-            - AuthorizationHeaderFilter
-

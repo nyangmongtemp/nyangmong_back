@@ -1,20 +1,21 @@
 package com.playdata.schedulerservice.crawling.controller;
 
 import com.playdata.schedulerservice.crawling.crawler.NaverPetEventCrawler;
+import com.playdata.schedulerservice.crawling.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class PetController {
 
     private final NaverPetEventCrawler crawler;
+    private final PetRepository petRepository;
 
-    /**
-     * 수동으로 크롤러를 실행하는 엔드포인트
-     * GET /scheduler/crawler
-     */
     @GetMapping("/scheduler/crawler")
     public String runCrawler() {
         try {
@@ -25,4 +26,6 @@ public class PetController {
             return "크롤링 도중 오류가 발생했습니다.";
         }
     }
+
+
 }
