@@ -3,11 +3,15 @@ package com.playdata.mainservice.main.service;
 import com.playdata.mainservice.client.UserServiceClient;
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
+import com.playdata.mainservice.common.enumeration.ErrorCode;
+import com.playdata.mainservice.common.exception.CommonException;
 import com.playdata.mainservice.main.dto.*;
 import com.playdata.mainservice.main.entity.*;
 import com.playdata.mainservice.main.repository.CommentRepository;
 import com.playdata.mainservice.main.repository.LikeRepository;
 import com.playdata.mainservice.main.repository.ReplyRepository;
+import com.playdata.mainservice.main.repository.impl.LikeRepositoryImpl;
+import com.querydsl.core.Tuple;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +26,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.playdata.mainservice.main.entity.QLike.like;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -34,9 +40,12 @@ public class MainService {
     private final CommentRepository commentRepository;
 
     private final ReplyRepository replyRepository;
+    
+    // queryDSL 사용하는 Repository 서비스
+    private final LikeRepositoryImpl likeImpl;
 
     // 들어온 url의 값의 유효성 확인용
-    private List<String> categoryList = List.of("free", "adopt", "children", "review", "question");
+    private List<String> categoryList = List.of("free", "adopt", "introduction", "review", "question");
     private List<String> typeList = List.of("post", "comment", "reply");
 
     /**
@@ -50,7 +59,7 @@ public class MainService {
         
         // 요청 Dto 값의 유효성을 확인
         if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
-            return new CommonResDto(HttpStatus.BAD_REQUEST, "요청 url이 잘못되었습니다.", null);
+            throw new CommonException(ErrorCode.INVALID_PARAMETER, "옳지 않은 입력값입니다.");
         }
         
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
@@ -92,7 +101,7 @@ public class MainService {
 
         // 요청 Dto 값의 유효성을 확인
         if(!isValidCategory(reqDto.getCategory())) {
-            return new CommonResDto(HttpStatus.BAD_REQUEST, "요청 url이 잘못되었습니다.", null);
+            throw new CommonException(ErrorCode.INVALID_PARAMETER, "옳지 않은 입력값입니다.");
         }
 
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
@@ -102,7 +111,7 @@ public class MainService {
         ResponseEntity<String> responseEntity = userClient.getUserProfileImage(userId);
 
         if(responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("댓글 생성 중 오류가 발생하였습니다");
+            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR, "댓글 생성 중에 에러가 발생하였습니다.");
         }
 
         // 새로운 댓글 생성
@@ -118,7 +127,6 @@ public class MainService {
     }
     
     // 댓글 삭제 메소드
-    
     /**
      * 댓글 삭제 메소드
      * @param commentId
@@ -169,7 +177,7 @@ public class MainService {
         // user-service 에서 대댓글 작성자의 프로필 이미지를 전송 받음
         ResponseEntity<String> res = userClient.getUserProfileImage(userInfo.getUserId());
         if(res.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("대댓글 작성 중 오류가 발생하였습니다.");
+            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR, "대댓글 작성 중 오류가 발생하였습니다.");
         }
         
         // 대댓글 생성
@@ -460,16 +468,16 @@ public class MainService {
      */
     // 마이페이지에서 사용자의 댓글 조회 --> 활성화된 모든 댓글을 페이징 처리해서 조회
     public CommonResDto getMyComment(Long userId, Pageable pageable) {
-        
+
         // 해당 userId로 작성된 모든 활성화 댓글을 페이징 조건에 맞게 조회
         Page<Comment> foundUserComment = commentRepository.findActiveByUserId(userId, pageable);
-        
+
         // 조회된 댓글의 좋아요 개수를 계산하는 로직
         List<CommentDetailResDto> myCommentList = foundUserComment.stream().map(comment -> {
             // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
             Long likeCount
                     = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.COMMENT ,comment.getCommentId());
-            
+
             // 댓글의 정보 + 좋아요개수 + 대댓글 존재 여부
             return getDetailResDto(comment, likeCount);
         }).collect(Collectors.toList());
@@ -478,23 +486,23 @@ public class MainService {
     }
 
     /**
-     * 
+     *
      * @param userId
      * @param pageable
      * @return
      */
     // 마이페이지에서 사용자의 대댓글 조회 --> 활성화된 모든 대댓글을 페이징 처리해서 조회
     public CommonResDto getMyReply(Long userId, Pageable pageable) {
-        
+
         // 사용자가 작성한 활성화된 모든 대댓글을 페이징 조건에 맞게 조회
         Page<Reply> foundUserReply = replyRepository.findActiveByUserId(userId, pageable);
-        
+
         // 해당 대댓글의 좋아요 개수를 계산하는 로직
         List<ReplyDetailResDto> myReplyList = foundUserReply.stream().map(reply -> {
             // 대댓글들의 좋아요 개수를 계산하는 로직
             Long likeCount =
                     likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.REPLY, reply.getReplyId());
-            
+
             // 대댓글의 정보 + 좋아요 개수
             return reply.fromEntity(likeCount);
         }).collect(Collectors.toList());
@@ -517,7 +525,7 @@ public class MainService {
         }
         Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
         // 열람할 비공개 댓글이 존재하지 않거나, 삭제되었거나, 비공개 댓글이 아닌 경우
-        if(!foundComment.isPresent() || !foundComment.get().isHidden() 
+        if(!foundComment.isPresent() || !foundComment.get().isHidden()
                 || !foundComment.get().isActive()) {
             throw new EntityNotFoundException("열람할 비공개 댓글이 없습니다.");
         }
@@ -527,8 +535,39 @@ public class MainService {
         }
         return true;
     }
+    
+    // 메인 화면에 드러날 소개 게시판의 인기 게시물을 찾아서, 좋아요, 댓글 개수를 같이 리턴해주는 로직
+    public CommonResDto getMainIntroduction() {
+        
+        // 소개 게시물 중 한 달동안 생성된 좋아요 개수가 가장 많은 3개의 게시물을 조회
+        List<Tuple> postList = likeImpl.getPostIdMainIntroductionPost();
+        List<LikeComCountResDto> resDtoList = postList.stream().map(tuple -> {
+            // 해당 게시물의 댓글 개수 조회
+            List<Long> findComment = commentRepository.
+                    findActiveCommentIdsByCategoryAndContentId(Category.INTRODUCTION, tuple.get(like.contentId));
+            // 댓글 개수
+            Long commentCount = (long) findComment.size();
+            // 댓글에 매핑된 대댓글 개수
+            Long replyCount = replyRepository.countAllActiveRepliesByCommentIds(findComment);
+            // 총 댓글 개수 = 댓글 + 대댓글
+            commentCount += replyCount;
+            // contentId, Category, 좋아요 개수, 총 댓글 개수
+            return new LikeComCountResDto(tuple.get(like.contentId), "Introduction", tuple.get(like.count()), commentCount);
+        }).collect(Collectors.toList());
 
-/////////////////// 공통 사용 메소드들입니다.
+        return new CommonResDto(HttpStatus.OK, "인기 소개 게시물 정보 조회", resDtoList);
+    }
+
+    public CommonResDto getUserLiked(Long userId, MainLikeReqDto reqDto) {
+
+        if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        Optional<Like> liked = likeImpl.findUserLiked(userId, reqDto);
+        return new CommonResDto(HttpStatus.OK, "사용자의 좋아요 찾음", liked.isPresent());
+    }
+
+    /////////////////// 공통 사용 메소드들입니다.
 
     // 들어온 요청의 url값의 유효성을 확인하는 메소드
     // 컨텐츠타입의 유효성 확인
@@ -546,11 +585,11 @@ public class MainService {
         Optional<Comment> foundComment = commentRepository.findById(commentId);
         // 삭제하려는 댓글이 존재하지 않는 경우
         if(!foundComment.isPresent()) {
-            throw new EntityNotFoundException("해당 댓글을 찾을 수 없습니다.");
+            throw new CommonException(ErrorCode.NOT_FOUND, "삭제하려는 댓글이 존재하지 않습니다.");
         }
         // 삭제 요청을 보낸 사용자가 댓글의 작성자가 아닌 경우
         if(!foundComment.get().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 댓글의 삭제 및 수정 권한이 없습니다.");
+            throw new CommonException(ErrorCode.NO_DELETE_PERMISSION);
         }
         return foundComment.get();
     }
@@ -560,7 +599,7 @@ public class MainService {
         Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
         // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우
         if(!foundComment.isPresent() || !foundComment.get().isActive()) {
-            throw new EntityNotFoundException("대댓글을 작성할 댓글이 존재하지 않습니다.");
+            throw new CommonException(ErrorCode.NOT_FOUND, "삭제하려는 댓글이 존재하지 않습니다.");
         }
         return foundComment.get();
     }
@@ -570,15 +609,15 @@ public class MainService {
         Optional<Reply> foundReply = replyRepository.findById(replyId);
         // 삭제할 대댓글이 존재하지 않는 경우
         if(!foundReply.isPresent() || !foundReply.get().isActive()) {
-            throw new EntityNotFoundException("수정, 삭제할 대댓글이 존재하지 않습니다.");
+            throw new CommonException(ErrorCode.NOT_FOUND, "삭제하려는 댓글이 존재하지 않습니다.");
         }
         // 삭제를 요청한 사용자가 대댓글 작성자가 아닌 경우
         if(!foundReply.get().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 대댓글의 수정 및 삭제 권한이 없습니다.");
+            throw new CommonException(ErrorCode.NO_UPDATE_PERMISSION);
         }
         return foundReply.get();
     }
-    
+
     // 게시물 상세 조회 시, 댓글 개수와 좋아요 수를 담은 dto 변환 메소드
     private static LikeComCountResDto getLikeComCountResDto(LikeComCountReqDto req, Long count, long totalCount) {
         return LikeComCountResDto.builder()
@@ -588,8 +627,9 @@ public class MainService {
                 .commentCount(totalCount)
                 .build();
     }
-    
+
     // 게시물 상세 조회 시, 댓글의 정보들 + 좋아요 수 + 대댓글 여부를 담은 dto 변환 메소드
+
     private static CommentDetailResDto getDetailResDto(Comment comment, Long likeCount) {
         return CommentDetailResDto.builder()
                 .contentId(comment.getCommentId())
@@ -597,7 +637,7 @@ public class MainService {
                 .content(comment.getContent())
                 // 대댓글 존재 여부
                 .isReply(!comment.getReplyList().isEmpty())
-                .createTime(comment.getCreatedAt())
+                .createAt(comment.getCreateAt())
                 // 좋아요 개수
                 .likeCount(likeCount)
                 .profileImage(comment.getProfileImage())

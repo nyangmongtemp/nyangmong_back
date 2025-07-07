@@ -21,7 +21,7 @@ public class CommentDetailResDto {
 
     private String content;
 
-    private LocalDateTime createTime;
+    private LocalDateTime createAt;
 
     private String profileImage;
 

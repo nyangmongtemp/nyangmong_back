@@ -31,7 +31,7 @@ public class QReply extends EntityPathBase<Reply> {
     public final StringPath content = createString("content");
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
+    public final DateTimePath<java.time.LocalDateTime> createAt = _super.createAt;
 
     public final StringPath nickname = createString("nickname");
 
@@ -40,7 +40,7 @@ public class QReply extends EntityPathBase<Reply> {
     public final NumberPath<Long> replyId = createNumber("replyId", Long.class);
 
     //inherited
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
+    public final DateTimePath<java.time.LocalDateTime> updateAt = _super.updateAt;
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 

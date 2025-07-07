@@ -6,6 +6,6 @@ public enum Category {
     FREE,
     REVIEW,
     ADOPT,
-    CHILDREN
+    INTRODUCTION,
 
 }

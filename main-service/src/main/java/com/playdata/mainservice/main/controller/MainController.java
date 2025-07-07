@@ -213,6 +213,32 @@ public class MainController {
         return new ResponseEntity<>(canSee, HttpStatus.OK);
     }
 
+    /** 메인 화면에서 소개 게시물의 인기 게시물 3개를 리턴해주는 메소드 입니다
+     *
+     *
+     * @return
+     */
+    @GetMapping("/introduction")
+    public ResponseEntity<?> getMainIntroduction() {
+        CommonResDto resDto = mainService.getMainIntroduction();
+
+        return ResponseEntity.ok(resDto);
+    }
+
+    /**  게시물 상세에서 로그인한 사용자의 좋아요 클릭 여부를 확인시켜주는 메소드
+     *
+     * @param userInfo
+     * @param reqDto  --> category, contentId, contentType
+     * @return
+     */
+    @PostMapping("/liked")
+    public ResponseEntity<?> getUserLiked(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                          @RequestBody MainLikeReqDto reqDto) {
+        CommonResDto resDto = mainService.getUserLiked(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
 
 ////// feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
 

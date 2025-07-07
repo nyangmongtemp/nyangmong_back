@@ -4,6 +4,9 @@ import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.common.dto.ErrorResponse;
+import com.playdata.userservice.common.enumeration.ErrorCode;
+import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.common.util.ImageValidation;
 import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.entity.User;
@@ -12,6 +15,7 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -80,7 +84,7 @@ public class UserService {
         // 회원가입을 요청한 이메일로 이미 가입한 회원정보가 있는 경우
         if (foundByEmail.isPresent()) {
             // 회원가입 실패
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
 
         // 이메일 유효성 검증을 통과한 경우
@@ -124,11 +128,11 @@ public class UserService {
             
             // 탈퇴한 회원인 경우 로그인 실패 처리
             if(!foundUser.get().isActive()) {
-                throw new IllegalArgumentException("탈퇴한 회원입니다.");
+                throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
             }
             // 비밀번호가 일치 하지 않는 경우
             if(!passwordEncoder.matches(userLoginReqDto.getPassword(), pw)) {
-                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+                throw new CommonException(ErrorCode.INVALID_PASSWORD);
             }
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
@@ -171,14 +175,14 @@ public class UserService {
         // 차단 상태 확인
         // 이메일 인증번호 발송을 3회 이상한 경우
         if(isBlocked(email)){
-            throw new IllegalArgumentException("현재 인증코드 발송이 제한된 이메일입니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
         }
         Optional<User> foundEmail =
                 userRepository.findByEmail(email);
         // 이미 존재하는 이메일인 경우 -> 회원가입 불가
         if (foundEmail.isPresent()) {
             // 이미 존재하는 이메일이라는 에러를 발생 -> controller가 이 에러를 처리
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
         
         // 이메일로 인증번호 발송
@@ -206,7 +210,7 @@ public class UserService {
         Object foundCode = redisTemplate.opsForValue().get(key);
         // 인증 코드 유효시간이 만료된 경우
         if(foundCode == null) {
-            throw new IllegalArgumentException("인증 코드 유효시간이 만료되었습니다.");
+            throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
         }
 
         // 인증 시도 횟수 증가
@@ -218,11 +222,12 @@ public class UserService {
             if(attemptCount >= 3){
                 // 최대 시도 횟수 초과 시 해당 이메일 인증 차단
                 blockUser(email);
-                throw new IllegalArgumentException("30분동안 인증 코드 발송이 제한되었습니다.");
+                throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
             }
             // 인증 횟수 차감하여 프론트로 메시지 전송
             int remainingAttempt = 3 - attemptCount;
-            throw new IllegalArgumentException(String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt));
+            throw new CommonException(ErrorCode.INVALID_AUTH_CODE,
+                    (String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt)));
         }
 
         log.info("이메일 인증 성공!, email: {}", email);
@@ -244,8 +249,8 @@ public class UserService {
     public boolean modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto, MultipartFile profileImage) {
 
         Optional<User> byId = userRepository.findById(userInfo.getUserId());
-        if(!byId.isPresent()) {
-            throw new EntityNotFoundException("해당 정보를 가진 사용자가 없습니다.");
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         User foundUser = byId.get();
         String newProfileImage = null;
@@ -259,11 +264,11 @@ public class UserService {
             ResponseEntity<?> res = mainClient.modifyProfileImage(userInfo.getUserId(), newProfileImage);
 
             if(res.getStatusCode() != HttpStatus.OK) {
-                throw new RuntimeException("회원 정보 수정 중 오류가 발생하였습니다.");
+                throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
         // nickname을 변경하는 경우
-        if(modiDto.getNickname() != null) {
+        if(!StringUtils.isBlank(newProfileImage)) {
             // feign 요청 시 한글을 PathVariable로 쓰지 못해서, 인코딩 변환
             String encodedNickname = URLEncoder.encode(modiDto.getNickname(), StandardCharsets.UTF_8);
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
@@ -272,7 +277,7 @@ public class UserService {
             
             // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
             if(response.getStatusCode() != HttpStatus.OK) {
-                throw new RuntimeException("회원정보 수정 중 오류가 발생하였습니다.");
+                throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
         
@@ -294,7 +299,7 @@ public class UserService {
         Optional<User> byEmail = userRepository.findByEmail(newEmail);
         // 이메일 변경 요청을 보낸 사용자가 DB에 이미 존재하는 경우
         if(byEmail.isPresent()) {
-            throw new EntityNotFoundException("해당 이메일의 사용자가 이미 존재합니다.");
+            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
         String authCode = sendEmailAuthCode(newEmail, false);
 
@@ -319,7 +324,7 @@ public class UserService {
         Optional<User> foundUser = userRepository.findById(userInfo.getUserId());
         // 이메일을 변경할 사용자가 존재 및 활성화 되었는지 확인
         if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            throw new EntityNotFoundException("이메일을 변경하려하는 사용자가 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         // 이메일 변경 요청 사용자의 유효성 확인 후
         // 해당 사용자의 이메일 변경 및 저장
@@ -341,7 +346,7 @@ public class UserService {
         Optional<User> byEmail = userRepository.findByEmail(email);
         // 비밀번호 변경 요청을 보낸 유저가 DB에 없는 경우
         if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         // 이메일 전송
         String code = sendEmailAuthCode(email, false);
@@ -364,7 +369,7 @@ public class UserService {
         Optional<User> byEmail = userRepository.findById(userId);
         // 비밀번호를 변경하려는 유저가 DB에 없는 경우
         if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new EntityNotFoundException("해당 이메일의 사용자가 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         
         User user = byEmail.get();
@@ -388,7 +393,7 @@ public class UserService {
         Optional<User> byEmail = userRepository.findById(userId);
         // 정보를 조회할 회원이 존재하지 않거나, 탈퇴한 회원인 경우
         if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new IllegalArgumentException("해당 이메일의 사용자는 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원이 존재하지 않습니다.");
         }
         User foundUser = byEmail.get();
         // 화면단으로 전송할 데이터를 담은 dto 변환
@@ -408,7 +413,7 @@ public class UserService {
         Optional<User> targetUser = userRepository.findById(userId);
         // 탈퇴를 진행할 사용자가 없거나, 이미 사용자가 탈퇴를 진행한 경우
         if(!targetUser.isPresent() || !targetUser.get().isActive()) {
-            throw new EntityNotFoundException("탈퇴를 진행할 사용자가 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "탈퇴를 진행할 회원이 존재하지 않습니다.");
         }
         User user = targetUser.get();
         // 회원의 비활성화 처리
@@ -418,7 +423,7 @@ public class UserService {
 
         // 댓글, 대댓글 비활성화 처리 중 오류 발생
         if(response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("회원 탈퇴 진행 중 오류가 발생하였습니다.");
+            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         
         // 회원의 비활성화 처리 DB로 저장
@@ -437,7 +442,7 @@ public class UserService {
         Optional<User> foundUser = userRepository.findById(userId);
         // 이미지를 요청한 회원이 존재하지 않거나, 탈퇴한 회원인 경우
         if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            throw new EntityNotFoundException("회원이 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원이 존재하지 않습니다.");
         }
         // 유효한 회원인 경우, 이미지를 main-service로 전달
         User user = foundUser.get();
@@ -455,7 +460,7 @@ public class UserService {
         Optional<User> foundUser = userRepository.findByEmail(email);
         // 토큰 발급을 요청한 회원이 유효하지 않은 회원인 경우
         if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            throw new EntityNotFoundException("토큰을 발급할 사용자가 없습니다.");
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "토큰 발급을 진행할 회원이 존재하지 않습니다.");
         }
         User user = foundUser.get();
         // redis에 해당 유저의 refresh token 조회
@@ -463,7 +468,7 @@ public class UserService {
         
         // refresh 토큰이 만료된 경우
         if(obj == null){
-            throw new IllegalArgumentException("다시 로그인을 진행하셔야 합니다.");
+            throw new CommonException(ErrorCode.SESSION_EXPIRED, "다시 로그인을 진행해주세요.");
         }
         // refresh 토큰이 유효한 경우
         // 새로운 Access Token 재발급
@@ -502,7 +507,7 @@ public class UserService {
             } catch (IOException e) {
                 // 저장 실패 처리
                 e.printStackTrace();
-                throw new RuntimeException("이미지 저장 중 오류가 발생하였습니다.");
+                throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
             }
         }
         return profileImagePath;
@@ -529,7 +534,7 @@ public class UserService {
             }
         } catch (MessagingException e) {
             log.info(e.getMessage());
-            throw new RuntimeException("이메일 전송 과정 중 문제 발생");
+            throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
         }
 
         // 인증 코드를 redis에 저장하자

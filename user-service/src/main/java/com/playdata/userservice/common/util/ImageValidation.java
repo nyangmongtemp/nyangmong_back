@@ -1,5 +1,7 @@
 package com.playdata.userservice.common.util;
 
+import com.playdata.userservice.common.enumeration.ErrorCode;
+import com.playdata.userservice.common.exception.CommonException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,13 +17,13 @@ public class ImageValidation {
         // 1. MIME 타입 검사
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("업로드한 파일은 이미지가 아닙니다. (contentType 검사 실패)");
+            throw new CommonException(ErrorCode.MIME_FILE_TYPE);
         }
 
         // 2. 파일 확장자 검사
         String filename = file.getOriginalFilename();
         if (filename != null && !filename.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif|bmp|webp)$")) {
-            throw new IllegalArgumentException("허용되지 않는 이미지 확장자입니다.");
+            throw new CommonException(ErrorCode.MATCHES_FILE_TYPE);
         }
         
         // 아래의 검사 과정까지는 불필요한 듯하여, 추후에 필요할 경우 주석해제

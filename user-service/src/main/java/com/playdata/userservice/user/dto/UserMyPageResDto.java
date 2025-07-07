@@ -12,7 +12,7 @@ public class UserMyPageResDto {
     private String email;
     private String userName;
     private String nickname;
-    private LocalDateTime createdAt;
+    private LocalDateTime createAt;
     private String phone;
     private String address;
 
