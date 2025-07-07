@@ -34,7 +34,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/animal-board/list", "/animal-board/public/{postId}",
             "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
             "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
-            ,"/main/introduction"
+            ,"/main/introduction", "/board/introduction/main", "/board/introduction/list"
     );
 
     @Override
