@@ -15,5 +15,6 @@ public class UserMyPageResDto {
     private LocalDateTime createAt;
     private String phone;
     private String address;
+    private String profileImage;
 
 }

@@ -157,7 +157,9 @@ public class UserService {
                         TimeUnit.DAYS);
                 // 로그인 성공
                 // token과 email을 화면단으로 리턴
-                return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", new UserLoginResDto(user.getEmail() ,token));
+                return new CommonResDto(HttpStatus.OK,
+                        "로그인에 성공하였습니다.",
+                        new UserLoginResDto(user.getEmail(),user.getNickname(),user.getProfileImage() ,token));
             }
         }
 
@@ -271,7 +273,7 @@ public class UserService {
             }
         }
         // nickname을 변경하는 경우
-        if(!StringUtils.isBlank(newProfileImage)) {
+        if(newProfileImage != null) {
             // feign 요청 시 한글을 PathVariable로 쓰지 못해서, 인코딩 변환
             String encodedNickname = URLEncoder.encode(modiDto.getNickname(), StandardCharsets.UTF_8);
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
@@ -479,7 +481,7 @@ public class UserService {
                 = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
 
         return new CommonResDto(HttpStatus.OK, "토큰 재발급이 이루어졌습니다."
-                , new UserLoginResDto(user.getEmail(), token));
+                , new UserLoginResDto(user.getEmail(), user.getNickname(), user.getProfileImage(), token));
     }
 
 ///////////  공통적으로 사용하는 공통 로직들입니다.

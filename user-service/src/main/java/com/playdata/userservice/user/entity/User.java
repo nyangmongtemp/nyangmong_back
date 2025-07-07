@@ -93,6 +93,7 @@ public class User extends BaseTimeEntity {
                 .nickname(this.nickname)
                 .userName(this.userName)
                 .phone(this.phone)
+                .profileImage(profileImage)
                 .createAt(this.getCreateAt())
                 .address(this.address)
                 .build();

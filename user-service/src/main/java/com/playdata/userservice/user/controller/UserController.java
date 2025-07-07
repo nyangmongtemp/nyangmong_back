@@ -39,7 +39,7 @@ public class UserController {
             @RequestPart("user") @Valid UserSaveReqDto userSaveReqDto,
             // 프로필 이미지는 필수가 아님
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
-    ) throws JsonProcessingException {
+    ) {
         // String으로 받은 값을 Dto로 변환
         /*ObjectMapper objectMapper = new ObjectMapper();
         UserSaveReqDto userSaveReqDto = objectMapper.readValue(userJson, UserSaveReqDto.class);*/
@@ -91,8 +91,8 @@ public class UserController {
     /**
      *
      * @param userInfo
-     * @param modiJson   --> dto 변환 오류로 인한 String
-     * @param profileImage  --> 이미지 url, nullable
+     * @param modiDto --> nickname, phone, address
+     * @param profileImage  --> 이미지 url
      * @return
      * @throws JsonProcessingException
      */
@@ -100,12 +100,9 @@ public class UserController {
     // 로그인 필요 -> 토큰 필요함.
     @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
     public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestPart("user") String modiJson,
+            ,@RequestPart("user") UserInfoModiReqDto modiDto,
             // 프로필 이미지 변경은 필수가 아님
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws JsonProcessingException {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        UserInfoModiReqDto modiDto = objectMapper.readValue(modiJson, UserInfoModiReqDto.class);
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage){
 
         boolean result = userService.modiUserCommonInfo(userInfo, modiDto, profileImage);
 

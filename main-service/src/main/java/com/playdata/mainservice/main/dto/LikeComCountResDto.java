@@ -18,7 +18,4 @@ public class LikeComCountResDto {
 
     private Long commentCount;
 
-
-    // 메인화면에 드러날 소개 게시물의 좋아요, 댓글 개수, contentId 리턴용
-
 }

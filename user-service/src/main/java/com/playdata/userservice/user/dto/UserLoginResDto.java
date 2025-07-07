@@ -10,6 +10,10 @@ public class UserLoginResDto {
 
     private String email;
 
+    private String nickname;
+
+    private String profileImage;
+
     private String token;
 
 }
