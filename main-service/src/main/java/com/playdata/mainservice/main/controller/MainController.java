@@ -213,16 +213,14 @@ public class MainController {
         return new ResponseEntity<>(canSee, HttpStatus.OK);
     }
 
-    /** 메인 화면에서 소개 게시물의 인기 게시물 3개를 리턴해주는 메소드 입니다
-     *
+    /**
+     * 메인 화면에서 소개 게시물의 인기 게시물 3개를 리턴해주는 메소드 입니다
      *
      * @return
      */
     @GetMapping("/introduction")
-    public ResponseEntity<?> getMainIntroduction() {
-        CommonResDto resDto = mainService.getMainIntroduction();
-
-        return ResponseEntity.ok(resDto);
+    public List<LikeComCountResDto> getMainIntroduction() {
+        return mainService.getMainIntroduction();
     }
 
     /**  게시물 상세에서 로그인한 사용자의 좋아요 클릭 여부를 확인시켜주는 메소드

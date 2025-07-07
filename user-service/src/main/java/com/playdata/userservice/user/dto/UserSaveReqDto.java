@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -32,6 +33,9 @@ public class UserSaveReqDto {
 
 
     public User toEntity(String encodedPassword, String profileImagePath) {
+        if(StringUtils.isBlank(nickname)){
+            nickname = userName;
+        }
         return User.builder()
                 .email(email)
                 .password(encodedPassword)

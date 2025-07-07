@@ -210,7 +210,8 @@ public class UserService {
         Object foundCode = redisTemplate.opsForValue().get(key);
         // 인증 코드 유효시간이 만료된 경우
         if(foundCode == null) {
-            throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+            //throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
         }
 
         // 인증 시도 횟수 증가
@@ -222,12 +223,14 @@ public class UserService {
             if(attemptCount >= 3){
                 // 최대 시도 횟수 초과 시 해당 이메일 인증 차단
                 blockUser(email);
-                throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
+                throw new CommonException(ErrorCode.BAD_REQUEST);
+                // throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
             }
             // 인증 횟수 차감하여 프론트로 메시지 전송
             int remainingAttempt = 3 - attemptCount;
-            throw new CommonException(ErrorCode.INVALID_AUTH_CODE,
-                    (String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt)));
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+            /*throw new CommonException(ErrorCode.INVALID_AUTH_CODE,
+                    (String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt)));*/
         }
 
         log.info("이메일 인증 성공!, email: {}", email);
