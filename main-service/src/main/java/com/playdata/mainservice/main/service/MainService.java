@@ -636,7 +636,7 @@ public class MainService {
                 .category(String.valueOf(comment.getCategory()))
                 .content(comment.getContent())
                 // 대댓글 존재 여부
-                .isReply(!comment.getReplyList().isEmpty())
+                .isReply(comment.isReplyExist())
                 .createAt(comment.getCreateAt())
                 // 좋아요 개수
                 .likeCount(likeCount)
