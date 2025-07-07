@@ -1,9 +1,8 @@
 package com.playdata.userservice.user.dto;
 
 import com.playdata.userservice.user.entity.User;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
@@ -15,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserSaveReqDto {
 
+    @Email
     private String email;
 
     @NotBlank(message = "비밀번호는 필수입니다.")
@@ -23,12 +23,15 @@ public class UserSaveReqDto {
             message = "비밀번호는 영문 대소문자 및 특수문자를 각각 1개 이상 포함해야 합니다.")
     private String password;
 
+    @NotNull
     private String userName;
 
+    @NotNull
     private String phone;
 
     private String nickname;
 
+    @NotNull
     private String address;
 
 

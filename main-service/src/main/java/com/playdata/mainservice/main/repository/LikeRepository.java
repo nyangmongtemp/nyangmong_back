@@ -1,7 +1,6 @@
 package com.playdata.mainservice.main.repository;
 
 import com.playdata.mainservice.main.entity.Category;
-import com.playdata.mainservice.main.entity.ContentType;
 import com.playdata.mainservice.main.entity.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,11 +11,11 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     Optional<List<Like>> findByUserId(Long userId);
 
-    Optional<Like> findByCategoryAndContentTypeAndContentIdAndUserId(Category category, ContentType contentType, Long contentId, Long userId);
+    Optional<Like> findByCategoryAndContentIdAndUserId(Category category, Long contentId, Long userId);
 
     // contentType, category, contentId가 모두 일치하고 active가 true인 데이터 개수 조회
-    Long countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType contentType, Category category, Long contentId);
+    Long countByCategoryAndContentIdAndActiveIsTrue(Category category, Long contentId);
     
     // 마이페이지에서 사용자가 작성한 활성화된 모든 댓글의 개수 조회
-    Long countByContentTypeAndContentIdAndActiveTrue (ContentType contentType, Long contentId);
+    Long countByContentIdAndActiveTrue (Long contentId);
 }

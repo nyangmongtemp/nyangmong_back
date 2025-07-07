@@ -14,8 +14,6 @@ public class LikeComCountResDto {
 
     private String category;
 
-    private Long likeCount;
-
     private Long commentCount;
 
 }

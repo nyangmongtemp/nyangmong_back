@@ -58,17 +58,16 @@ public class MainService {
     public CommonResDto createLike(Long userId, MainLikeReqDto reqDto) {
         
         // 요청 Dto 값의 유효성을 확인
-        if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
+        if(!isValidCategory(reqDto.getCategory())) {
             throw new CommonException(ErrorCode.INVALID_PARAMETER, "옳지 않은 입력값입니다.");
         }
         
         // 유효한 값들이니 ENUM 값으로 변환  --> ENUM 값이 대문자라서 toUpperCase 적용
         Category cate = Category.valueOf(reqDto.getCategory().toUpperCase());
-        ContentType ct = ContentType.valueOf(reqDto.getContentType().toUpperCase());
         
         // DB에 기존에 생성된 좋아요가 있는지 조회
         Optional<Like> foundLike
-                = likeRepository.findByCategoryAndContentTypeAndContentIdAndUserId(cate, ct, reqDto.getContentId(), userId);
+                = likeRepository.findByCategoryAndContentIdAndUserId(cate, reqDto.getContentId(), userId);
 
         // 기존에 좋아요를 눌렀던 이력이 있는 경우
         if (foundLike.isPresent()) {
@@ -82,7 +81,7 @@ public class MainService {
         }
 
         // 좋아요를 눌렀던 이력이 없는 경우
-        Like like = new Like(userId, reqDto.getContentId(), ct, cate);
+        Like like = new Like(userId, reqDto.getContentId(), cate);
         likeRepository.save(like);
         return new CommonResDto(HttpStatus.CREATED, "좋아요가 생성됨",
                 // 새로 생성됐으니 active는 무조건 true
@@ -123,7 +122,7 @@ public class MainService {
 
         return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨",
                 // Dto 변환 해서 화면단으로 리턴
-                getDetailResDto(newComment, 0L));
+                getDetailResDto(newComment));
     }
     
     // 댓글 삭제 메소드
@@ -155,11 +154,8 @@ public class MainService {
         comment.mofifyComment(reqDto.getContent());
         Comment saved = commentRepository.save(comment);
 
-        Long likeCount
-                = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.COMMENT, comment.getCommentId());
-
         return new CommonResDto(HttpStatus.OK,
-                "댓글 내용이 수정되었습니다.", getDetailResDto(saved, likeCount));
+                "댓글 내용이 수정되었습니다.", getDetailResDto(saved));
     }
 
     /**
@@ -232,7 +228,7 @@ public class MainService {
 
         // 기존 대댓글의 좋아요 개수 조회
         Long likeCount
-                = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.REPLY, reqDto.getReplyId());
+                = likeRepository.countByContentIdAndActiveTrue(reqDto.getReplyId());
 
         return new CommonResDto(HttpStatus.CREATED,
                 "대댓글 수정이 완료되었습니다.", validReply.fromEntity(likeCount));
@@ -366,8 +362,8 @@ public class MainService {
                     Category category = Category.valueOf(req.getCategory().toUpperCase());
 
                     // 해당 게시물 혹은 댓글, 대댓글 중에서 활성화된 좋아요의 개수만 카운팅
-                    Long count = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(
-                            ContentType.POST, category, req.getContentId());
+                    Long count = likeRepository.countByCategoryAndContentIdAndActiveIsTrue(
+                            category, req.getContentId());
                     
                     // 검색 대상 게시물들의 모든 댓글의 id를 리턴 --> 대댓글 검색용
                     List<Long> foundComment
@@ -404,8 +400,8 @@ public class MainService {
         Category category = Category.valueOf(req.getCategory().toUpperCase());
 
         // 해당 게시물
-        Long likeCount = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(
-                ContentType.POST, category, req.getContentId());
+        Long likeCount = likeRepository.countByCategoryAndContentIdAndActiveIsTrue(
+                category, req.getContentId());
 
         // 검색 대상 게시물들의 모든 댓글의 id를 리턴 --> 대댓글 검색용
         List<Comment> foundComment
@@ -444,17 +440,9 @@ public class MainService {
         Page<Comment> foundComment
                 // 게시물의 category로 조회
                 = commentRepository.findActiveByCategoryAndContentId(category, reqDto.getContentId(), pageable);
-        
+
         // 해당 댓글들의 모든 좋아요 개수를 계산하는 로직
-        List<CommentDetailResDto> commentList = foundComment.stream().map(comment -> {
-            // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
-            Long likeCount = likeRepository.countByContentTypeAndCategoryAndContentIdAndActiveIsTrue(ContentType.COMMENT,
-                    category, comment.getContentId());
-            
-            // 댓글의 정보 + 좋아요 개수 형태로 dto 변환
-            // 댓글에 매핑된 대댓글의 여부도 포함
-            return getDetailResDto(comment, likeCount);
-        }).collect(Collectors.toList());
+        List<CommentDetailResDto> commentList = foundComment.stream().map(MainService::getDetailResDto).collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 모든 댓글 정보 조회", commentList);
 
@@ -476,10 +464,10 @@ public class MainService {
         List<CommentDetailResDto> myCommentList = foundUserComment.stream().map(comment -> {
             // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
             Long likeCount
-                    = likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.COMMENT ,comment.getCommentId());
+                    = likeRepository.countByContentIdAndActiveTrue(comment.getCommentId());
 
             // 댓글의 정보 + 좋아요개수 + 대댓글 존재 여부
-            return getDetailResDto(comment, likeCount);
+            return getDetailResDto(comment);
         }).collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글 정보 조회", myCommentList);
@@ -501,7 +489,7 @@ public class MainService {
         List<ReplyDetailResDto> myReplyList = foundUserReply.stream().map(reply -> {
             // 대댓글들의 좋아요 개수를 계산하는 로직
             Long likeCount =
-                    likeRepository.countByContentTypeAndContentIdAndActiveTrue(ContentType.REPLY, reply.getReplyId());
+                    likeRepository.countByContentIdAndActiveTrue(reply.getReplyId());
 
             // 대댓글의 정보 + 좋아요 개수
             return reply.fromEntity(likeCount);
@@ -552,7 +540,7 @@ public class MainService {
             // 총 댓글 개수 = 댓글 + 대댓글
             commentCount += replyCount;
             // contentId, Category, 좋아요 개수, 총 댓글 개수
-            return new LikeComCountResDto(tuple.get(like.contentId), "Introduction", tuple.get(like.count()), commentCount);
+            return new LikeComCountResDto(tuple.get(like.contentId), "Introduction", commentCount);
         }).collect(Collectors.toList());
 
         return resDtoList;
@@ -560,7 +548,7 @@ public class MainService {
 
     public CommonResDto getUserLiked(Long userId, MainLikeReqDto reqDto) {
 
-        if(!isValidCategory(reqDto.getCategory()) || !isValidContentType(reqDto.getContentType())) {
+        if(!isValidCategory(reqDto.getCategory())) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
         Optional<Like> liked = likeImpl.findUserLiked(userId, reqDto);
@@ -623,23 +611,19 @@ public class MainService {
         return LikeComCountResDto.builder()
                 .contentId(req.getContentId())
                 .category(req.getCategory())
-                .likeCount(count)
                 .commentCount(totalCount)
                 .build();
     }
 
     // 게시물 상세 조회 시, 댓글의 정보들 + 좋아요 수 + 대댓글 여부를 담은 dto 변환 메소드
-
-    private static CommentDetailResDto getDetailResDto(Comment comment, Long likeCount) {
+    private static CommentDetailResDto getDetailResDto(Comment comment) {
         return CommentDetailResDto.builder()
                 .contentId(comment.getCommentId())
                 .category(String.valueOf(comment.getCategory()))
                 .content(comment.getContent())
                 // 대댓글 존재 여부
-                .isReply(!comment.getReplyList().isEmpty())
+                .isReply(comment.isReplyExist())
                 .createAt(comment.getCreateAt())
-                // 좋아요 개수
-                .likeCount(likeCount)
                 .profileImage(comment.getProfileImage())
                 .nickname(comment.getNickname())
                 .userId(comment.getUserId())

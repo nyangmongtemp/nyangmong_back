@@ -83,4 +83,17 @@ public class Comment extends BaseTimeEntity {
     // 사용자의 프로필 이미지 변경 시 사용하는 메소드
     public void modifyProfileImage(String profileImage) {this.profileImage = profileImage;}
 
+    // 대댓글 존재 여부 리턴 메소드
+    public boolean isReplyExist() {
+        if(replyList == null || replyList.isEmpty()) {
+            return false;
+        }
+        else {
+            for (Reply reply : replyList) {
+                if(reply.isActive())
+                    return true;
+            }
+        }
+        return false;
+    }
 }

@@ -55,7 +55,7 @@ public class UserController {
      */
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> userLogin(@RequestBody UserLoginReqDto userLoginReqDto){
+    public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginReqDto userLoginReqDto){
         CommonResDto resDto = userService.login(userLoginReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -82,7 +82,7 @@ public class UserController {
      */
     // 회원가입 시 이메일 인증 코드 검증
     @PostMapping("/verify-code")
-    public ResponseEntity<?> verifyUserEmailCode(@RequestBody UserEmailAuthResDto authResDto){
+    public ResponseEntity<?> verifyUserEmailCode(@RequestBody @Valid UserEmailAuthResDto authResDto){
         CommonResDto resDto = userService.verifyEmailCode(authResDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -100,7 +100,7 @@ public class UserController {
     // 로그인 필요 -> 토큰 필요함.
     @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
     public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestPart("user") UserInfoModiReqDto modiDto,
+            ,@RequestPart("user") @Valid UserInfoModiReqDto modiDto,
             // 프로필 이미지 변경은 필수가 아님
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage){
 
@@ -136,7 +136,7 @@ public class UserController {
     // 토큰 필요
     @PatchMapping("/verify-new-email")
     public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
-            @RequestBody UserEmailAuthResDto authResDto){
+            @RequestBody @Valid UserEmailAuthResDto authResDto){
 
         CommonResDto resDto = userService.verifyUserNewEmail(authResDto, userInfo);
 

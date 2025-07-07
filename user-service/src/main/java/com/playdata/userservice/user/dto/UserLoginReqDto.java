@@ -1,5 +1,6 @@
 package com.playdata.userservice.user.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,8 +8,10 @@ import lombok.Getter;
 @Getter
 public class UserLoginReqDto {
 
+    @NotBlank
     private String email;
 
+    @NotBlank
     private String password;
 
 }
