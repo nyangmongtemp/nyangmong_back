@@ -24,7 +24,8 @@ public class RedisConfig {
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
         redisStandaloneConfiguration.setHostName(host);
         redisStandaloneConfiguration.setPort(port);
-        redisStandaloneConfiguration.setDatabase(1);
+        // user-service 0번 redis 디스크를 사용
+        redisStandaloneConfiguration.setDatabase(0);
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
 
     }

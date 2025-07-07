@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
 import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.IntroductionMainListResDto;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.service.BoardService;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,8 @@ public class BoardController {
     // 정보 게시판 게시물 생성
     @PostMapping(value = "/information/create", consumes = "multipart/form-data")
     public ResponseEntity<?> InformationCreate (@AuthenticationPrincipal TokenUserInfo userInfo
-            , @RequestPart("context") String context,
-                                                @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage)
+            , @RequestPart("context") String context
+            , @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage)
     throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -96,5 +98,15 @@ public class BoardController {
 
             // 삭제 성공 응답
             return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * 소개 게시판 좋아요순 3개 목록 조회
+     * @return
+     */
+    @GetMapping("/introduction/main")
+    public ResponseEntity<?> introductionMainList() {
+        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
+        return ResponseEntity.ok(resDto);
     }
 }
