@@ -26,15 +26,15 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
-    // ✅ 인증 없이 통과시킬 경로 목록
-    private final List<String> allowUrl = Arrays.asList(
-            "/user/login",
-            "/scheduler/crawler",
-            "/scheduler/api",
-            "/api/festivals/**",
-            "/festival-service/api/festivals/**",
-            "/festival-service/api/festivals"
+    @Value("${jwt.secretAdminKey}")
+    private String adminKey;
 
+    private final List<String> allowUrl = Arrays.asList(
+            "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/**",
+            "/animal-board/list", "/animal-board/public/{postId}",
+            "/user/create", "/user/temp", "/user/templogin", "/user/verify-email",
+            "/user/verify-code",
+            "/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
     );
 
     @Override
@@ -52,8 +52,6 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             log.info("isAllowed:{}", isAllowed);
 
             if (isAllowed || path.startsWith("/actuator")) {
-                // ✅ 인증 없이 통과
-                log.info("gateway filter 통과!");
                 return chain.filter(exchange);
             }
 
@@ -69,7 +67,18 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             String token = authorizationHeader.replace("Bearer ", "");
             log.info("token: {}", token);
 
-            Claims claims = validateJwt(token);
+            Claims claims;
+            String roleHeader = "X-User-Role";
+
+            if (path.startsWith("/admin")) {
+                // 관리자 경로는 adminSecretKey 사용
+                claims = validateJwt(token, adminKey);
+                roleHeader = "X-Admin-Role"; // 필요 시 다르게
+            } else {
+                // 사용자 경로는 userSecretKey 사용
+                claims = validateJwt(token, secretKey);
+            }
+
             if (claims == null) {
                 return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
             }
@@ -77,6 +86,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             ServerHttpRequest request = exchange.getRequest()
                     .mutate()
                     .header("X-User-Email", claims.getSubject())
+                    .header(roleHeader, claims.get("role", String.class))
+                    .header("X-User-Id", claims.get("userId", String.class))
+                    .header("X-User-Nickname", claims.get("nickname", String.class))
                     .build();
 
             return chain.filter(exchange.mutate().request(request).build());
@@ -93,7 +105,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
         return response.writeWith(Mono.just(buffer));
     }
 
-    private Claims validateJwt(String token) {
+    private Claims validateJwt(String token, String secretKey) {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(secretKey)
