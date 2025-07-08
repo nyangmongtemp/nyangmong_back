@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 
 @Getter
-@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +21,6 @@ public class IntroductionBoardResDto {
     private LocalDateTime updatedAt;
     private Integer viewCount;
     private String nickname;
-    private String profileImage;
     private String title;
 
     public static IntroductionBoardResDto fromEntity(IntroductionBoard Board) {
@@ -34,7 +32,6 @@ public class IntroductionBoardResDto {
                 .title(Board.getTitle())
                 .viewCount(Board.getViewCount())
                 .nickname(Board.getNickname())
-                .profileImage(Board.getProfileImage())
                 .createdAt(Board.getCreateAt())
                 .updatedAt(Board.getUpdateAt())
                 .build();

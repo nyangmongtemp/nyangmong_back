@@ -2,7 +2,7 @@ package com.playdata.boardservice.board.dto;
 
 import lombok.*;
 
-@Getter @Setter @ToString
+@Getter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

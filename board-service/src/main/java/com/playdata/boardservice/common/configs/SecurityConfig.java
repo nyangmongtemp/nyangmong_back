@@ -33,8 +33,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> {
             auth
-                    .requestMatchers("/actuator/**", "/demo/**","/orders/userOrder",
-                            "/board/information/list", "/board/introduction/list",
+                    .requestMatchers("/board/information/list", "/board/introduction/list",
+                            "/board/introduction/main", "/board/information/main",
                             "/board/detail/**").permitAll()
                     .anyRequest().authenticated();
         });

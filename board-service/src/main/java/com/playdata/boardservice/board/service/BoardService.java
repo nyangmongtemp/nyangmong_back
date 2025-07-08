@@ -8,21 +8,27 @@ import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
-import jakarta.persistence.EntityNotFoundException;
+import com.playdata.boardservice.common.enumeration.ErrorCode;
+import com.playdata.boardservice.common.exception.CommonException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -31,6 +37,7 @@ public class BoardService {
 
     private final InformationBoardRepository informationBoardRepository;
     private final IntroductionBoardRepository introductionBoardRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
@@ -38,230 +45,141 @@ public class BoardService {
 
     private List<String> categoryList = List.of("freedom", "introduction", "question", "review");
 
+
     // 질문, 후기, 자유 게시판 게시물 등록
-    public CommonResDto informationCreate(InformationBoardSaveReqDto informationSaveDto
-            , MultipartFile thumbnailImage
-            , TokenUserInfo userInfo) {
-        try {
-            // 카테고리 값 가져와서 null, 빈문자열 체크 후 값이 있다면 대문자로 변환
-            String category = (informationSaveDto.getCategory() != null && !informationSaveDto.getCategory().isBlank())
-                    ? informationSaveDto.getCategory().trim().toUpperCase()
-                    : "default";
+    @Transactional
+    public CommonResDto informationCreate(InformationBoardSaveReqDto informationSaveDto,
+                                          MultipartFile thumbnailImage,
+                                          TokenUserInfo userInfo) {
 
-//            StringUtils.isEmpty()
+        // 카테고리 값 가져와서 null, 빈문자열 체크 후 값이 있다면 대문자로 변환
+        String category = (informationSaveDto.getCategory() != null && !informationSaveDto.getCategory().isBlank())
+                ? informationSaveDto.getCategory().trim().toUpperCase()
+                : "default";
 
-            // DTO → toEntity() 로 변환 -> DB
-            informationSaveDto.setCategory(category);
+        // 썸네일 경로를 저장할 변수
+        String savedPath = setThumbnailImage(thumbnailImage);
 
-            // 썸네일 경로를 저장할 변수
-            String savedPath = null;
+        // DTO → toEntity() 로 변환 -> DB
+        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        informationBoardRepository.save(entity);
 
-            // 썸네일 이미지가 있다면 저장
-            if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+        // 성공 응답 반환
+        return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
 
-                // 원래 업로드된 파일명
-                String originalName = thumbnailImage.getOriginalFilename();
-
-                // 고유한 파일명을 만들기 위해 UUID 사용
-                String fileName = UUID.randomUUID() + "_" + originalName;
-
-                // 카테고리별 폴더 구성
-                File dir = new File(thumbnailImagePath, category);
-                if (!dir.exists()) dir.mkdirs();
-
-                // 최종 저장 경로
-                File dest = new File(dir, fileName);
-                thumbnailImage.transferTo(dest);
-
-                // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
-                savedPath = category + "/" + fileName;
-
-                // DTO에 썸네일 경로 세팅
-                informationSaveDto.setThumbnailImage(savedPath);
-            }
-
-            // DTO → toEntity() 로 변환 -> DB
-            InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname());
-            informationBoardRepository.save(entity);
-
-            // 성공 응답 반환
-            return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
-
-        } catch (IOException e) {
-            // 예외 발생 시 에러 로그 남기고 실패 응답
-            log.error("썸네일 저장 실패: {}", e.getMessage());
-            return new CommonResDto(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류 발생", null);
-        }
     }
 
     // 소개 게시판 게시물 등록
-    public CommonResDto introductionCreate(IntroductionBoardSaveReqDto introductionSaveDto
-            , MultipartFile thumbnailImage
-            , TokenUserInfo userInfo) {
-        try {
-            // 썸네일 경로를 저장할 변수
-            String savedPath = null;
+    @Transactional
+    public CommonResDto introductionCreate(IntroductionBoardSaveReqDto introductionSaveDto,
+                                           MultipartFile thumbnailImage,
+                                           TokenUserInfo userInfo) {
 
-            // 썸네일 이미지가 있다면 저장
-            if (thumbnailImage == null || thumbnailImage.isEmpty()) {
-                throw new IllegalArgumentException("썸네일 이미지는 필수입니다.");
-            }
-
-            // 원래 업로드된 파일명
-            String originalName = thumbnailImage.getOriginalFilename();
-
-            // 고유한 파일명을 만들기 위해 UUID 사용
-            String fileName = UUID.randomUUID() + "_" + originalName;
-
-            // 카테고리 = "INTRODUCTION"
-            String category = "INTRODUCTION";
-
-            // 카테고리별 폴더 구성
-            File dir = new File(thumbnailImagePath, category);
-            if (!dir.exists()) dir.mkdirs();
-
-            // 최종 저장 경로
-            File dest = new File(dir, fileName);
-            thumbnailImage.transferTo(dest);
-
-            // DB에는 상대 경로만 저장 (ex: 정보/uuid_고양이.jpg)
-            savedPath = category + "/" + fileName;
-
-            // DTO에 썸네일 경로 세팅
-            introductionSaveDto.setThumbnailImage(savedPath);
-
-
-            // DTO → Entity 변환 후 저장
-            IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname());
-            introductionBoardRepository.save(entity);
-
-            // 성공 응답 반환
-            return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
-
-        } catch (IOException e) { // 예외 발생 시 에러 로그 남기고 실패 응답
-            log.error("썸네일 저장 실패: {}", e.getMessage());
-            return new CommonResDto(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류 발생", null);
-        } catch (IllegalArgumentException e) { // 썸네일이 null 이거나 비어있을 때 여기서 응답
-            return new CommonResDto(HttpStatus.BAD_REQUEST, e.getMessage(), null);
+        if (thumbnailImage == null || thumbnailImage.isEmpty()) {
+            throw new CommonException(ErrorCode.EMPTY_FILE, "썸네일 이미지는 필수 입니다.");
         }
+
+        // 썸네일 경로를 저장할 변수
+        String savedPath = setThumbnailImage(thumbnailImage);
+
+
+        // DTO → Entity 변환 후 저장
+        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        introductionBoardRepository.save(entity);
+
+        // 성공 응답 반환
+        return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
+
     }
 
     // 게시물 수정 (공통)
+    @Transactional
     public void boardModify(BoardModiDto modiDto,
                             MultipartFile thumbnailImage,
                             TokenUserInfo userInfo,
                             Category category,
                             Long postId) {
-        try {
-            // 썸네일 저장 경로 변수 (null이면 수정 안 함)
-            String savedPath = null;
 
-            // 사용자가 새로운 썸네일 이미지를 첨부한 경우
-            if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
-                String originalName = thumbnailImage.getOriginalFilename();
-                String fileName = UUID.randomUUID() + "_" + originalName;
-                String categoryStr = category.name();
+        // 썸네일 저장 경로 변수
+        String savedPath = setThumbnailImage(thumbnailImage);
 
-                // 디렉토리가 없다면 생성 (서비스 운영중 파일이 폴더가 손상 되었을 확률도 있기 때문에 다시 설정)
-                File dir = new File(thumbnailImagePath, categoryStr);
-                if (!dir.exists()) dir.mkdirs();
+        // 소개 게시판은 INTRODUCTION enum 으로 단일 구분
+        if (category == Category.INTRODUCTION) {
+            // 게시글 조회 (없으면 예외)
+            IntroductionBoard board = introductionBoardRepository.findById(postId)
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-                // 파일 저장
-                File dest = new File(dir, fileName);
-                thumbnailImage.transferTo(dest);
-
-                // DB에 저장할 상대 경로 세팅
-                savedPath = categoryStr + "/" + fileName;
+            // 작성자 검증 (자기 글만 수정 가능)
+            if (!board.getUserId().equals(userInfo.getUserId())) {
+                throw new CommonException(ErrorCode.UNAUTHORIZED);
             }
 
-            // 소개 게시판은 INTRODUCTION enum 으로 단일 구분
-            if (category == Category.INTRODUCTION) {
-                // 게시글 조회 (없으면 예외)
-                IntroductionBoard board = introductionBoardRepository.findById(postId)
-                        .orElseThrow(() -> new IllegalArgumentException("해당 소개 게시글이 존재하지 않습니다."));
-
-                // 작성자 검증 (자기 글만 수정 가능)
-                if (!board.getUserId().equals(userInfo.getUserId())) {
-                    throw new SecurityException("작성자만 수정할 수 있습니다.");
-                }
-
-                // 썸네일은 필수이므로 없으면 예외
-                if (savedPath == null) {
-                    throw new IllegalArgumentException("소개 게시판은 썸네일 이미지를 반드시 첨부해야 합니다.");
-                }
-
-                // 본문 및 썸네일 수정
-                board.setContent(modiDto.getContent());
-                board.setThumbnailImage(savedPath);
-
-                // 수정된 게시글 저장
-                introductionBoardRepository.save(board);
-
-                // 정보 게시판의 카테고리를 설정
-            } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
-
-                // 게시글 조회 (없으면 예외)
-                InformationBoard board = informationBoardRepository.findById(postId)
-                        .orElseThrow(() -> new IllegalArgumentException("해당 정보 게시글이 존재하지 않습니다."));
-
-                // 작성자 검증
-                if (!board.getUserId().equals(userInfo.getUserId())) {
-                    throw new SecurityException("작성자만 수정할 수 있습니다.");
-                }
-
-                // content 수정
-                board.setContent(modiDto.getContent());
-
-                if (savedPath != null) {
-                    // 새 이미지가 있으면 교체
-                    board.setThumbnailImage(savedPath);
-                } else if (board.getThumbnailImage() != null && (thumbnailImage == null || thumbnailImage.isEmpty())) {
-
-                    // 기존 이미지가 있었고, 새 이미지가 없으면 → 삭제
-                    // 삭제 시 저장 디렉토리에서도 이미지 삭제
-                    File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
-                    if (oldFile.exists()) oldFile.delete();
-
-                    board.setThumbnailImage(null);
-                }
-
-                // 수정된 게시글 저장
-                informationBoardRepository.save(board);
-
-            } else {
-                // 그 외 잘못된 카테고리는 예외
-                throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
+            // 썸네일은 필수이므로 없으면 예외
+            if (savedPath == null) {
+                throw new CommonException(ErrorCode.EMPTY_FILE, "썸네일 이미지를 첨부해주세요.");
             }
 
-        } catch (IOException e) {
-            // 파일 저장 실패 시 로그 출력 및 예외 던짐
-            log.error("썸네일 저장 실패: {}", e.getMessage());
-            throw new RuntimeException("파일 저장 중 오류 발생");
-        } catch (SecurityException | IllegalArgumentException e) {
-            // 유효성 or 인증 오류는 그대로 던짐
-            throw e;
-        } catch (Exception e) {
-            // 예기치 못한 에러 처리
-            log.error("게시글 수정 중 예외 발생: {}", e.getMessage());
-            throw new RuntimeException("게시글 수정 중 오류 발생");
+            // 본문 및 썸네일 수정
+            board.boardModify(modiDto, savedPath);
+
+            // 수정된 게시글 저장
+            introductionBoardRepository.save(board);
+
+            // 정보 게시판의 카테고리를 설정
+        } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
+
+            // 게시글 조회 (없으면 예외)
+            InformationBoard board = informationBoardRepository.findById(postId)
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "게시글이 존재하지 않습니다."));
+
+            // 작성자 검증
+            if (!board.getUserId().equals(userInfo.getUserId())) {
+                throw new CommonException(ErrorCode.UNAUTHORIZED, "작성자만 작성할 수 있습니다.");
+            }
+
+            // content 수정
+            board.boardModify(modiDto, savedPath);
+
+            if (savedPath != null) {
+                // 새 이미지가 있으면 교체
+                board.boardModify(modiDto, savedPath);
+                // DB에 썸네일 이미지가 있는 게시글인데 수정 후 썸네일 이미지를 삭제했다.
+            } else if (board.getThumbnailImage() != null && (thumbnailImage == null || thumbnailImage.isEmpty())) {
+
+                // 기존 이미지가 있었고, 새 이미지가 없으면 → 삭제
+                // 삭제 시 저장 디렉토리에서도 이미지 삭제
+                File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
+                if (oldFile.exists()) oldFile.delete();
+
+                board.boardModify(modiDto, savedPath);
+            }
+
+            // 수정된 게시글 저장
+            informationBoardRepository.save(board);
+
+        } else {
+            // 그 외 잘못된 카테고리는 예외
+            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않는 카테고리 입니다.");
         }
     }
 
     // 게시물 삭제 (공통)
+    @Transactional
     public void deleteBoard(TokenUserInfo userInfo, Category category, Long postId) {
         // 소개 게시판인 경우
         if (category == Category.INTRODUCTION) {
+
             // 게시글 조회 (없으면 예외)
             IntroductionBoard board = introductionBoardRepository.findById(postId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 소개 게시글이 존재하지 않습니다."));
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
             // 작성자 검증 (다른 사람이 삭제 요청하면 차단)
             if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new SecurityException("작성자만 삭제할 수 있습니다.");
+                throw new CommonException(ErrorCode.UNAUTHORIZED);
             }
 
             // 실제 삭제하지 않고 active 값을 false 로 변경 (소프트 삭제)
-            board.setActive(false);
+            board.boardDelete();
 
             // 변경된 상태를 DB에 저장
             introductionBoardRepository.save(board);
@@ -271,29 +189,20 @@ public class BoardService {
         else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
             // 게시글 조회 (없으면 예외)
             InformationBoard board = informationBoardRepository.findById(postId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 정보 게시글이 존재하지 않습니다."));
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
             // 작성자 검증
             if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new SecurityException("작성자만 삭제할 수 있습니다.");
-            }
-
-            // 썸네일이 있다면 로컬에서 삭제
-            if (board.getThumbnailImage() != null) {
-                File file = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
-                if (file.exists()) file.delete();
+                throw new CommonException(ErrorCode.UNAUTHORIZED);
             }
 
             // active = false로 비활성화 처리
-            board.setActive(false);
+            board.boardDelete();
 
             // DB에 저장
             informationBoardRepository.save(board);
-        }
-
-        // 지원하지 않는 카테고리
-        else {
-            throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
+        } else { // 지원하지 않는 카테고리
+            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않은 카테고리 입니다.");
         }
     }
 
@@ -326,37 +235,218 @@ public class BoardService {
     // 게시판 게시물 상세 조회
     public CommonResDto boardDetail(String category, Long postId) {
 
-        if(!isValidCategory(category)) {
-            throw new IllegalArgumentException("옳지 않은 카테고리 입력값입니다.");
+        // 입력 받은 카테고리 값이 설정 해둔 값과 일치 하지 않다면 예외
+        if (!isValidCategory(category)) {
+            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "옳지 않은 카테고리 입니다.");
         }
+
+        // 입력받은 카테고리 값 대문자 변환
         Category cate = Category.valueOf(category.toUpperCase());
 
-        if(cate == Category.INTRODUCTION) {
-            // null 방지
+        if (cate == Category.INTRODUCTION) {
+            // 게시물 조회 (null 방지)
             Optional<IntroductionBoard> foundPost = introductionBoardRepository.findById(postId);
-            if(!foundPost.isPresent()) {
-                throw new EntityNotFoundException("조회하려는 게시물이 없습니다.");
+
+            // 게시물이 없다면 예외
+            if (!foundPost.isPresent()) {
+                throw new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다.");
             }
+
+            // 객체를 꺼냄
             IntroductionBoard board = foundPost.get();
+
+            // 화면단으로 보낼 DTO로 변환
             IntroductionBoardResDto resDto = board.fromEntity(board);
 
             return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
-        }
-        else {
+        } else {
+
             // null 이면 들어올 수 없으니까 에러 던짐
             InformationBoard board = informationBoardRepository.findById(postId)
-                    .orElseThrow(() -> new EntityNotFoundException("조회하려는 게시물이 없습니다."));
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
             InformationBoardResDto resDto = board.fromEntity(board);
 
             return new CommonResDto(HttpStatus.OK, "게시물 상세 조회 성공!", resDto);
         }
     }
 
-    // 입력받은 카테고리가 유효하냐
+    // 정보 게시판 메인 최근 게시물 조회
+    public List<InformationBoardListResDto> findInformationMainList() {
+        List<InformationBoard> informationBoardList = informationBoardRepository.findMainList();
+
+        return informationBoardList.stream()
+                .map(informationBoard -> InformationBoardListResDto.builder()
+                        .informationBoard(informationBoard)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // 소개 게시판 메인 최근 게시물 조회
+    public List<IntroductionBoardListResDto> findIntroductionMainList() {
+        List<IntroductionBoard> introductionBoardList = introductionBoardRepository.findMainList();
+
+        return introductionBoardList.stream()
+                .map(introductionBoard -> IntroductionBoardListResDto.builder()
+                        .introductionBoard(introductionBoard)
+                        .build())
+                .collect(Collectors.toList());
+
+
+    }
+
+
+
+
+    // 입력받은 카테고리가 유효하냐 (contains)
     private boolean isValidCategory(String input) {
         return categoryList.contains(input);
     }
+
+    private String setThumbnailImage(MultipartFile thumbnailImage) {
+
+        // 썸네일 이미지를 저장할 경로
+        String savePath = null;
+
+        // 썸네일 이미지가 있다면 저장
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            try {
+                // 원래 업로드된 파일명
+                String originalName = thumbnailImage.getOriginalFilename();
+
+                //고유한 파일명을 만드기 위해 UUID 사용
+                String fileName = UUID.randomUUID() + "_" + originalName;
+
+                // 카테고리별 폴더 구성
+                File dir = new File(thumbnailImagePath);
+                if (!dir.exists()) dir.mkdirs();
+
+                // 최종 저장 경로
+                File dest = new File(thumbnailImagePath, fileName);
+                thumbnailImage.transferTo(dest);
+
+                savePath = fileName;
+            } catch (IOException e) {
+                // 예외 발생 시 에러 로그 남기고 실패 응답
+                log.error("썸네일 저장 실패: {}", e.getMessage());
+                throw new CommonException(ErrorCode.FILE_SERVER_ERROR, "저장 중 오류 발생");
+            }
+        }
+        return savePath;
+    }
+
+    /**
+     * 사용자의 실제 IP 주소 추출
+     *
+     * 프록시, 로드밸런서 등을 통해 들어오는 요청 고려
+     *
+     * @param request HttpServletRequest 객체
+     * @return 추출된 IP 주소 (최종 사용자)
+     */
+    private String extractClientIp(HttpServletRequest request) {
+        // X-Forwarded-For 헤더는 프록시를 통한 실제 사용자 IP를 포함
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr(); // 최종 수단으로 실제 접속된 IP 사용
+        }
+
+        // 여러 IP가 있을 경우 첫 번째 IP만 사용
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
+        return ip;
+    }
+
+    /**
+     * Redis Key를 생성하는 로직
+     *
+     * 로그인 사용자는 이메일 기준, 비로그인 사용자는 IP + 브라우저 정보로 구분
+     *
+     * @param email 로그인 사용자 이메일 (nullable)
+     * @param ip 사용자 IP 주소
+     * @param userAgent 사용자 브라우저 정보
+     * @param boardType 게시판 타입 (ex. animal)
+     * @param postId 게시물 ID
+     * @return 고유 Redis Key
+     */
+    private String generateRedisKey(String email, String ip, String userAgent, String boardType, Long postId) {
+        StringBuilder key = new StringBuilder("viewCount:");
+        key.append(boardType).append(":").append(postId).append(":");
+
+        // 로그인 사용자는 이메일 기반으로 구분
+        if (email != null && !email.isEmpty()) {
+            key.append("email:").append(email);
+        } else {
+            // 비로그인 사용자는 IP + UserAgent 해시로 구분
+            key.append("ip:").append(ip != null ? ip : "unknown")
+                    .append(":ua:").append(userAgent != null ? userAgent.hashCode() : "unknown");
+        }
+
+        return key.toString();
+    }
+
+    /**
+     * Redis를 활용하여 하루 1회만 조회수 증가 처리
+     *
+     * @param redisKey Redis 중복 조회 방지용 키
+     * @param InformationBoard 조회 대상 엔티티 (조회수 업데이트 대상)
+     */
+    private void increaseViewCountInformationFirstTime(String redisKey, InformationBoard informationBoard) {
+        // Redis에 키가 없을 경우만 조회수 증가
+        if (!redisTemplate.hasKey(redisKey)) {
+            // 현재 조회수를 1 증가시킨 후 저장
+            informationBoard.viewCountUp(informationBoard.getViewCount() + 1);
+            informationBoardRepository.save(informationBoard);
+
+            // Redis에 키 등록 (value: "1") → 자정 만료
+            redisTemplate.opsForValue().set(redisKey, "1");
+
+            // 자정까지 유효하도록 만료 시간 설정
+            redisTemplate.expireAt(redisKey,
+                    java.util.Date.from(LocalDate.now()
+                            .plusDays(1) // 다음날
+                            .atStartOfDay(java.time.ZoneId.systemDefault()) // 자정
+                            .toInstant()));
+        }
+    }
+
+    /**
+     * Redis를 활용하여 하루 1회만 조회수 증가 처리
+     *
+     * @param redisKey Redis 중복 조회 방지용 키
+     * @param IntroductionBoard 조회 대상 엔티티 (조회수 업데이트 대상)
+     */
+    private void increaseViewCountIntroductionFirstTime(String redisKey, IntroductionBoard introductionBoard) {
+        // Redis에 키가 없을 경우만 조회수 증가
+        if (!redisTemplate.hasKey(redisKey)) {
+            // 현재 조회수를 1 증가시킨 후 저장
+            introductionBoard.viewCountUp(introductionBoard.getViewCount() + 1);
+            introductionBoardRepository.save(introductionBoard);
+
+            // Redis에 키 등록 (value: "1") → 자정 만료
+            redisTemplate.opsForValue().set(redisKey, "1");
+
+            // 자정까지 유효하도록 만료 시간 설정
+            redisTemplate.expireAt(redisKey,
+                    java.util.Date.from(LocalDate.now()
+                            .plusDays(1) // 다음날
+                            .atStartOfDay(java.time.ZoneId.systemDefault()) // 자정
+                            .toInstant()));
+        }
+    }
+
+
+
 }
+
+
+
 
 
 

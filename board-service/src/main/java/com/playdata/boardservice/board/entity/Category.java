@@ -5,7 +5,6 @@ public enum Category {
     QUESTION, // 질문
     REVIEW, // 후기
     FREEDOM, // 자유
-    INTRODUCTION // 소개
-
+    INTRODUCTION; // 소개
 
 }

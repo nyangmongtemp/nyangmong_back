@@ -12,6 +12,7 @@ public class IntroductionBoardListResDto {
     private String content;
     private String thumbnailImage;
 
+    @Builder
     public IntroductionBoardListResDto(IntroductionBoard introductionBoard) {
         this.title = introductionBoard.getTitle();
         this.nickname = introductionBoard.getNickname();

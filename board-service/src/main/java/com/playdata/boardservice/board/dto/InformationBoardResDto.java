@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,9 +21,9 @@ public class InformationBoardResDto {
     private LocalDateTime updatedat;
     private Integer viewcount;
     private String nickname;
-    private String profileImage;
     private String title;
 
+    @Builder
     public static InformationBoardResDto fromEntity(InformationBoard Board) {
         return InformationBoardResDto.builder()
                 .postid(Board.getPostId())
@@ -35,7 +34,6 @@ public class InformationBoardResDto {
                 .title(Board.getTitle())
                 .viewcount(Board.getViewCount())
                 .nickname(Board.getNickname())
-                .profileImage(Board.getProfileImage())
                 .title(Board.getTitle())
                 .createdat(Board.getCreateAt())
                 .updatedat(Board.getUpdateAt())

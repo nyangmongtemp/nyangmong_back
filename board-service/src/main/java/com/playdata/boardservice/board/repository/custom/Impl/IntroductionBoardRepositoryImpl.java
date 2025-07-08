@@ -1,6 +1,7 @@
 package com.playdata.boardservice.board.repository.custom.Impl;
 
 import com.playdata.boardservice.board.dto.BoardSearchDto;
+import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.board.entity.IntroductionBoard;
 import com.playdata.boardservice.board.repository.custom.IntroductionBoardRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
@@ -38,6 +39,11 @@ public class IntroductionBoardRepositoryImpl implements  IntroductionBoardReposi
 
         // Page 형태로 리턴
         return new PageImpl<>(content, pageable, total);
+    }
+
+    public List<IntroductionBoard> findMainList() {
+        return jpaQueryFactory.selectFrom(introductionBoard)
+                .fetch();
     }
 
     // 검색 조건 동적으로 생성

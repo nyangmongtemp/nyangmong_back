@@ -1,6 +1,7 @@
 package com.playdata.boardservice.board.dto;
 
 import com.playdata.boardservice.board.entity.InformationBoard;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
@@ -12,6 +13,7 @@ public class InformationBoardListResDto {
     private String thumbnailImage;
     private String category;
 
+    @Builder
     public InformationBoardListResDto(InformationBoard informationBoard) {
         this.title = informationBoard.getTitle();
         this.content = informationBoard.getContent();

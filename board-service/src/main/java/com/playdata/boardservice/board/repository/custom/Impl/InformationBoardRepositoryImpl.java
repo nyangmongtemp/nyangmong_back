@@ -41,6 +41,12 @@ public class InformationBoardRepositoryImpl implements InformationBoardRepositor
         return new PageImpl<>(content, pageable, total);
     }
 
+    // 정보 게시판 메인에 최신 게시물 조회
+    public List<InformationBoard> findMainList() {
+        return jpaQueryFactory.selectFrom(informationBoard)
+                .fetch();
+    }
+
     // 동적 조건 생성 메서드
     private Predicate createCondition(BoardSearchDto boardSearchDto) {
         BooleanBuilder builder = new BooleanBuilder();

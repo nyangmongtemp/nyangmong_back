@@ -1,12 +1,12 @@
 package com.playdata.boardservice.board.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.service.BoardService;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/board")
@@ -27,19 +29,15 @@ public class BoardController {
 
     // 정보 게시판 게시물 생성
     @PostMapping(value = "/information/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> informationCreate (@AuthenticationPrincipal TokenUserInfo userInfo
-            , @RequestPart("context") String context,
-                                                @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage)
-    throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
+    public ResponseEntity<?> informationCreate (@AuthenticationPrincipal TokenUserInfo userInfo,
+                                                // RequestDto 에 값이 있는지 유효성 검증
+                                                @RequestPart("context") @Valid InformationBoardSaveReqDto informationBoardSaveReqDto,
+                                                @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
 
-        // JSON String 을 Dto 객체로 변환
-        InformationBoardSaveReqDto informationSaveDto
-                = objectMapper.readValue(context, InformationBoardSaveReqDto.class);
 
         // boardService로 전달
         CommonResDto resDto
-                = boardService.informationCreate(informationSaveDto, thumbnailImage, userInfo);
+                = boardService.informationCreate(informationBoardSaveReqDto, thumbnailImage, userInfo);
 
         // 성공 시 응답
        return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -47,18 +45,13 @@ public class BoardController {
 
     // 소개 게시판 게시물 생성
     @PostMapping(value = "introduction/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> introductionCreate (@AuthenticationPrincipal TokenUserInfo userInfo
-            , @RequestPart("context") String context,
-                                          @RequestPart(name = "thumbnailImage", required = true) MultipartFile thumbnailImage)
-            throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        // JSON String 을 Dto 객체로 변환
-        IntroductionBoardSaveReqDto introductionSaveDto
-                = objectMapper.readValue(context, IntroductionBoardSaveReqDto.class);
+    public ResponseEntity<?> introductionCreate (@AuthenticationPrincipal TokenUserInfo userInfo,
+                                                 // RequestDto 에 값이 있는지 유효성 검증
+                                                 @RequestPart("context") @Valid IntroductionBoardSaveReqDto introductionBoardSaveDto,
+                                                 @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
 
         // boardService로 전달
-        CommonResDto resDto = boardService.introductionCreate(introductionSaveDto, thumbnailImage, userInfo);
+        CommonResDto resDto = boardService.introductionCreate(introductionBoardSaveDto, thumbnailImage, userInfo);
 
         // 성공 시 응답
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -68,17 +61,16 @@ public class BoardController {
     @PutMapping("/{category}/modify/{postId}")
     public ResponseEntity<?> modifyBoard(@PathVariable String category,
                                          @PathVariable Long postId,
-            @AuthenticationPrincipal TokenUserInfo userInfo
-            , @RequestPart("context") String context,
-                                         @RequestPart(name = "thumbnailImage", required = false) MultipartFile thumbnailImage) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        BoardModiDto modiDto = objectMapper.readValue(context, BoardModiDto.class);
+                                         @AuthenticationPrincipal TokenUserInfo userInfo,
+                                         // ModiDto에 값이 있는지 유효성 검증
+                                         @RequestPart("context") @Valid BoardModiDto boardModiDto,
+                                         @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) throws JsonProcessingException {
 
         // 대소문자 구분 없이 enum 변환
         Category categoryEnum = Category.valueOf(category.toUpperCase());
 
 
-        boardService.boardModify(modiDto, thumbnailImage, userInfo, categoryEnum, postId);
+        boardService.boardModify(boardModiDto, thumbnailImage, userInfo, categoryEnum, postId);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -123,10 +115,25 @@ public class BoardController {
 
     // 게시물 상세 조회 (공통)
     @GetMapping("/detail/{category}/{id}")
-    public ResponseEntity<?> getBoardDetail(@PathVariable String category, @PathVariable(name = "id") Long postId){
+    public ResponseEntity<?> getBoardDetail(@PathVariable String category,
+                                            @PathVariable(name = "id") Long postId) {
         CommonResDto resDto = boardService.boardDetail(category, postId);
 
         return new  ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 정보 게시판 메인 최근 게시물 조회
+    @GetMapping("/information/main")
+    public ResponseEntity<?> findInformationMainList() {
+        List<InformationBoardListResDto> resDto = boardService.findInformationMainList();
+        return ResponseEntity.ok().body(resDto);
+    }
+
+    // 소개 게시판 메인 최근 게시물 조회
+    @GetMapping("/introduction/main")
+    public ResponseEntity<?> findIntroductionMainList() {
+        List<IntroductionBoardListResDto> resDto = boardService.findIntroductionMainList();
+        return ResponseEntity.ok().body(resDto);
     }
 
 }
