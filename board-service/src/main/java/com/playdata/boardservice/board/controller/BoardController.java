@@ -104,7 +104,7 @@ public class BoardController {
      * 소개 게시판 좋아요순 3개 목록 조회
      * @return
      */
-    @GetMapping("/introduction/main")
+    @GetMapping("/popular/children")
     public ResponseEntity<?> introductionMainList() {
         List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
         return ResponseEntity.ok(resDto);
