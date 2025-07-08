@@ -1,5 +1,6 @@
 package com.playdata.boardservice.board.dto;
 
+import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 public class InformationBoardSaveReqDto {
 
     
-    private String category;
+    private Category category;
 
     private String thumbnailImage;
 

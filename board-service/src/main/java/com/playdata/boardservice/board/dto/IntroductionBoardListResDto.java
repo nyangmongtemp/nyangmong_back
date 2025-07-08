@@ -11,6 +11,7 @@ public class IntroductionBoardListResDto {
     private String nickname;
     private String content;
     private String thumbnailImage;
+    private int viewCount;
 
     @Builder
     public IntroductionBoardListResDto(IntroductionBoard introductionBoard) {
@@ -18,6 +19,7 @@ public class IntroductionBoardListResDto {
         this.nickname = introductionBoard.getNickname();
         this.content = introductionBoard.getContent();
         this.thumbnailImage = introductionBoard.getThumbnailImage();
+        this.viewCount = introductionBoard.getViewCount();
     }
 
 }

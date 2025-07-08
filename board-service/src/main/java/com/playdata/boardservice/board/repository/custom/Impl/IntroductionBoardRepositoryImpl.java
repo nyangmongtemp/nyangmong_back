@@ -12,8 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.playdata.boardservice.board.entity.QInformationBoard.informationBoard;
 import static com.playdata.boardservice.board.entity.QIntroductionBoard.introductionBoard;
 
 
@@ -41,6 +43,7 @@ public class IntroductionBoardRepositoryImpl implements  IntroductionBoardReposi
         return new PageImpl<>(content, pageable, total);
     }
 
+    // 소개 게시판 메인 최신 게시물 조회
     public List<IntroductionBoard> findMainList() {
         return jpaQueryFactory.selectFrom(introductionBoard)
                 .fetch();

@@ -21,8 +21,9 @@ public class InformationBoard extends BaseTimeEntity {
     @Column(name = "post_id")
     private Long postId; // 게시글 번호
 
-    @Column(nullable = false)
-    private String category; // 게시판 종류
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category")
+    private Category category; // 게시판 종류
 
     @Column(name = "user_id", nullable = false)
     private Long userId; // 사용자 번호(?)

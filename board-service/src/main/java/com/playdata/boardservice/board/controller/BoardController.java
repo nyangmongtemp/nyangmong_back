@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.service.BoardService;
+import com.playdata.boardservice.common.auth.JwtTokenProvider;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 정보 게시판 게시물 생성
     @PostMapping(value = "/information/create", consumes = "multipart/form-data")
@@ -33,7 +36,6 @@ public class BoardController {
                                                 // RequestDto 에 값이 있는지 유효성 검증
                                                 @RequestPart("context") @Valid InformationBoardSaveReqDto informationBoardSaveReqDto,
                                                 @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-
 
         // boardService로 전달
         CommonResDto resDto
@@ -115,9 +117,25 @@ public class BoardController {
 
     // 게시물 상세 조회 (공통)
     @GetMapping("/detail/{category}/{id}")
-    public ResponseEntity<?> getBoardDetail(@PathVariable String category,
-                                            @PathVariable(name = "id") Long postId) {
-        CommonResDto resDto = boardService.boardDetail(category, postId);
+    public ResponseEntity<?> getBoardDetail(@PathVariable Category category,
+                                            @PathVariable(name = "id") Long postId,
+                                            @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                            HttpServletRequest request) {
+
+        String email = null;
+        // Authorization 헤더가 존재하고 Bearer로 시작하는 경우
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // "Bearer " 이후의 토큰만 추출
+            try {
+                // 토큰에서 이메일 추출
+                email = jwtTokenProvider.extractEmail(token);
+            } catch (Exception e) {
+                // JWT 파싱 실패 시 로그 기록 (비로그인 사용자로 처리)
+                e.printStackTrace();
+            }
+        }
+
+        CommonResDto resDto = boardService.boardDetail(category, postId, email, request);
 
         return new  ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -125,6 +143,7 @@ public class BoardController {
     // 정보 게시판 메인 최근 게시물 조회
     @GetMapping("/information/main")
     public ResponseEntity<?> findInformationMainList() {
+        // 정보 게시판의 게시물 조회
         List<InformationBoardListResDto> resDto = boardService.findInformationMainList();
         return ResponseEntity.ok().body(resDto);
     }
@@ -132,8 +151,16 @@ public class BoardController {
     // 소개 게시판 메인 최근 게시물 조회
     @GetMapping("/introduction/main")
     public ResponseEntity<?> findIntroductionMainList() {
+        // 소개 게시판의 게시물 조회
         List<IntroductionBoardListResDto> resDto = boardService.findIntroductionMainList();
         return ResponseEntity.ok().body(resDto);
     }
 
+    // 정보 게시판 메인 인기 게시물 조회
+    @GetMapping("/information/popular")
+    public ResponseEntity<?> findPopularInformationBoard() {
+        // 정보 게시판의 인기 게시물 조회
+        List<InformationBoardListResDto> resDto = boardService.findPopularInformationBoard();
+        return ResponseEntity.ok().body(resDto);
+    }
 }

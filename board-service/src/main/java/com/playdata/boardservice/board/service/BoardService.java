@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,7 +42,7 @@ public class BoardService {
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
 
-    private List<String> categoryList = List.of("freedom", "introduction", "question", "review");
+    private List<Category> categoryList = List.of(Category.FREEDOM, Category.INTRODUCTION, Category.QUESTION, Category.REVIEW);
 
 
     // 질문, 후기, 자유 게시판 게시물 등록
@@ -52,9 +51,15 @@ public class BoardService {
                                           MultipartFile thumbnailImage,
                                           TokenUserInfo userInfo) {
 
+        if (!isValidCategory(informationSaveDto.getCategory())){
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+
+        Category cate = informationSaveDto.getCategory();
+
         // 카테고리 값 가져와서 null, 빈문자열 체크 후 값이 있다면 대문자로 변환
-        String category = (informationSaveDto.getCategory() != null && !informationSaveDto.getCategory().isBlank())
-                ? informationSaveDto.getCategory().trim().toUpperCase()
+        String category = (informationSaveDto.getCategory() != null)
+                ? informationSaveDto.getCategory().name().toUpperCase()
                 : "default";
 
         // 썸네일 경로를 저장할 변수
@@ -233,37 +238,49 @@ public class BoardService {
     }
 
     // 게시판 게시물 상세 조회
-    public CommonResDto boardDetail(String category, Long postId) {
+    public CommonResDto boardDetail(Category category, Long postId, String email, HttpServletRequest request) {
+
 
         // 입력 받은 카테고리 값이 설정 해둔 값과 일치 하지 않다면 예외
         if (!isValidCategory(category)) {
             throw new CommonException(ErrorCode.DATA_NOT_FOUND, "옳지 않은 카테고리 입니다.");
         }
 
-        // 입력받은 카테고리 값 대문자 변환
-        Category cate = Category.valueOf(category.toUpperCase());
-
-        if (cate == Category.INTRODUCTION) {
+        if (category == Category.INTRODUCTION) {
             // 게시물 조회 (null 방지)
-            Optional<IntroductionBoard> foundPost = introductionBoardRepository.findById(postId);
+            IntroductionBoard board = introductionBoardRepository.findById(postId)
+                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
 
-            // 게시물이 없다면 예외
-            if (!foundPost.isPresent()) {
-                throw new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다.");
-            }
+            // 사용자 식별 정보 생성
+            String ip = extractClientIp(request);
+            String userAgent = request.getHeader("User-Agent");
 
-            // 객체를 꺼냄
-            IntroductionBoard board = foundPost.get();
+            // Redis 중복 조회 방지를 위한 Key 생성
+            String redisKey = generateRedisKey(email, ip, userAgent, category, postId);
+
+            // Redis에 기록이 없으면 첫 조회 → 조회수 증가 처리
+            increaseViewCountIntroductionFirstTime(redisKey, board);
 
             // 화면단으로 보낼 DTO로 변환
             IntroductionBoardResDto resDto = board.fromEntity(board);
 
             return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
         } else {
-
             // null 이면 들어올 수 없으니까 에러 던짐
             InformationBoard board = informationBoardRepository.findById(postId)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
+
+            // 사용자 식별 정보 생성
+            String ip = extractClientIp(request);
+            String userAgent = request.getHeader("User-Agent");
+
+            // Redis 중복 조회 방지를 위한 Key 생성
+            String redisKey = generateRedisKey(email, ip, userAgent, category, postId);
+
+            // Redis에 기록이 없으면 첫 조회 → 조회수 증가 처리
+            increaseViewCountInformationFirstTime(redisKey, board);
+
+            // 화면단으로 보낼 DTO로 변환
             InformationBoardResDto resDto = board.fromEntity(board);
 
             return new CommonResDto(HttpStatus.OK, "게시물 상세 조회 성공!", resDto);
@@ -276,7 +293,7 @@ public class BoardService {
 
         return informationBoardList.stream()
                 .map(informationBoard -> InformationBoardListResDto.builder()
-                        .informationBoard(informationBoard)
+                        .informationBoard(informationBoard) // 엔티티 -> DTO 변환
                         .build())
                 .collect(Collectors.toList());
     }
@@ -287,20 +304,29 @@ public class BoardService {
 
         return introductionBoardList.stream()
                 .map(introductionBoard -> IntroductionBoardListResDto.builder()
-                        .introductionBoard(introductionBoard)
+                        .introductionBoard(introductionBoard) // 엔티티 -> DTO 변환
                         .build())
                 .collect(Collectors.toList());
 
 
     }
 
+    // 정보 게시판 메인 인기 게시물 조회
+    public List<InformationBoardListResDto> findPopularInformationBoard() {
+        List<InformationBoard> board = informationBoardRepository.findPopularList(10, 7); // 최근 7일 상위 10개
 
-
+        return board.stream()
+                .map(informationBoard -> InformationBoardListResDto.builder()
+                        .informationBoard(informationBoard) // 엔티티 → DTO 변환
+                        .build())
+                .toList();
+    }
 
     // 입력받은 카테고리가 유효하냐 (contains)
-    private boolean isValidCategory(String input) {
+    private boolean isValidCategory(Category input) {
         return categoryList.contains(input);
     }
+
 
     private String setThumbnailImage(MultipartFile thumbnailImage) {
 
@@ -375,7 +401,7 @@ public class BoardService {
      * @param postId 게시물 ID
      * @return 고유 Redis Key
      */
-    private String generateRedisKey(String email, String ip, String userAgent, String boardType, Long postId) {
+    private String generateRedisKey(String email, String ip, String userAgent, Category boardType, Long postId) {
         StringBuilder key = new StringBuilder("viewCount:");
         key.append(boardType).append(":").append(postId).append(":");
 

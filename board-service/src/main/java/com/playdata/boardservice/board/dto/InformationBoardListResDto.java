@@ -1,5 +1,6 @@
 package com.playdata.boardservice.board.dto;
 
+import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +12,8 @@ public class InformationBoardListResDto {
     private String content;
     private String nickname;
     private String thumbnailImage;
-    private String category;
+    private Category category;
+    private int viewCount;
 
     @Builder
     public InformationBoardListResDto(InformationBoard informationBoard) {
@@ -20,6 +22,7 @@ public class InformationBoardListResDto {
         this.nickname = informationBoard.getNickname();
         this.thumbnailImage = informationBoard.getThumbnailImage();
         this.category = informationBoard.getCategory();
+        this.viewCount = informationBoard.getViewCount();
     }
 
 

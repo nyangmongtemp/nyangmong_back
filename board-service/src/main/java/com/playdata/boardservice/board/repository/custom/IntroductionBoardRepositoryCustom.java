@@ -11,10 +11,10 @@ import java.util.List;
 
 public interface IntroductionBoardRepositoryCustom {
 
-    // 분양 목록 조회 (검색 조건 및 페이징 처리 포함) 인터페이스
+    // 목록 조회 (검색 조건 및 페이징 처리 포함) 인터페이스
     Page<IntroductionBoard> findList(BoardSearchDto boardSearchDto, Pageable pageable);
 
-    // 유기동물 메인 노출될 리스트 목록 조회 인터페이스
+    // 메인 노출될 리스트 목록 조회 인터페이스
     List<IntroductionBoard> findMainList();
 
 }
