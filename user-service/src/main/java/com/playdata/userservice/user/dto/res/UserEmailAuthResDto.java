@@ -1,17 +1,17 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.userservice.user.dto.res;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
-public class UserLoginReqDto {
+@Builder
+public class UserEmailAuthResDto {
 
     @NotBlank
     private String email;
 
     @NotBlank
-    private String password;
+    private String authCode;
 
 }

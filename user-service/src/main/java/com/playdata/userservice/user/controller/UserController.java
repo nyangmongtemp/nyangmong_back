@@ -1,10 +1,11 @@
 package com.playdata.userservice.user.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.user.dto.*;
+import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.req.*;
+import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -225,6 +226,56 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
+    // 마이페이지에서 요청을 보내는 것이기에, token의 정보는 쓰지 않더라도 token이 필요로 하게 함.
+    // 비로그인 상태의 사용자는 사용하지 못하게 할 것 임.
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<?> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                        @PathVariable String keyword){
+        CommonResDto resDto = userService.searchUser(keyword);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+////////////////  쪽지 관련 요청들입니다.
+
+    // 본인의 활성화된 대화방 조회
+    @GetMapping("/chat")
+    public ResponseEntity<?> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo){
+        CommonResDto resDto = userService.findMyActiveChat(userInfo.getUserId(), userInfo.getNickname());
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 대화방 삭제
+    @GetMapping("/clear/{chatId}")
+    public ResponseEntity<?> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                              @PathVariable(name = "chatId") Long chatId) {
+        CommonResDto resDto = userService.clearChat(userInfo.getUserId(), chatId);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+    // 선택한 채팅방의 7일간의 모든 쪽지 내용 조회
+    @GetMapping("/chat/list/{id}")
+    public ResponseEntity<?> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
+                                            @PathVariable(name = "id") Long chatId){
+        CommonResDto resDto
+                = userService.getMyChatMessages(userInfo.getUserId(), userInfo.getNickname(), chatId);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+    // 쪽지 발송
+    @PostMapping("/send")
+    public ResponseEntity<?> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                             @RequestBody @Valid UserMessageReqDto reqDto){
+        CommonResDto resDto = userService.sendMessage(userInfo.getUserId(), userInfo.getNickname(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
+
     /**
      *
      * @param userEmail
@@ -241,12 +292,15 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+
+//////// feign 요청을 받는 메소드 들입니다.
+
+
     /**
      *
      * @param userId
      * @return
      */
-    // feign 요청을 받는 메소드 들입니다.
     // 댓글 및 대댓글 생성 시 프로필 이미지 주소를 넘겨주는 메소드
     @GetMapping("/profileImage/{id}")
     ResponseEntity<String> getUserProfileImage(@PathVariable(name = "id") Long userId) {

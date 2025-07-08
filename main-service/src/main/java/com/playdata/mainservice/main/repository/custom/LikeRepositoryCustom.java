@@ -1,6 +1,6 @@
 package com.playdata.mainservice.main.repository.custom;
 
-import com.playdata.mainservice.main.dto.MainLikeReqDto;
+import com.playdata.mainservice.main.dto.req.MainLikeReqDto;
 import com.playdata.mainservice.main.entity.Like;
 import com.querydsl.core.Tuple;
 

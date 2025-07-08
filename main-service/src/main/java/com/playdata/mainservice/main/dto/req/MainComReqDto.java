@@ -1,4 +1,4 @@
-package com.playdata.mainservice.main.dto;
+package com.playdata.mainservice.main.dto.req;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.userservice.user.dto.res;
 
 import lombok.Builder;
 import lombok.Getter;

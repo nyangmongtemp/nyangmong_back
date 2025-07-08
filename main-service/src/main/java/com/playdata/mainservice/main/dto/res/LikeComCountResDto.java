@@ -1,6 +1,5 @@
-package com.playdata.mainservice.main.dto;
+package com.playdata.mainservice.main.dto.res;
 
-import com.playdata.mainservice.main.entity.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

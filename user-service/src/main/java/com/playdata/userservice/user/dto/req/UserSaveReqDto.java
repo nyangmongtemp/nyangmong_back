@@ -1,12 +1,10 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.userservice.user.dto.req;
 
 import com.playdata.userservice.user.entity.User;
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 

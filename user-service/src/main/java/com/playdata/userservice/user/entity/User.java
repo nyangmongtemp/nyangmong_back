@@ -1,8 +1,9 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
-import com.playdata.userservice.user.dto.UserInfoModiReqDto;
-import com.playdata.userservice.user.dto.UserMyPageResDto;
+import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
+import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
+import com.playdata.userservice.user.dto.res.UserMyPageResDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -102,6 +103,17 @@ public class User extends BaseTimeEntity {
     // 탈퇴 진행 메소드
     public void resignUser() {
         this.active = false;
+    }
+
+    // 쪽지를 보낼 상대방의 정보 조회 dto 변환
+    public UserInfoResDto toMessageInfo() {
+        return UserInfoResDto.builder()
+                .userId(userId)
+                .nickname(nickname)
+                .createAt(this.getCreateAt())
+                .profileImage(profileImage)
+                .username(userName)
+                .build();
     }
 
 }

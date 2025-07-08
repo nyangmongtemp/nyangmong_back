@@ -4,25 +4,36 @@ import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.common.dto.ErrorResponse;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.common.util.ImageValidation;
-import com.playdata.userservice.user.dto.*;
+import com.playdata.userservice.user.dto.chat.res.UserChatInfoResDto;
+import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
+import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
+import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
+import com.playdata.userservice.user.dto.req.UserLoginReqDto;
+import com.playdata.userservice.user.dto.req.UserPasswordModiReqDto;
+import com.playdata.userservice.user.dto.req.UserSaveReqDto;
+import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
+import com.playdata.userservice.user.dto.res.UserLoginResDto;
+import com.playdata.userservice.user.dto.res.UserMyPageResDto;
+import com.playdata.userservice.user.entity.Chat;
+import com.playdata.userservice.user.entity.Message;
 import com.playdata.userservice.user.entity.User;
+import com.playdata.userservice.user.repository.ChatRepository;
+import com.playdata.userservice.user.repository.MessageRepository;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -30,9 +41,12 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +60,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final ChatRepository chatRepository;
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
@@ -430,7 +446,12 @@ public class UserService {
         if(response.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        
+
+        // 사용자의 모든 채팅방 삭제 필요
+        Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
+        // 사용자의 활성화된 채팅방이 있을때만, 비활성화 처리
+        myActiveChat.ifPresent(chats -> chats.stream().forEach(Chat::deleteChat));
+
         // 회원의 비활성화 처리 DB로 저장
         userRepository.save(user);
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
@@ -454,6 +475,20 @@ public class UserService {
         return user.getProfileImage();
     }
 
+    // 쪽지를 보내기 위한 사용자 검색에서 사용하는 서비스입니다.
+    public CommonResDto searchUser(String keyword) {
+
+        // keyword를 통한 쪽지를 보낼 수 있는 사용자 조회
+        Optional<List<User>> userList = userRepository.findByKeyword(keyword);
+        // 검색 결과가 없는 경우
+        List<User> foundUsers = userList.orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND));
+        // 검색 결과를 dto로 변환해서 리턴
+        List<UserInfoResDto> resDto = foundUsers.stream().map(User::toMessageInfo
+        ).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "검색된 회원 목록 조회", resDto);
+    }
+
     /**
      *
      * @param email
@@ -470,7 +505,7 @@ public class UserService {
         User user = foundUser.get();
         // redis에 해당 유저의 refresh token 조회
         Object obj = redisTemplate.opsForValue().get("user:refresh:" + user.getUserId());
-        
+
         // refresh 토큰이 만료된 경우
         if(obj == null){
             throw new CommonException(ErrorCode.SESSION_EXPIRED, "다시 로그인을 진행해주세요.");
@@ -484,7 +519,101 @@ public class UserService {
                 , new UserLoginResDto(user.getEmail(), user.getNickname(), user.getProfileImage(), token));
     }
 
+    // 쪽지 발송 로직
+    public CommonResDto sendMessage(Long senderId, String requestNickname, UserMessageReqDto reqDto) {
+
+        // 자기 자신에게 채팅방 여는 것은 방지
+        if(senderId == reqDto.getReceiverId()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        String receiverNickname = findNicknameByUserID(reqDto.getReceiverId());
+        Optional<Chat> foundChat = chatRepository.findByUserId(senderId, reqDto.getReceiverId());
+        // 처음 채팅을 시작하는 거라면
+        Chat chat = null;
+        if(!foundChat.isPresent() || !foundChat.get().isActive()) {
+            // 채팅방 생성
+            chat = new Chat(senderId, reqDto.getReceiverId());
+        }
+        else {
+            // 기존에 생성된 채팅방이 있는 경우
+            chat = foundChat.get();
+        }
+        chatRepository.save(chat);
+        // 새로운 메시지 생성
+        Message message = new Message(senderId, reqDto.getReceiverId(), reqDto.getContent(), chat);
+
+        UserMessageResDto resDto = messageRepository.save(message)
+                .fromEntity(receiverNickname, requestNickname, requestNickname);
+
+        return new CommonResDto(HttpStatus.CREATED, "메시지 전송됨", resDto);
+    }
+
+    // 채팅방 삭제
+    public CommonResDto clearChat(Long userId, Long chatId) {
+
+        Optional<Chat> byId = chatRepository.findById(chatId);
+        // 삭제하려는 채팅방이 유효하지 않은 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        Chat chat = byId.get();
+        if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        byId.get().deleteChat();
+        chatRepository.save(chat);
+        return new CommonResDto(HttpStatus.OK, "해당 채팅방 삭제됨.", true);
+    }
+
+    // 내 채팅방 목록 조회
+    public CommonResDto findMyActiveChat(Long userId, String requestNickname) {
+
+        Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
+        if(!myActiveChat.isPresent()) {
+            return new CommonResDto(HttpStatus.OK, "생성된 채팅방이 없습니다.", null);
+        }
+        List<UserChatInfoResDto> resDtos = myActiveChat.get().stream().map(chat -> {
+                    String nickname1 = findNicknameByUserID(chat.getUserId1());
+                    String nickname2 = findNicknameByUserID(chat.getUserId2());
+                    UserMessageResDto messageDto = messageRepository
+                            .findLastByChatId(chat.getChatId()).fromEntity(nickname1, nickname2, requestNickname);
+                    return chat.toUserChatInfoResDto(nickname1, nickname2, requestNickname, messageDto);
+                })
+                .collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "사용자의 채팅방 모두 조회됨.", resDtos);
+    }
+
+    // 특정 채팅방의 채팅 내용 조회  --> 7일 간 생성된 것만
+    public CommonResDto getMyChatMessages(Long userId, String requestNickname, Long chatId) {
+
+        Optional<Chat> byId = chatRepository.findById(chatId);
+        // 조회하려는 채팅방이 유효하지 않는 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        Chat chat = byId.get();
+        // 조회하려는 채팅방이 내가 볼 수 있는 채팅방이 아닌 경우
+        if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        // 채팅방의 사용자의 nickname 조회
+        String n1 = findNicknameByUserID(chat.getUserId1());
+        String n2 = findNicknameByUserID(chat.getUserId2());
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        Optional<List<Message>> messageList = messageRepository.findByChatId(chatId, sevenDaysAgo);
+        if(!messageList.isPresent()) {
+            return null;
+        }
+        List<UserMessageResDto> resDto = messageList.get().stream().map(message -> {
+            return message.fromEntity(n1, n2, requestNickname);
+        }).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
+    }
+
 ///////////  공통적으로 사용하는 공통 로직들입니다.
+
 
     /**
      *
@@ -519,7 +648,7 @@ public class UserService {
     }
 
     /**
-     * 
+     *
      * @param email
      * @param create  --> 회원가입 또는 개인정보 변경 여부
      * @return
@@ -581,16 +710,27 @@ public class UserService {
      */
     // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
     private int incrementAttemptCount(String email) {
-        
+
         // redis key 생성
         String key = VERIFICATION_ATTEMPT_KEY + email;
         // redis에 있는 해당 email의 값 확인
         Object obj = redisTemplate.opsForValue().get(key);
-        
+
         // 발송 횟수를 하나 늘려서 다시 redis에 저장
         int count = (obj != null) ? Integer.parseInt(obj.toString()) + 1 : 1;
         redisTemplate.opsForValue().set(key, String.valueOf(count), Duration.ofMinutes(1));
 
         return count;
     }
+
+    // 사용자의 id를 통해 nickname을 리턴하는 메소드
+    private String findNicknameByUserID(Long userId) {
+        Optional<User> byId = userRepository.findById(userId);
+        // 회원이 없는 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        return byId.get().getNickname();
+    }
+
 }

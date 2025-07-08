@@ -1,6 +1,6 @@
 package com.playdata.mainservice.main.repository.impl;
 
-import com.playdata.mainservice.main.dto.MainLikeReqDto;
+import com.playdata.mainservice.main.dto.req.MainLikeReqDto;
 import com.playdata.mainservice.main.entity.Category;
 import com.playdata.mainservice.main.entity.Like;
 import com.playdata.mainservice.main.repository.custom.LikeRepositoryCustom;

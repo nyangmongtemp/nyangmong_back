@@ -2,7 +2,8 @@ package com.playdata.mainservice.main.controller;
 
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
-import com.playdata.mainservice.main.dto.*;
+import com.playdata.mainservice.main.dto.req.*;
+import com.playdata.mainservice.main.dto.res.LikeComCountResDto;
 import com.playdata.mainservice.main.service.MainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
