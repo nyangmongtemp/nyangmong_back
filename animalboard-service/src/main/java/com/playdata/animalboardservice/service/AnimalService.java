@@ -7,8 +7,10 @@ import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
+import com.playdata.animalboardservice.dto.req.ReservationReqDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
+import com.playdata.animalboardservice.entity.ReservationStatus;
 import com.playdata.animalboardservice.repository.AnimalRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -101,6 +103,10 @@ public class AnimalService {
     @Transactional
     public void insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
         Long userId = userInfo.getUserId(); // 사용자 ID 추출
+        // 이미지 존재유무
+        if (thumbnailImage == null || thumbnailImage.isEmpty()) {
+            throw new CommonException(ErrorCode.EMPTY_FILE);
+        }
         // 이미지 유효성 검사 (용량, 확장자 등)
         ImageValidation.validateImageFile(thumbnailImage);
         // 이미지 저장 후, 저장된 파일명 반환
@@ -154,6 +160,21 @@ public class AnimalService {
 
         // 삭제
         animal.deleteAnimal();
+    }
+
+    /**
+     * 분양 동물 예약상태 변경
+     * @param postId 게시판 번호
+     * @param userInfo 로그인한 유저 정보
+     */
+    @Transactional
+    public void reservationStatusAnimal(Long postId, TokenUserInfo userInfo, ReservationReqDto reservationReqDto) {
+        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+        Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        if (!userInfo.getUserId().equals(animal.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
+        }
+        animal.reservationStatusAnimal(reservationReqDto.getReservationStatus());
     }
 
     /**
