@@ -4,18 +4,30 @@ import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.common.dto.ErrorResponse;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.common.util.ImageValidation;
-import com.playdata.userservice.user.dto.*;
+import com.playdata.userservice.user.dto.chat.res.UserChatInfoResDto;
+import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
+import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
+import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
+import com.playdata.userservice.user.dto.req.UserLoginReqDto;
+import com.playdata.userservice.user.dto.req.UserPasswordModiReqDto;
+import com.playdata.userservice.user.dto.req.UserSaveReqDto;
+import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
+import com.playdata.userservice.user.dto.res.UserLoginResDto;
+import com.playdata.userservice.user.dto.res.UserMyPageResDto;
+import com.playdata.userservice.user.entity.Chat;
+import com.playdata.userservice.user.entity.Message;
 import com.playdata.userservice.user.entity.User;
+import com.playdata.userservice.user.repository.ChatRepository;
+import com.playdata.userservice.user.repository.MessageRepository;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -30,9 +42,12 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +61,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final ChatRepository chatRepository;
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
@@ -157,7 +174,9 @@ public class UserService {
                         TimeUnit.DAYS);
                 // 로그인 성공
                 // token과 email을 화면단으로 리턴
-                return new CommonResDto(HttpStatus.OK, "로그인에 성공하였습니다.", new UserLoginResDto(user.getEmail() ,token));
+                return new CommonResDto(HttpStatus.OK,
+                        "로그인에 성공하였습니다.",
+                        new UserLoginResDto(user.getEmail(),user.getNickname(),user.getProfileImage() ,token));
             }
         }
 
@@ -186,7 +205,7 @@ public class UserService {
         }
         
         // 이메일로 인증번호 발송
-        String authNum = sendEmailAuthCode(email, true);
+        String authNum = sendEmailAuthCode(email, "CREATE");
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
@@ -271,7 +290,7 @@ public class UserService {
             }
         }
         // nickname을 변경하는 경우
-        if(!StringUtils.isBlank(newProfileImage)) {
+        if(newProfileImage != null) {
             // feign 요청 시 한글을 PathVariable로 쓰지 못해서, 인코딩 변환
             String encodedNickname = URLEncoder.encode(modiDto.getNickname(), StandardCharsets.UTF_8);
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
@@ -304,7 +323,7 @@ public class UserService {
         if(byEmail.isPresent()) {
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
-        String authCode = sendEmailAuthCode(newEmail, false);
+        String authCode = sendEmailAuthCode(newEmail, "MODIFY");
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
@@ -352,7 +371,7 @@ public class UserService {
             throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         // 이메일 전송
-        String code = sendEmailAuthCode(email, false);
+        String code = sendEmailAuthCode(email, "MODIFY");
 
         // 실제 배포 환경에서는 인증 코드는 빼고 리턴해야 함.
         // 개발 단계에서는 인증코드가 이메일로 전송된 인증코드와 일치하는 지 보기 위해서 리턴함.
@@ -428,10 +447,50 @@ public class UserService {
         if(response.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        
+
+        // 사용자의 모든 채팅방 삭제 필요
+        Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
+        // 사용자의 활성화된 채팅방이 있을때만, 비활성화 처리
+        myActiveChat.ifPresent(chats -> chats.stream().forEach(Chat::deleteChat));
+
         // 회원의 비활성화 처리 DB로 저장
         userRepository.save(user);
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
+    }
+
+    // 비밀번호 분실 시 임시비밀번호 발급을 위한 인증코드 발급 로직
+    public CommonResDto forgetPasswordReq(String email) {
+
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        // 임시 비밀번호 발급을 요청한 사용자의 이메일이 유효하지 않은 경우
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+
+        String authCode = sendEmailAuthCode(email, "FORGET");
+
+        return new CommonResDto(HttpStatus.OK, "인증 이메일이 전송됨", authCode);
+    }
+
+    // 임시 비밀번호를 발급 후 저장 및 이메일로 전송해주는 로직
+    public CommonResDto authCodeAndRePw(UserEmailAuthResDto reqDto) {
+
+        Optional<User> byEmail = userRepository.findByEmail(reqDto.getEmail());
+        // 인증코드를 받은 이메일이 유효한 이메일인지 확인하는 메소드
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        // 인증코드를 확인하는 메소드
+        verifyEmailCode(reqDto);
+        // 임시 비밀번호 발급
+        String newPw = sendEmailAuthCode(reqDto.getEmail(), "NEW");
+        log.info("임시 비밀번호는: " + newPw);
+        // 신규 비밀번호를 인코딩 후, DB에 저장
+        String encodedNewPW = passwordEncoder.encode(newPw);
+        byEmail.get().modifyPassword(encodedNewPW);
+        userRepository.save(byEmail.get());
+
+        return new CommonResDto(HttpStatus.OK, "임시 비밀번호 발급 완료", newPw);
     }
 
     /**
@@ -452,6 +511,20 @@ public class UserService {
         return user.getProfileImage();
     }
 
+    // 쪽지를 보내기 위한 사용자 검색에서 사용하는 서비스입니다.
+    public CommonResDto searchUser(String keyword) {
+
+        // keyword를 통한 쪽지를 보낼 수 있는 사용자 조회
+        Optional<List<User>> userList = userRepository.findByKeyword(keyword);
+        // 검색 결과가 없는 경우
+        List<User> foundUsers = userList.orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND));
+        // 검색 결과를 dto로 변환해서 리턴
+        List<UserInfoResDto> resDto = foundUsers.stream().map(User::toMessageInfo
+        ).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "검색된 회원 목록 조회", resDto);
+    }
+
     /**
      *
      * @param email
@@ -468,7 +541,7 @@ public class UserService {
         User user = foundUser.get();
         // redis에 해당 유저의 refresh token 조회
         Object obj = redisTemplate.opsForValue().get("user:refresh:" + user.getUserId());
-        
+
         // refresh 토큰이 만료된 경우
         if(obj == null){
             throw new CommonException(ErrorCode.SESSION_EXPIRED, "다시 로그인을 진행해주세요.");
@@ -479,10 +552,117 @@ public class UserService {
                 = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
 
         return new CommonResDto(HttpStatus.OK, "토큰 재발급이 이루어졌습니다."
-                , new UserLoginResDto(user.getEmail(), token));
+                , new UserLoginResDto(user.getEmail(), user.getNickname(), user.getProfileImage(), token));
+    }
+
+    // 쪽지 발송 로직
+    public CommonResDto sendMessage(Long senderId, String requestNickname, UserMessageReqDto reqDto) {
+
+        // 자기 자신에게 채팅방 여는 것은 방지
+        if(senderId == reqDto.getReceiverId()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        String receiverNickname = findNicknameByUserID(reqDto.getReceiverId());
+        Optional<Chat> foundChat = chatRepository.findByUserId(senderId, reqDto.getReceiverId());
+        // 처음 채팅을 시작하는 거라면
+        Chat chat = null;
+        if(!foundChat.isPresent() || !foundChat.get().isActive()) {
+            // 채팅방 생성
+            chat = new Chat(senderId, reqDto.getReceiverId());
+        }
+        else {
+            // 기존에 생성된 채팅방이 있는 경우
+            chat = foundChat.get();
+        }
+        chatRepository.save(chat);
+        // 새로운 메시지 생성
+        Message message = new Message(senderId, reqDto.getReceiverId(), reqDto.getContent(), chat);
+
+        UserMessageResDto resDto = messageRepository.save(message)
+                .fromEntity(receiverNickname, requestNickname, requestNickname);
+
+        return new CommonResDto(HttpStatus.CREATED, "메시지 전송됨", resDto);
+    }
+
+    // 채팅방 삭제
+    public CommonResDto clearChat(Long userId, Long chatId) {
+
+        Optional<Chat> byId = chatRepository.findById(chatId);
+        // 삭제하려는 채팅방이 유효하지 않은 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        Chat chat = byId.get();
+        if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        byId.get().deleteChat();
+        chatRepository.save(chat);
+        return new CommonResDto(HttpStatus.OK, "해당 채팅방 삭제됨.", true);
+    }
+
+    // 내 채팅방 목록 조회
+    public CommonResDto findMyActiveChat(Long userId, String requestNickname) {
+
+        Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
+        if(!myActiveChat.isPresent()) {
+            return new CommonResDto(HttpStatus.OK, "생성된 채팅방이 없습니다.", null);
+        }
+        List<UserChatInfoResDto> resDtos = myActiveChat.get().stream().map(chat -> {
+                    String nickname1 = findNicknameByUserID(chat.getUserId1());
+                    String nickname2 = findNicknameByUserID(chat.getUserId2());
+                    UserMessageResDto messageDto = messageRepository
+                            .findLastByChatId(chat.getChatId()).fromEntity(nickname1, nickname2, requestNickname);
+                    return chat.toUserChatInfoResDto(nickname1, nickname2, requestNickname, messageDto);
+                })
+                .collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "사용자의 채팅방 모두 조회됨.", resDtos);
+    }
+
+    // 특정 채팅방의 채팅 내용 조회  --> 7일 간 생성된 것만
+    @Transactional
+    public CommonResDto getMyChatMessages(Long userId, String requestNickname, Long chatId) {
+
+        Optional<Chat> byId = chatRepository.findById(chatId);
+        // 조회하려는 채팅방이 유효하지 않는 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        Chat chat = byId.get();
+        // 조회하려는 채팅방이 내가 볼 수 있는 채팅방이 아닌 경우
+        if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        // 채팅방의 사용자의 nickname 조회
+        String n1 = findNicknameByUserID(chat.getUserId1());
+        String n2 = findNicknameByUserID(chat.getUserId2());
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        Optional<List<Message>> messageList = messageRepository.findByChatId(chatId, sevenDaysAgo);
+        if(!messageList.isPresent()) {
+            return null;
+        }
+        List<UserMessageResDto> resDto = messageList.get().stream().map(message -> {
+            return message
+                    // 내가 읽지 않은 메시지는 읽음 처리
+                    .setRead(userId)
+                    .fromEntity(n1, n2, requestNickname);
+        }).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
+    }
+
+    // fegin용 이메일을 통해 userId를 리턴하는 메소드입니다.
+    public Long findByEmail(String email) {
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        return byEmail.get().getUserId();
     }
 
 ///////////  공통적으로 사용하는 공통 로직들입니다.
+
 
     /**
      *
@@ -517,23 +697,33 @@ public class UserService {
     }
 
     /**
-     * 
+     *
      * @param email
-     * @param create  --> 회원가입 또는 개인정보 변경 여부
+     * @param occasion  --> 회원가입 또는 개인정보 변경 여부
      * @return
      */
     // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
-    private String sendEmailAuthCode(String email, boolean create) {
+    private String sendEmailAuthCode(String email, String occasion) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
         try {
             // 회원가입용 이메일 전송
-            if (create) {
+            if (occasion.equals("CREATE")) {
                 authNum = mailSenderService.joinMain(email);
             }
             // 개인정보 변경용 이메일 전송
-            else {
+            else if(occasion.equals("MODIFY")) {
                 authNum = mailSenderService.sendAuthCode(email);
+            }
+            else if (occasion.equals("FORGET")) {
+                authNum = mailSenderService.sendAuthCodeForget(email);
+            }
+            else if (occasion.equals("NEW")) {
+                authNum = mailSenderService.sendNewPasswordForget(email);
+                log.info(authNum);
+            } else {
+                authNum = "";
+                throw new CommonException(ErrorCode.BAD_REQUEST);
             }
         } catch (MessagingException e) {
             log.info(e.getMessage());
@@ -579,16 +769,27 @@ public class UserService {
      */
     // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
     private int incrementAttemptCount(String email) {
-        
+
         // redis key 생성
         String key = VERIFICATION_ATTEMPT_KEY + email;
         // redis에 있는 해당 email의 값 확인
         Object obj = redisTemplate.opsForValue().get(key);
-        
+
         // 발송 횟수를 하나 늘려서 다시 redis에 저장
         int count = (obj != null) ? Integer.parseInt(obj.toString()) + 1 : 1;
         redisTemplate.opsForValue().set(key, String.valueOf(count), Duration.ofMinutes(1));
 
         return count;
     }
+
+    // 사용자의 id를 통해 nickname을 리턴하는 메소드
+    private String findNicknameByUserID(Long userId) {
+        Optional<User> byId = userRepository.findById(userId);
+        // 회원이 없는 경우
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        return byId.get().getNickname();
+    }
+
 }

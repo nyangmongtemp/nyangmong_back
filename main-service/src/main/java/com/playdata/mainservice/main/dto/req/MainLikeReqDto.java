@@ -1,5 +1,6 @@
-package com.playdata.mainservice.main.dto;
+package com.playdata.mainservice.main.dto.req;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,10 +8,10 @@ import lombok.Getter;
 @Builder
 public class MainLikeReqDto {
 
+    @NotNull
     private Long contentId;
 
+    @NotNull
     private String category;
-
-    private String contentType;
 
 }

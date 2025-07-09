@@ -1,4 +1,4 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.userservice.user.dto.res;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -15,5 +15,6 @@ public class UserMyPageResDto {
     private LocalDateTime createAt;
     private String phone;
     private String address;
+    private String profileImage;
 
 }

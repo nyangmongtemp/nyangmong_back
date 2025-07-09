@@ -1,7 +1,6 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.userservice.user.dto.res;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 @AllArgsConstructor
@@ -9,6 +8,10 @@ import lombok.Getter;
 public class UserLoginResDto {
 
     private String email;
+
+    private String nickname;
+
+    private String profileImage;
 
     private String token;
 

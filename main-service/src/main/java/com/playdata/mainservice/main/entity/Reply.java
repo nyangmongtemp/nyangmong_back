@@ -1,7 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
-import com.playdata.mainservice.main.dto.ReplyDetailResDto;
+import com.playdata.mainservice.main.dto.res.ReplyDetailResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
