@@ -652,6 +652,15 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
     }
 
+    // fegin용 이메일을 통해 userId를 리턴하는 메소드입니다.
+    public Long findByEmail(String email) {
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        return byEmail.get().getUserId();
+    }
+
 ///////////  공통적으로 사용하는 공통 로직들입니다.
 
 

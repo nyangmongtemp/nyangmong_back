@@ -325,6 +325,13 @@ public class UserController {
         return new ResponseEntity<>(profileImage, HttpStatus.OK);
     }
 
+    @GetMapping("/findId/{email}")
+    Long findUserEmail(@PathVariable(name = "email") String email) {
+        Long foundUserId = userService.findByEmail(email);
+
+        return foundUserId;
+    }
+
     /**
      *
      * @param userInfo
