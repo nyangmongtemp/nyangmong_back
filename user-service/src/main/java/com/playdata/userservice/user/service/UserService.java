@@ -204,7 +204,7 @@ public class UserService {
         }
         
         // 이메일로 인증번호 발송
-        String authNum = sendEmailAuthCode(email, true);
+        String authNum = sendEmailAuthCode(email, "CREATE");
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
@@ -322,7 +322,7 @@ public class UserService {
         if(byEmail.isPresent()) {
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
-        String authCode = sendEmailAuthCode(newEmail, false);
+        String authCode = sendEmailAuthCode(newEmail, "MODIFY");
 
         // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
         // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
@@ -370,7 +370,7 @@ public class UserService {
             throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         // 이메일 전송
-        String code = sendEmailAuthCode(email, false);
+        String code = sendEmailAuthCode(email, "MODIFY");
 
         // 실제 배포 환경에서는 인증 코드는 빼고 리턴해야 함.
         // 개발 단계에서는 인증코드가 이메일로 전송된 인증코드와 일치하는 지 보기 위해서 리턴함.
@@ -455,6 +455,41 @@ public class UserService {
         // 회원의 비활성화 처리 DB로 저장
         userRepository.save(user);
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
+    }
+
+    // 비밀번호 분실 시 임시비밀번호 발급을 위한 인증코드 발급 로직
+    public CommonResDto forgetPasswordReq(String email) {
+
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        // 임시 비밀번호 발급을 요청한 사용자의 이메일이 유효하지 않은 경우
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+
+        String authCode = sendEmailAuthCode(email, "FORGET");
+
+        return new CommonResDto(HttpStatus.OK, "인증 이메일이 전송됨", authCode);
+    }
+
+    // 임시 비밀번호를 발급 후 저장 및 이메일로 전송해주는 로직
+    public CommonResDto authCodeAndRePw(UserEmailAuthResDto reqDto) {
+
+        Optional<User> byEmail = userRepository.findByEmail(reqDto.getEmail());
+        // 인증코드를 받은 이메일이 유효한 이메일인지 확인하는 메소드
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        // 인증코드를 확인하는 메소드
+        verifyEmailCode(reqDto);
+        // 임시 비밀번호 발급
+        String newPw = sendEmailAuthCode(reqDto.getEmail(), "NEW");
+        log.info("임시 비밀번호는: " + newPw);
+        // 신규 비밀번호를 인코딩 후, DB에 저장
+        String encodedNewPW = passwordEncoder.encode(newPw);
+        byEmail.get().modifyPassword(encodedNewPW);
+        userRepository.save(byEmail.get());
+
+        return new CommonResDto(HttpStatus.OK, "임시 비밀번호 발급 완료", newPw);
     }
 
     /**
@@ -650,21 +685,31 @@ public class UserService {
     /**
      *
      * @param email
-     * @param create  --> 회원가입 또는 개인정보 변경 여부
+     * @param occasion  --> 회원가입 또는 개인정보 변경 여부
      * @return
      */
     // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
-    private String sendEmailAuthCode(String email, boolean create) {
+    private String sendEmailAuthCode(String email, String occasion) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
         try {
             // 회원가입용 이메일 전송
-            if (create) {
+            if (occasion.equals("CREATE")) {
                 authNum = mailSenderService.joinMain(email);
             }
             // 개인정보 변경용 이메일 전송
-            else {
+            else if(occasion.equals("MODIFY")) {
                 authNum = mailSenderService.sendAuthCode(email);
+            }
+            else if (occasion.equals("FORGET")) {
+                authNum = mailSenderService.sendAuthCodeForget(email);
+            }
+            else if (occasion.equals("NEW")) {
+                authNum = mailSenderService.sendNewPasswordForget(email);
+                log.info(authNum);
+            } else {
+                authNum = "";
+                throw new CommonException(ErrorCode.BAD_REQUEST);
             }
         } catch (MessagingException e) {
             log.info(e.getMessage());

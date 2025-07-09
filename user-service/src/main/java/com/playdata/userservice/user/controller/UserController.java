@@ -199,6 +199,22 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 비밀번호 분실 시 입력한 이메일로 인증번호를 발송해주는 메소드
+    @GetMapping("/forget/{email}")
+    public ResponseEntity<?> forgetPasswordReq(@PathVariable String email){
+        CommonResDto resDto = userService.forgetPasswordReq(email);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 비밀번호 분실 시, 발급된 인증번호로 인증 후 임시비밀번호를 발급해주는 메소드
+    @PostMapping("/forget/auth")
+    public ResponseEntity<?> forgetAuth(@RequestBody @Valid UserEmailAuthResDto reqDto){
+        CommonResDto resDto = userService.authCodeAndRePw(reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     /**
      *
      * @param userInfo
