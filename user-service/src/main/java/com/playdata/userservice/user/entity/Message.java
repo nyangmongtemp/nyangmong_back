@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -68,8 +69,13 @@ public class Message extends BaseTimeEntity {
     }
 
     // 메시지 읽음 처리
-    public void setRead() {
-        this.readed = true;
+    public Message setRead(Long requestUserId) {
+        if(requestUserId != null) {
+            if(Objects.equals(this.receiverId, requestUserId)) {
+                this.readed = true;
+            }
+        }
+        return this;
     }
 
     // 메시지 비활성화

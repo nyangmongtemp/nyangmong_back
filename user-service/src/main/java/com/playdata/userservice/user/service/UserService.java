@@ -34,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -620,6 +621,7 @@ public class UserService {
     }
 
     // 특정 채팅방의 채팅 내용 조회  --> 7일 간 생성된 것만
+    @Transactional
     public CommonResDto getMyChatMessages(Long userId, String requestNickname, Long chatId) {
 
         Optional<Chat> byId = chatRepository.findById(chatId);
@@ -641,7 +643,10 @@ public class UserService {
             return null;
         }
         List<UserMessageResDto> resDto = messageList.get().stream().map(message -> {
-            return message.fromEntity(n1, n2, requestNickname);
+            return message
+                    // 내가 읽지 않은 메시지는 읽음 처리
+                    .setRead(userId)
+                    .fromEntity(n1, n2, requestNickname);
         }).collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
