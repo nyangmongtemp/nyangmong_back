@@ -2,8 +2,10 @@ package com.playdata.mainservice.main.controller;
 
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
-import com.playdata.mainservice.main.dto.*;
+import com.playdata.mainservice.main.dto.req.*;
+import com.playdata.mainservice.main.dto.res.LikeComCountResDto;
 import com.playdata.mainservice.main.service.MainService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,7 @@ public class MainController {
      */
     @PostMapping("/like")
     public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestBody MainLikeReqDto reqDto) {
+            ,@RequestBody @Valid MainLikeReqDto reqDto) {
 
         CommonResDto likePost = mainService.createLike(userInfo.getUserId(), reqDto);
         
@@ -48,7 +50,7 @@ public class MainController {
     // 댓글 생성
     @PostMapping("/comment/create")
     public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                           @RequestBody MainComReqDto reqDto){
+                                           @RequestBody @Valid MainComReqDto reqDto){
         CommonResDto resDto = mainService.createComment(reqDto, userInfo.getUserId(), userInfo.getNickname());
 
         return new ResponseEntity(resDto, HttpStatus.CREATED);
@@ -78,7 +80,7 @@ public class MainController {
     // 댓글 수정
     @PatchMapping("/comment/modify")
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                           @RequestBody ComModiReqDto reqDto){
+                                           @RequestBody @Valid ComModiReqDto reqDto){
         CommonResDto resDto
                 = mainService.modifyComment(userInfo.getUserId(), reqDto);
 
@@ -94,7 +96,7 @@ public class MainController {
     // 대댓글 생성
     @PostMapping("/reply/create")
     public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                         @RequestBody ReplySaveReqDto reqDto) {
+                                         @RequestBody @Valid ReplySaveReqDto reqDto) {
         CommonResDto resDto = mainService.createReply(userInfo, reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
@@ -124,7 +126,7 @@ public class MainController {
     // 대댓글 수정
     @PatchMapping("/reply/modify")
     public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                         @RequestBody ReplyModiReqDto reqDto){
+                                         @RequestBody @Valid ReplyModiReqDto reqDto){
         CommonResDto resDto = mainService.modifyReply(userInfo, reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -207,7 +209,7 @@ public class MainController {
     // 화면단에서 commentId 와 게시물 작성자 userId를 줘야함.
     @PostMapping("/comment/hidden")
     public ResponseEntity<?> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                              @RequestBody SeeHideComReqDto reqDto) {
+                                              @RequestBody @Valid SeeHideComReqDto reqDto) {
         boolean canSee = mainService.canSeeHideComment(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(canSee, HttpStatus.OK);
@@ -231,7 +233,7 @@ public class MainController {
      */
     @PostMapping("/liked")
     public ResponseEntity<?> getUserLiked(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                          @RequestBody MainLikeReqDto reqDto) {
+                                          @RequestBody @Valid MainLikeReqDto reqDto) {
         CommonResDto resDto = mainService.getUserLiked(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);

@@ -1,10 +1,11 @@
 package com.playdata.userservice.user.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.user.dto.*;
+import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.req.*;
+import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class UserController {
             @RequestPart("user") @Valid UserSaveReqDto userSaveReqDto,
             // 프로필 이미지는 필수가 아님
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
-    ) throws JsonProcessingException {
+    ) {
         // String으로 받은 값을 Dto로 변환
         /*ObjectMapper objectMapper = new ObjectMapper();
         UserSaveReqDto userSaveReqDto = objectMapper.readValue(userJson, UserSaveReqDto.class);*/
@@ -55,7 +56,7 @@ public class UserController {
      */
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> userLogin(@RequestBody UserLoginReqDto userLoginReqDto){
+    public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginReqDto userLoginReqDto){
         CommonResDto resDto = userService.login(userLoginReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -82,7 +83,7 @@ public class UserController {
      */
     // 회원가입 시 이메일 인증 코드 검증
     @PostMapping("/verify-code")
-    public ResponseEntity<?> verifyUserEmailCode(@RequestBody UserEmailAuthResDto authResDto){
+    public ResponseEntity<?> verifyUserEmailCode(@RequestBody @Valid UserEmailAuthResDto authResDto){
         CommonResDto resDto = userService.verifyEmailCode(authResDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -91,8 +92,8 @@ public class UserController {
     /**
      *
      * @param userInfo
-     * @param modiJson   --> dto 변환 오류로 인한 String
-     * @param profileImage  --> 이미지 url, nullable
+     * @param modiDto --> nickname, phone, address
+     * @param profileImage  --> 이미지 url
      * @return
      * @throws JsonProcessingException
      */
@@ -100,12 +101,9 @@ public class UserController {
     // 로그인 필요 -> 토큰 필요함.
     @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
     public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
-            ,@RequestPart("user") String modiJson,
+            ,@RequestPart("user") @Valid UserInfoModiReqDto modiDto,
             // 프로필 이미지 변경은 필수가 아님
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws JsonProcessingException {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        UserInfoModiReqDto modiDto = objectMapper.readValue(modiJson, UserInfoModiReqDto.class);
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage){
 
         boolean result = userService.modiUserCommonInfo(userInfo, modiDto, profileImage);
 
@@ -139,7 +137,7 @@ public class UserController {
     // 토큰 필요
     @PatchMapping("/verify-new-email")
     public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
-            @RequestBody UserEmailAuthResDto authResDto){
+            @RequestBody @Valid UserEmailAuthResDto authResDto){
 
         CommonResDto resDto = userService.verifyUserNewEmail(authResDto, userInfo);
 
@@ -201,6 +199,22 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 비밀번호 분실 시 입력한 이메일로 인증번호를 발송해주는 메소드
+    @GetMapping("/forget/{email}")
+    public ResponseEntity<?> forgetPasswordReq(@PathVariable String email){
+        CommonResDto resDto = userService.forgetPasswordReq(email);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 비밀번호 분실 시, 발급된 인증번호로 인증 후 임시비밀번호를 발급해주는 메소드
+    @PostMapping("/forget/auth")
+    public ResponseEntity<?> forgetAuth(@RequestBody @Valid UserEmailAuthResDto reqDto){
+        CommonResDto resDto = userService.authCodeAndRePw(reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     /**
      *
      * @param userInfo
@@ -228,6 +242,56 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+/////////////// 쪽지 관련 로직들입니다.
+
+    // 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
+    // 마이페이지에서 요청을 보내는 것이기에, token의 정보는 쓰지 않더라도 token이 필요로 하게 함.
+    // 비로그인 상태의 사용자는 사용하지 못하게 할 것 임.
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<?> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                        @PathVariable String keyword){
+        CommonResDto resDto = userService.searchUser(keyword);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 본인의 활성화된 대화방 조회
+    @GetMapping("/chat")
+    public ResponseEntity<?> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo){
+        CommonResDto resDto = userService.findMyActiveChat(userInfo.getUserId(), userInfo.getNickname());
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 대화방 삭제
+    @GetMapping("/clear/{chatId}")
+    public ResponseEntity<?> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                              @PathVariable(name = "chatId") Long chatId) {
+        CommonResDto resDto = userService.clearChat(userInfo.getUserId(), chatId);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+    // 선택한 채팅방의 7일간의 모든 쪽지 내용 조회
+    @GetMapping("/chat/list/{id}")
+    public ResponseEntity<?> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
+                                            @PathVariable(name = "id") Long chatId){
+        CommonResDto resDto
+                = userService.getMyChatMessages(userInfo.getUserId(), userInfo.getNickname(), chatId);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+    // 쪽지 발송
+    @PostMapping("/send")
+    public ResponseEntity<?> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                             @RequestBody @Valid UserMessageReqDto reqDto){
+        CommonResDto resDto = userService.sendMessage(userInfo.getUserId(), userInfo.getNickname(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
+
     /**
      *
      * @param userEmail
@@ -244,18 +308,28 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+
+//////// feign 요청을 받는 메소드 들입니다.
+
+
     /**
      *
      * @param userId
      * @return
      */
-    // feign 요청을 받는 메소드 들입니다.
     // 댓글 및 대댓글 생성 시 프로필 이미지 주소를 넘겨주는 메소드
     @GetMapping("/profileImage/{id}")
     ResponseEntity<String> getUserProfileImage(@PathVariable(name = "id") Long userId) {
         String profileImage = userService.getProfileImage(userId);
 
         return new ResponseEntity<>(profileImage, HttpStatus.OK);
+    }
+
+    @GetMapping("/findId/{email}")
+    Long findUserEmail(@PathVariable(name = "email") String email) {
+        Long foundUserId = userService.findByEmail(email);
+
+        return foundUserId;
     }
 
     /**

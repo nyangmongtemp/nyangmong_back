@@ -27,16 +27,12 @@ public class Like extends BaseTimeEntity {
     private Long contentId;
 
     @Enumerated(EnumType.STRING)
-    private ContentType contentType;
-
-    @Enumerated(EnumType.STRING)
     private Category category;
     
     // 새로 좋아요 데이터가 생성될 때, 사용할 생성자
-    public Like(Long userId, Long contentId, ContentType contentType, Category category) {
+    public Like(Long userId, Long contentId, Category category) {
         this.userId = userId;
         this.contentId = contentId;
-        this.contentType = contentType;
         this.category = category;
         this.active = true;
     }

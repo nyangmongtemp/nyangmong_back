@@ -1,6 +1,5 @@
-package com.playdata.mainservice.main.dto;
+package com.playdata.mainservice.main.dto.res;
 
-import com.playdata.mainservice.main.entity.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,11 +13,6 @@ public class LikeComCountResDto {
 
     private String category;
 
-    private Long likeCount;
-
     private Long commentCount;
-
-
-    // 메인화면에 드러날 소개 게시물의 좋아요, 댓글 개수, contentId 리턴용
 
 }

@@ -6,4 +6,5 @@ spring:
     name: animalboard-service
 
 imagePath:
-  url: /Users/ubing/Desktop/nyangmong/images/animal/
+  #url: /Users/ubing/Desktop/nyangmong/images/animal/
+  url: C:\nyangmong_image\animal
