@@ -41,8 +41,6 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
             count = jpaQueryFactory.select(strayAnimal.count().coalesce(0L).as("cnt"))
                     .from(strayAnimal)
                     .where(builderCondition(straySearchDto))
-                    .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
                     .fetchOne();
         }
 
