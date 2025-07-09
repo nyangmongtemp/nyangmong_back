@@ -6,7 +6,7 @@ public enum Category {
 
     QUESTION, // 질문
     REVIEW, // 후기
-    FREEDOM, // 자유
+    FREE, // 자유
     INTRODUCTION; // 소개
 
     @JsonCreator

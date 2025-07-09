@@ -42,7 +42,7 @@ public class BoardService {
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
 
-    private List<Category> categoryList = List.of(Category.FREEDOM, Category.INTRODUCTION, Category.QUESTION, Category.REVIEW);
+    private List<Category> categoryList = List.of(Category.FREE, Category.INTRODUCTION, Category.QUESTION, Category.REVIEW);
 
 
     // 질문, 후기, 자유 게시판 게시물 등록
@@ -67,6 +67,8 @@ public class BoardService {
 
         // DTO → toEntity() 로 변환 -> DB
         InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        
+        // DB에 저장
         informationBoardRepository.save(entity);
 
         // 성공 응답 반환
@@ -90,6 +92,8 @@ public class BoardService {
 
         // DTO → Entity 변환 후 저장
         IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        
+        // DB에 저장
         introductionBoardRepository.save(entity);
 
         // 성공 응답 반환
@@ -127,14 +131,11 @@ public class BoardService {
             // 본문 및 썸네일 수정
             board.boardModify(modiDto, savedPath);
 
-            // 수정된 게시글 저장
-            introductionBoardRepository.save(board);
-
             // 정보 게시판의 카테고리를 설정
-        } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
+        } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
 
             // 게시글 조회 (없으면 예외)
-            InformationBoard board = informationBoardRepository.findById(postId)
+            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "게시글이 존재하지 않습니다."));
 
             // 작성자 검증
@@ -155,13 +156,9 @@ public class BoardService {
                 // 삭제 시 저장 디렉토리에서도 이미지 삭제
                 File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
                 if (oldFile.exists()) oldFile.delete();
-
+                // 변경사항 저장
                 board.boardModify(modiDto, savedPath);
             }
-
-            // 수정된 게시글 저장
-            informationBoardRepository.save(board);
-
         } else {
             // 그 외 잘못된 카테고리는 예외
             throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않는 카테고리 입니다.");
@@ -185,15 +182,11 @@ public class BoardService {
 
             // 실제 삭제하지 않고 active 값을 false 로 변경 (소프트 삭제)
             board.boardDelete();
-
-            // 변경된 상태를 DB에 저장
-            introductionBoardRepository.save(board);
         }
-
         // 질문/후기/자유 게시판인 경우
-        else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREEDOM) {
+        else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
             // 게시글 조회 (없으면 예외)
-            InformationBoard board = informationBoardRepository.findById(postId)
+            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
             // 작성자 검증
@@ -203,9 +196,6 @@ public class BoardService {
 
             // active = false로 비활성화 처리
             board.boardDelete();
-
-            // DB에 저장
-            informationBoardRepository.save(board);
         } else { // 지원하지 않는 카테고리
             throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않은 카테고리 입니다.");
         }
@@ -267,7 +257,7 @@ public class BoardService {
             return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
         } else {
             // null 이면 들어올 수 없으니까 에러 던짐
-            InformationBoard board = informationBoardRepository.findById(postId)
+            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
 
             // 사용자 식별 정보 생성
@@ -307,8 +297,6 @@ public class BoardService {
                         .introductionBoard(introductionBoard) // 엔티티 -> DTO 변환
                         .build())
                 .collect(Collectors.toList());
-
-
     }
 
     // 정보 게시판 메인 인기 게시물 조회
@@ -466,9 +454,6 @@ public class BoardService {
                             .toInstant()));
         }
     }
-
-
-
 }
 
 
