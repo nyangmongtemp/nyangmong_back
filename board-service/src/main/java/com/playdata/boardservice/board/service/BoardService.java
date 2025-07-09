@@ -3,13 +3,19 @@ package com.playdata.boardservice.board.service;
 import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.InformationBoardSaveReqDto;
 import com.playdata.boardservice.board.dto.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.IntroductionMainListResDto;
+import com.playdata.boardservice.board.dto.LikeComCountResDto;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.board.entity.IntroductionBoard;
 import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
+import com.playdata.boardservice.client.MainServiceClient;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +34,8 @@ public class BoardService {
 
     private final InformationBoardRepository informationBoardRepository;
     private final IntroductionBoardRepository introductionBoardRepository;
+
+    private final MainServiceClient mainServiceClient;
 
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
@@ -295,6 +303,41 @@ public class BoardService {
         else {
             throw new IllegalArgumentException("지원하지 않는 게시판 카테고리입니다.");
         }
+    }
+
+    /**
+     * 소개 게시판 좋아요순 3개 목록 조회
+     */
+    public List<IntroductionMainListResDto> findIntroductionMainList() {
+        // 1. Feign으로 좋아요 많은 게시글 리스트 가져오기
+        List<LikeComCountResDto> introductionLikeCountList = mainServiceClient.getMainIntroduction();
+
+        // 2. postId만 추출
+        List<Long> postIds = introductionLikeCountList.stream()
+                .map(LikeComCountResDto::getContentId)
+                .collect(Collectors.toList());
+
+        // 3. postId → likeCount/ commentCount 맵핑
+        Map<Long, LikeComCountResDto> likeCountMap = introductionLikeCountList.stream()
+                .collect(Collectors.toMap(
+                        LikeComCountResDto::getContentId,
+                        dto -> dto
+                ));
+
+        // 4. DB에서 postId로 게시글 조회
+        List<IntroductionBoard> introductionBoards = introductionBoardRepository.findAllById(postIds);
+
+        // 5. 게시글 + 좋아요/댓글 정보 조합 후 DTO 변환
+        return introductionBoards.stream()
+                .map(introduction -> {
+                    LikeComCountResDto likeDto = likeCountMap.get(introduction.getPostId());
+                    return IntroductionMainListResDto.builder()
+                            .introductionBoard(introduction)
+                            .likeCount(likeDto.getLikeCount())
+                            .commentCount(likeDto.getCommentCount())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
 

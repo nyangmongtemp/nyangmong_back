@@ -7,6 +7,6 @@ spring:
 
 imagePath:
   thumbnail:
-    url: C:\nyangmorg_image\board_thumbnaiImage
-
+#    url: C:\nyangmorg_image\board_thumbnaiImage
+    url: /Users/ubing/Desktop/nyangmong/images/board_thumbnaiImage/
 

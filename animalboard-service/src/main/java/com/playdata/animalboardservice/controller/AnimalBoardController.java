@@ -5,6 +5,7 @@ import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
+import com.playdata.animalboardservice.dto.req.ReservationReqDto;
 import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -115,11 +117,26 @@ public class AnimalBoardController {
     /**
      * 분양게시굴 삭제
      * @param postId 게시판 번호
+     * @param userInfo 로그인한 유저 정보
      * @return
      */
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deleteAnimal(@PathVariable Long postId, @AuthenticationPrincipal TokenUserInfo userInfo) {
         animalService.deleteAnimal(postId, userInfo);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 분양 동물 예약상태 변경 api
+     * @param postId 게시판 번호
+     * @param userInfo 로그인한 유저 정보
+     * @return
+     */
+    @PostMapping("/reservation/{postId}")
+    public ResponseEntity<?> reservationStatusAnimal(@PathVariable Long postId,
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestBody @Valid ReservationReqDto reservationReqDto) {
+        animalService.reservationStatusAnimal(postId, userInfo, reservationReqDto);
         return ResponseEntity.ok().build();
     }
 }
