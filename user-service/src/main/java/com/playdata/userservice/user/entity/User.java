@@ -1,8 +1,9 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
-import com.playdata.userservice.user.dto.UserInfoModiReqDto;
-import com.playdata.userservice.user.dto.UserMyPageResDto;
+import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
+import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
+import com.playdata.userservice.user.dto.res.UserMyPageResDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -64,9 +65,15 @@ public class User extends BaseTimeEntity {
         if(newProfileImage != null) {
             this.profileImage = newProfileImage;
         }
-        this.nickname = modiDto.getNickname();
-        this.address = modiDto.getAddress();
-        this.phone = modiDto.getPhone();
+        if(modiDto.getNickname() != null) {
+            this.nickname = modiDto.getNickname();
+        }
+        if(modiDto.getAddress() != null) {
+            this.address = modiDto.getAddress();
+        }
+        if(modiDto.getPhone() != null) {
+            this.phone = modiDto.getPhone();
+        }
     }
 
     // 인증이 필요한 이메일 정보를 변경하는 메소드
@@ -87,7 +94,25 @@ public class User extends BaseTimeEntity {
                 .nickname(this.nickname)
                 .userName(this.userName)
                 .phone(this.phone)
-                .createtime(this.getCreateTime())
+                .profileImage(profileImage)
+                .createAt(this.getCreateAt())
+                .address(this.address)
+                .build();
+    }
+
+    // 탈퇴 진행 메소드
+    public void resignUser() {
+        this.active = false;
+    }
+
+    // 쪽지를 보낼 상대방의 정보 조회 dto 변환
+    public UserInfoResDto toMessageInfo() {
+        return UserInfoResDto.builder()
+                .userId(userId)
+                .nickname(nickname)
+                .createAt(this.getCreateAt())
+                .profileImage(profileImage)
+                .username(userName)
                 .build();
     }
 

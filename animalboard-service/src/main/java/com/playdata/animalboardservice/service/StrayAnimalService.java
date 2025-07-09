@@ -6,7 +6,9 @@ import com.playdata.animalboardservice.dto.StraySearchDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.repository.StrayAnimalRepository;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
@@ -50,5 +52,19 @@ public class StrayAnimalService {
         Optional.ofNullable(strayAnimal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
         return strayAnimal;
+    }
+
+    /**
+     * 유기동물 메인 노출될 리스트 목록 조회
+     * @return
+     */
+    public List<StrayAnimalListResDto> findStrayAnimalMainList() {
+        List<StrayAnimal> strayAnimalMainList = strayAnimalRepository.findMainList();
+
+        return strayAnimalMainList.stream()
+                .map(strayAnimal -> StrayAnimalListResDto.builder()
+                        .strayAnimal(strayAnimal)
+                        .build())
+                .collect(Collectors.toList());
     }
 }

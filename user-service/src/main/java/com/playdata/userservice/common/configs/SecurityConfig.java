@@ -18,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity // 권한 검사를 컨트롤러의 메서드에서 전역적으로 수행하기 위한 설정.
 
-public class SecurityConfig {
+public class
+SecurityConfig {
 
     private  final JwtAuthFilter jwtAuthFilter;
     private  final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -42,7 +43,8 @@ public class SecurityConfig {
 //
                     .requestMatchers(
                             "/user/login", "/user/create", "/user/templogin", "/user/temp",
-                            "/user/verify-email", "/user/verify-code"
+                            "/user/verify-email", "/user/verify-code", "/user/profileImage/**",
+                            "/user/refresh", "/user/forget/*", "/user/forget/auth"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });

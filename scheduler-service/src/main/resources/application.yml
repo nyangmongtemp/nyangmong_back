@@ -4,6 +4,20 @@ server:
 spring:
   application:
     name: scheduler-service
-
+  datasource:
+    url: jdbc:mysql://nyangmong.c9wy4wygytrx.ap-southeast-2.amazonaws.com:3306/scheduler_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: spring
+    password: spring
+    driver-class-name: com.mysql.cj.jdbc.Driver
 imagePath:
   url: /Users/ubing/Desktop/nyangmong/images/crawling/
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
