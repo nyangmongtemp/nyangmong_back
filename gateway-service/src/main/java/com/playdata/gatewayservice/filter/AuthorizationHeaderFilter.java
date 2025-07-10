@@ -33,7 +33,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/**",
             "/animal-board/list", "/animal-board/public/{postId}",
             "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email", "/user/forget/*", "/user/forget/auth",
-            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
+            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail", "/main/reply/list/*"
             ,"/main/introduction", "/board/popular/children", "/board/introduction/list"
             ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
     );

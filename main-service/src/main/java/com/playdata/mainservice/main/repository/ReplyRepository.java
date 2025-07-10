@@ -1,5 +1,6 @@
 package com.playdata.mainservice.main.repository;
 
+import com.playdata.mainservice.main.entity.Comment;
 import com.playdata.mainservice.main.entity.Reply;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,4 +23,6 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
 
     Page<Reply> findActiveByUserId(Long userId, Pageable pageable);
 
+    @Query("SELECT r FROM Reply r WHERE r.active = true AND r.comment.commentId = :commentId")
+    List<Reply> findActiveByCommentId(@Param("commentId") Long commentId);
 }

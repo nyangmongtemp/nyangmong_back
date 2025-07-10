@@ -116,6 +116,9 @@ public class UserService {
 
             profileImagePath = setProfileImage(profileImage);
         }
+        else {
+            profileImagePath = "default_user.png";
+        }
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
         // 부가적인 정보를 담아서 User를 DB에 저장
