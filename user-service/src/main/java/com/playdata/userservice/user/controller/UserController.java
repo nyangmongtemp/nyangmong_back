@@ -1,12 +1,16 @@
 package com.playdata.userservice.user.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
+import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
 import com.playdata.userservice.user.dto.req.*;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 
@@ -27,6 +32,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      *
@@ -243,6 +249,46 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+/////////////// 카카오 소셜 로그인 관련 로직들입니다.
+    // 카카오 콜백 요청 처리
+    @GetMapping("/kakao")
+    public void kakaoCallback(@RequestParam String code , HttpServletResponse response) throws IOException {
+        log.info("카카오 콜백 처리 시작! code: {}", code);
+
+        String kakaoAccessToken = userService.getKakaoAccessToken(code);
+
+        KakaoUserDto kakaoUserDto = userService.getKakaoUser(kakaoAccessToken);
+        KakaoLoginResDto resDto = userService.findOrCreateKakaoUser(kakaoUserDto);
+
+        String html = String.format("""
+                    <!DOCTYPE html>
+                    <html>
+                    <head><title>카카오 로그인 완료</title></head>
+                    <body>
+                        <script>
+                            if (window.opener) {
+                                window.opener.postMessage({
+                                    type: 'OAUTH_SUCCESS',
+                                    token: '%s',
+                                    email: '%s',
+                                    nickname: '%s',
+                                    profileImage: '%s',
+                                    provider: 'KAKAO'
+                                }, 'http://localhost:5173');
+                                window.close();
+                            } else {
+                                window.location.href = 'http://localhost:5173';
+                            }
+                        </script>
+                        <p>카카오 로그인 처리 중...</p>
+                    </body>
+                    </html>
+                    """, resDto.getToken(), resDto.getEmail(),
+                resDto.getNickname(), resDto.getProfileImage());
+        response.setContentType("text/html;charset=UTF-8");
+        response.getWriter().write(html);
+    }
+
 /////////////// 쪽지 관련 로직들입니다.
 
     // 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
@@ -292,6 +338,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
+    @GetMapping("/findId")
+    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        Long foundUserId = userService.findByEmail(userInfo.getEmail());
+
+        return ResponseEntity.ok(foundUserId);
+    }
+
 
     /**
      *
@@ -324,13 +377,6 @@ public class UserController {
         String profileImage = userService.getProfileImage(userId);
 
         return new ResponseEntity<>(profileImage, HttpStatus.OK);
-    }
-
-    @GetMapping("/findId/{email}")
-    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
-        Long foundUserId = userService.findByEmail(userInfo.getEmail());
-
-        return ResponseEntity.ok(foundUserId);
     }
 
     /**

@@ -134,19 +134,6 @@ public class MainController {
 
     /**
      *
-     * @param contentList  --> List<contentId, category>
-     * @return
-     */
-    // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
-    @PostMapping("/list")
-    public ResponseEntity<?> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
-        CommonResDto resDto = mainService.getLikeCommentCount(contentList);
-
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
-
-    /**
-     *
      * @param reqDto  ->> contentId, category
      * @return
      */
@@ -168,6 +155,13 @@ public class MainController {
     @PostMapping("/comment/list")
     public ResponseEntity<?> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
         CommonResDto resDto = mainService.getCommentDetail(reqDto, pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    @GetMapping("/reply/list/{id}")
+    public ResponseEntity<?> getReplyList(@PathVariable(name = "id") Long commentId) {
+        CommonResDto resDto = mainService.getCommentReplies(commentId);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -231,6 +225,7 @@ public class MainController {
      * @param reqDto  --> category, contentId, contentType
      * @return
      */
+
     @PostMapping("/liked")
     public ResponseEntity<?> getUserLiked(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @RequestBody @Valid MainLikeReqDto reqDto) {
@@ -284,6 +279,17 @@ public class MainController {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    /**
+     * @param contentList --> List<contentId, category>
+     * @return  List<LikeComCountResDto>  --> category, contentId, commentCount(대댓글까지 포함), likeCount
+     */
+    // feign으로 받으셔야 합니다.
+    // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
+    @PostMapping("/list")
+    public List<LikeComCountResDto> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
+        return mainService.getLikeCommentCount(contentList);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.playdata.userservice.user.service;
 
+import com.playdata.userservice.client.AnimalBoardServiceClient;
+import com.playdata.userservice.client.BoardServiceClient;
 import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
@@ -8,6 +10,8 @@ import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.common.util.ImageValidation;
 import com.playdata.userservice.user.dto.chat.res.UserChatInfoResDto;
+import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
+import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
 import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
@@ -30,11 +34,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -44,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +73,8 @@ public class UserService {
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
+    private final AnimalBoardServiceClient animalClient;
+    private final BoardServiceClient boardClient;
 
     // 로그인 토큰 발급용
     private final JwtTokenProvider jwtTokenProvider;
@@ -86,6 +95,12 @@ public class UserService {
     // 이미지 저장 경로 --> 추후에 yml에 있는 주소를 s3 주소로 바꿀 것
     @Value("${imagePath.url}")
     private String profileImageSaveUrl;
+
+    @Value("${oauth2.kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${oauth2.kakao.redirect-uri}")
+    private String kakaoRedirectUri;
 
     /**
      *
@@ -115,6 +130,9 @@ public class UserService {
             ImageValidation.validateImageFile(profileImage);
 
             profileImagePath = setProfileImage(profileImage);
+        }
+        else {
+            profileImagePath = "default_user.png";
         }
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
@@ -296,9 +314,13 @@ public class UserService {
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
             ResponseEntity<?> response
                     = mainClient.modifyNickname(userInfo.getUserId(), encodedNickname);
-            
+            ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
+            ResponseEntity<?> res2 = boardClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
-            if(response.getStatusCode() != HttpStatus.OK) {
+            // 또는 다른 게시판의 nickname값 수정 중 오류 발생
+            if(response.getStatusCode() != HttpStatus.OK
+                    || res1.getStatusCode() != HttpStatus.OK
+                    || res2.getStatusCode() != HttpStatus.OK) {
                 throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
@@ -442,9 +464,16 @@ public class UserService {
         user.resignUser();
         // main-service로  회원이 작성한 댓글, 대댓글을 모두 비활성화 요청
         ResponseEntity<?> response = mainClient.deleteUser(userId);
-
+        // animal-board-service로 요청
+        ResponseEntity<?> res1 = animalClient.deleteUser(userId);
+        // board-service로 요청
+        ResponseEntity<?> res2 = boardClient.deleteUser(userId);
+        
         // 댓글, 대댓글 비활성화 처리 중 오류 발생
-        if(response.getStatusCode() != HttpStatus.OK) {
+        // 모든 게시물 비활성화 처리 중 오류 발생
+        if(response.getStatusCode() != HttpStatus.OK
+        || res1.getStatusCode() != HttpStatus.OK
+        || res2.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
@@ -652,7 +681,104 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
     }
 
-    // fegin용 이메일을 통해 userId를 리턴하는 메소드입니다.
+    public String getKakaoAccessToken(String code) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        String requestUrl = "https://kauth.kakao.com/oauth/token";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "authorization_code");
+        formData.add("code", code);
+        formData.add("client_id", kakaoClientId);
+        formData.add("redirect_uri", kakaoRedirectUri);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+        ResponseEntity<Map> responseEntity = restTemplate.exchange(requestUrl, HttpMethod.POST, request, Map.class);
+
+        Map<String, Object> responseJSON = (Map<String, Object>) responseEntity.getBody();
+        return (String) responseJSON.get("access_token");
+
+    }
+
+    public KakaoUserDto getKakaoUser(String kakaoAccessToken) {
+
+        String requestUrl = "https://kapi.kakao.com/v2/user/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+        headers.add("Authorization", "Bearer " + kakaoAccessToken);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<KakaoUserDto> response = restTemplate.exchange(
+                requestUrl, HttpMethod.GET, new HttpEntity<>(headers), KakaoUserDto.class
+        );
+
+        return response.getBody();
+    }
+
+    public KakaoLoginResDto findOrCreateKakaoUser(KakaoUserDto kakaoUserDto) {
+
+        Optional<User> kakao
+                = userRepository.findSocialUser("KAKAO", kakaoUserDto.getId().toString());
+        // 가입 이력이 있는 회원인 경우
+        if(kakao.isPresent()) {
+            // 소셜로그인 요청 유저가 이미 탈퇴한 회원인 경우
+            if(!kakao.get().isActive()){
+                throw new CommonException(ErrorCode.BAD_REQUEST, "이미 탈퇴한 회원입니다.");
+            }
+            User user = kakao.get();
+            // Access Token 발급
+            String token
+                    = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
+            // Refresh Token 발급
+            String refreshToken =
+                    jwtTokenProvider.createRefreshToken(user.getEmail(),
+                            "USER", user.getUserId());
+            // redis에 refresh 토큰 저장
+            redisTemplate.opsForValue().set(
+                    // key
+                    "user:refresh:"+user.getUserId(),
+                    // value
+                    refreshToken,
+                    // 만료 시간
+                    2,
+                    // 2일간 리프레쉬 토큰 저장
+                    TimeUnit.DAYS);
+            return user.toKakaoLoginResDto(token);
+        }
+        // 가입한 적이 없는 회원인 경우
+        Optional<User> byEmail = userRepository.findByEmail(kakaoUserDto.getKakaoAccount().getEmail());
+        // 해당 이메일에 가입 이력이 있는 경우
+        if(byEmail.isPresent()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "이미 회원가입된 이메일입니다.");
+        }
+        User newKakaoUser = kakaoUserDto.makeNewKakaoUser();
+        // Access Token 발급
+        userRepository.save(newKakaoUser);
+        String token
+                = jwtTokenProvider.createToken(newKakaoUser.getEmail(),
+                "USER", newKakaoUser.getNickname(), newKakaoUser.getUserId());
+        // Refresh Token 발급
+        String refreshToken =
+                jwtTokenProvider.createRefreshToken(newKakaoUser.getEmail(),
+                        "USER", newKakaoUser.getUserId());
+        // redis에 refresh 토큰 저장
+        redisTemplate.opsForValue().set(
+                // key
+                "user:refresh:"+newKakaoUser.getUserId(),
+                // value
+                refreshToken,
+                // 만료 시간
+                2,
+                // 2일간 리프레쉬 토큰 저장
+                TimeUnit.DAYS);
+        return newKakaoUser.toKakaoLoginResDto(token);
+    }
+
+
+    // 이메일을 통해 userId를 리턴하는 메소드입니다.
     public Long findByEmail(String email) {
         Optional<User> byEmail = userRepository.findByEmail(email);
         if(!byEmail.isPresent() || !byEmail.get().isActive()) {

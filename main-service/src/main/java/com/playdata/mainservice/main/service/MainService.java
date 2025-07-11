@@ -349,12 +349,11 @@ public class MainService {
     }
 
     /**
-     * 
-     * @param contentList  --> <category, contentId> 를 리스트로 받음
+     * @param contentList --> <category, contentId> 를 리스트로 받음
      * @return
      */
     // 게시물 목록 조회 시 사용할 댓글, 좋아요 개수 조회
-    public CommonResDto getLikeCommentCount(List<LikeComCountReqDto> contentList) {
+    public List<LikeComCountResDto> getLikeCommentCount(List<LikeComCountReqDto> contentList) {
 
         List<LikeComCountResDto> result = contentList.stream()
                 .map((req) -> {
@@ -385,7 +384,7 @@ public class MainService {
                     return getLikeComCountResDto(req, count, totalCount);
                 })
                 .collect(Collectors.toList());
-        return new CommonResDto(HttpStatus.OK, "모든 댓글수, 좋아요 수 구함.", result);
+        return result;
     }
 
     /**
@@ -445,7 +444,7 @@ public class MainService {
                 = commentRepository.findActiveByCategoryAndContentId(category, reqDto.getContentId(), pageable);
 
         // 해당 댓글들의 모든 좋아요 개수를 계산하는 로직
-        List<CommentDetailResDto> commentList = foundComment.stream().map(MainService::getDetailResDto).collect(Collectors.toList());
+        Page<CommentDetailResDto> commentList = foundComment.map(MainService::getDetailResDto);
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 모든 댓글 정보 조회", commentList);
 
@@ -533,6 +532,8 @@ public class MainService {
         // 소개 게시물 중 한 달동안 생성된 좋아요 개수가 가장 많은 3개의 게시물을 조회
         List<Tuple> postList = likeImpl.getPostIdMainIntroductionPost();
         List<LikeComCountResDto> resDtoList = postList.stream().map(tuple -> {
+            // 해당 게시물의 모든 좋아요 개수 조회
+
             // 해당 게시물의 댓글 개수 조회
             List<Long> findComment = commentRepository.
                     findActiveCommentIdsByCategoryAndContentId(Category.INTRODUCTION, tuple.get(like.contentId));
@@ -543,7 +544,7 @@ public class MainService {
             // 총 댓글 개수 = 댓글 + 대댓글
             commentCount += replyCount;
             // contentId, Category, 좋아요 개수, 총 댓글 개수
-            return new LikeComCountResDto(tuple.get(like.contentId), "Introduction", commentCount);
+            return new LikeComCountResDto(tuple.get(like.contentId) , "Introduction", commentCount, tuple.get(like.count()));
         }).collect(Collectors.toList());
 
         return resDtoList;
@@ -556,6 +557,17 @@ public class MainService {
         }
         Optional<Like> liked = likeImpl.findUserLiked(userId, reqDto);
         return new CommonResDto(HttpStatus.OK, "사용자의 좋아요 찾음", liked.isPresent());
+    }
+
+    public CommonResDto getCommentReplies(Long commentId) {
+
+        List<Reply> replies = replyRepository.findActiveByCommentId(commentId);
+
+        List<ReplyDetailResDto> resDto = replies.stream().map(reply -> {
+            return reply.fromEntity(0L);
+        }).collect(Collectors.toList());
+
+        return new CommonResDto(HttpStatus.OK, "해당 댓글의 모든 대댓글 찾음", resDto);
     }
 
     /////////////////// 공통 사용 메소드들입니다.
@@ -614,6 +626,7 @@ public class MainService {
         return LikeComCountResDto.builder()
                 .contentId(req.getContentId())
                 .category(req.getCategory())
+                .likeCount(count)
                 .commentCount(totalCount)
                 .build();
     }
@@ -635,4 +648,5 @@ public class MainService {
                 .commentId(comment.getCommentId())
                 .build();
     }
+
 }
