@@ -3,6 +3,7 @@ package com.playdata.boardservice.board.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.entity.Category;
+import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.service.BoardService;
 import com.playdata.boardservice.common.auth.JwtTokenProvider;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
@@ -19,6 +20,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -29,6 +32,7 @@ public class BoardController {
 
     private final BoardService boardService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final InformationBoardRepository informationBoardRepository;
 
     // 정보 게시판 게시물 생성
     @PostMapping(value = "/information/create", consumes = "multipart/form-data")
@@ -176,10 +180,13 @@ public class BoardController {
 
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
     @PutMapping("/modifyNickname/{id}/{nickname}")
-    ResponseEntity<?> modifyNickname(@PathVariable("id") Long id,
-                                     @PathVariable("nickname") String nickname) {
+    ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId,
+                                     @PathVariable("nickname") String encodedNickname) {
 
-        boardService.modifyUserFindBoard(id, nickname);
+        String nickname = URLDecoder.decode(encodedNickname, StandardCharsets.UTF_8);
+
+        boardService.modifyUserFindBoard(userId, nickname);
+        log.info(userId + ":" + nickname);
 
         // 요청 완료 응답
         return new ResponseEntity<>(HttpStatus.OK);

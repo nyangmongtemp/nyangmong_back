@@ -31,16 +31,12 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
     private final List<String> allowUrl = Arrays.asList(
             "/user/login", "/scheduler/crawler", "/scheduler/api", "/stray-animal-board/**",
-            "/animal-board/list", "/animal-board/public/{postId}",
-            "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email", "/user/forget/*", "/user/forget/auth",
-            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
-            ,"/main/introduction", "/board/popular/children", "/board/information/list", "/board/introduction/list",
-            "/board/introduction/main", "/board/information/main", "/board/information/popular",
-            "/board/detail/**"
-            ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
-            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail", "/main/reply/list/*"
-            ,"/main/introduction", "/board/popular/children", "/board/introduction/list"
-            ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals", "/user/kakao"
+            "/animal-board/list", "/animal-board/public/{postId}", "/user/create", "/user/temp", "/user/verify-code",
+            "/user/verify-email", "/user/forget/*", "/user/forget/auth", "/user/verify-code", "/user/refresh",
+            "/main/list", "/main/comment/list", "/main/detail", "/main/introduction", "/board/popular/children",
+            "/board/information/list", "/board/introduction/list", "/board/introduction/main", "/board/information/main",
+            "/board/information/popular", "/board/detail/**", "/api/festivals/**", "/festival-service/api/festivals/**",
+            "/festival-service/api/festivals","/main/reply/list/*", "/user/kakao"
     );
 
     @Override

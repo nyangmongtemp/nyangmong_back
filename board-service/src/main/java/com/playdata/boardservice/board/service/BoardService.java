@@ -24,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -314,10 +316,10 @@ public class BoardService {
     @Transactional
     public void deleteUserFindBoard(Long userId) {
 
-        informationBoardRepository.findUserId(userId)
+        informationBoardRepository.findByUserId(userId)
                 .forEach(InformationBoard::boardDelete);
 
-        introductionBoardRepository.findUserId(userId)
+        introductionBoardRepository.findByUserId(userId)
                 .forEach(IntroductionBoard::boardDelete);
     }
 
@@ -325,17 +327,18 @@ public class BoardService {
     @Transactional
     public void modifyUserFindBoard(Long userId, String nickname) {
 
-        informationBoardRepository.findUserId(userId)
+        informationBoardRepository.findByUserId(userId)
                 .forEach(InformationBoard -> InformationBoard.nicknameModify(nickname));
 
-        introductionBoardRepository.findUserId(userId)
+        introductionBoardRepository.findByUserId(userId)
                 .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(nickname));
+
+
 
     }
 
 
     // 입력받은 카테고리가 유효하냐 (contains)
-
     private boolean isValidCategory(Category input) {
         return categoryList.contains(input);
     }
