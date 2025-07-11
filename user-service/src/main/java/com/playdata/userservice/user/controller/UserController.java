@@ -292,6 +292,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
+    @GetMapping("/findId")
+    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        Long foundUserId = userService.findByEmail(userInfo.getEmail());
+
+        return ResponseEntity.ok(foundUserId);
+    }
+
 
     /**
      *
@@ -324,13 +331,6 @@ public class UserController {
         String profileImage = userService.getProfileImage(userId);
 
         return new ResponseEntity<>(profileImage, HttpStatus.OK);
-    }
-
-    @GetMapping("/findId/{email}")
-    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
-        Long foundUserId = userService.findByEmail(userInfo.getEmail());
-
-        return ResponseEntity.ok(foundUserId);
     }
 
     /**
