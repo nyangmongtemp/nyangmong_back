@@ -221,7 +221,7 @@ public class MainService {
 
         // 대댓글에 매핑된 댓글의 존재 및 활성화 여부 확인
         ReplySaveReqDto saveReqDto
-                = new ReplySaveReqDto(userInfo.getUserId(), validReply.getContent());
+                = new ReplySaveReqDto(validReply.getComment().getCommentId(), validReply.getContent());
         isPresentComment(saveReqDto);
 
         // 대댓글의 댓글이 존재하고 수정 권한도 있는 경우
@@ -229,12 +229,9 @@ public class MainService {
         validReply.modifyReply(reqDto.getContent());
         replyRepository.save(validReply);
 
-        // 기존 대댓글의 좋아요 개수 조회
-        Long likeCount
-                = likeRepository.countByContentIdAndActiveTrue(reqDto.getReplyId());
 
         return new CommonResDto(HttpStatus.CREATED,
-                "대댓글 수정이 완료되었습니다.", validReply.fromEntity(likeCount));
+                "대댓글 수정이 완료되었습니다.", validReply.fromEntity(0L));
     }
 
     /**
