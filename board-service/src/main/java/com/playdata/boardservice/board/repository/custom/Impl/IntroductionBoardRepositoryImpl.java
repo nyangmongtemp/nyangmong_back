@@ -29,6 +29,7 @@ public class IntroductionBoardRepositoryImpl implements  IntroductionBoardReposi
         // 게시글 목록 조회
         List<IntroductionBoard> content = jpaQueryFactory.selectFrom(introductionBoard)
                 .where(createCondition(boardSearchDto)) // 검색 조건
+                .where(introductionBoard.active.eq(true)) // active true 인 애들을 찾겠다
                 .offset(pageable.getOffset()) // 시작 위치
                 .limit(pageable.getPageSize()) // 페이지당 개수
                 .fetch();
