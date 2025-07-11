@@ -310,7 +310,32 @@ public class BoardService {
                 .toList();
     }
 
+    // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
+    @Transactional
+    public void deleteUserFindBoard(Long userId) {
+
+        informationBoardRepository.findUserId(userId)
+                .forEach(InformationBoard::boardDelete);
+
+        introductionBoardRepository.findUserId(userId)
+                .forEach(IntroductionBoard::boardDelete);
+    }
+
+    // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
+    @Transactional
+    public void modifyUserFindBoard(Long userId, String nickname) {
+
+        informationBoardRepository.findUserId(userId)
+                .forEach(InformationBoard -> InformationBoard.nicknameModify(nickname));
+
+        introductionBoardRepository.findUserId(userId)
+                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(nickname));
+
+    }
+
+
     // 입력받은 카테고리가 유효하냐 (contains)
+
     private boolean isValidCategory(Category input) {
         return categoryList.contains(input);
     }

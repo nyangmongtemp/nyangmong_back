@@ -35,7 +35,7 @@ public class SecurityConfig {
             auth
                     .requestMatchers("/board/information/list", "/board/introduction/list",
                             "/board/introduction/main", "/board/information/main", "/board/information/popular",
-                            "/board/detail/**").permitAll()
+                            "/board/detail/**", "/deleteUser/{id}", "/modifyNickname/{id}/{nickname}").permitAll()
                     .anyRequest().authenticated();
         });
 

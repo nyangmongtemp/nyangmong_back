@@ -63,6 +63,11 @@ public class IntroductionBoard extends BaseTimeEntity {
         this.title = boardModiDto.getTitle();
     }
 
+    // 사용자가 nickname을 변경하면 그 작성자의 게시물들의 nickname을 변경
+    public void nicknameModify(String newNickname) {
+        this.nickname = newNickname;
+    }
+
     // 삭제
     public void boardDelete() {
         this.active = false;

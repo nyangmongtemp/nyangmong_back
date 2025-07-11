@@ -163,4 +163,26 @@ public class BoardController {
         List<InformationBoardListResDto> resDto = boardService.findPopularInformationBoard();
         return ResponseEntity.ok().body(resDto);
     }
+
+    // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
+    @DeleteMapping("/deleteUser/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
+
+        boardService.deleteUserFindBoard(userId);
+
+        // 요청 완료 응답
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
+    @PutMapping("/modifyNickname/{id}/{nickname}")
+    ResponseEntity<?> modifyNickname(@PathVariable("id") Long id,
+                                     @PathVariable("nickname") String nickname) {
+
+        boardService.modifyUserFindBoard(id, nickname);
+
+        // 요청 완료 응답
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }
