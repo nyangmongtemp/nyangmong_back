@@ -8,6 +8,7 @@ import lombok.*;
 @Builder
 public class BoardModiDto {
 
+    private String title;
     private String thumbnailImage;
     private String content;
 

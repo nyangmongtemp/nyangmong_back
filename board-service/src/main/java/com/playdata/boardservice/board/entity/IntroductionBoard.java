@@ -60,6 +60,7 @@ public class IntroductionBoard extends BaseTimeEntity {
     public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage) {
         this.content = boardModiDto.getContent();
         this.thumbnailImage = newThumbnailImage;
+        this.title = boardModiDto.getTitle();
     }
 
     // 삭제
