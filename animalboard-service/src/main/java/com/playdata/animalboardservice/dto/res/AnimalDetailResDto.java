@@ -1,13 +1,16 @@
 package com.playdata.animalboardservice.dto.res;
 
+import com.playdata.animalboardservice.common.entity.BaseTimeEntity;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.entity.NeuterYn;
+import com.playdata.animalboardservice.entity.ReservationStatus;
 import com.playdata.animalboardservice.entity.SexCode;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class AnimalDetailResDto {
+public class AnimalDetailResDto extends BaseTimeEntity {
 
     private Long postId; //pk 게시판 번호
     private Long userId; // 사용자 id 값
@@ -24,6 +27,8 @@ public class AnimalDetailResDto {
     private String address; // 주소
     private String fee; // 책임비
     private boolean active; // 게시물 활성화
+    private ReservationStatus reservationStatus; // 분양상태
+    private LocalDateTime createAt; // 생성 일시 (자동 관리)
 
     @Builder
     public AnimalDetailResDto(Animal animal) {
@@ -42,5 +47,7 @@ public class AnimalDetailResDto {
         this.address = animal.getAddress();
         this.fee = animal.getFee();
         this.active = animal.isActive();
+        this.reservationStatus = animal.getReservationStatus();
+        this.createAt = animal.getCreateAt();
     }
 }

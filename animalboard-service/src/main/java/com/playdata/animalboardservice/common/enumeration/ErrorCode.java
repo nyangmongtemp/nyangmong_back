@@ -61,6 +61,8 @@ public enum ErrorCode {
     AUTH_CODE_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-011", "인증코드가 존재하지 않습니다."),
     AUTH_ACCOUNT_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-012", "로그인을 해주세요."), // 인증할 계정이 존재하지 않을 때
     AUTH_OTP_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-013", "OTP 개인키가 존재하지 않습니다."),
+    JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "ACCOUNT-014", "JWT 토큰이 만료되었습니다."),
+    INVALID_AUTH_JWT(HttpStatus.UNAUTHORIZED, "ACCOUNT-014", "잘못된 JWT 토큰입니다."),
 
 
 

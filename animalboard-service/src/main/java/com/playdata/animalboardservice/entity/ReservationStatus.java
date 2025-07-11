@@ -18,13 +18,13 @@ import lombok.Getter;
 public enum ReservationStatus {
 
     @JsonProperty("A")
-    A("예약가능", "AVAILABLE"),
+    A("예약가능", "A"),
 
     @JsonProperty("R")
-    R("예약중", "RESERVED"),
+    R("예약중", "R"),
 
     @JsonProperty("C")
-    C("분양완료", "COMPLETED");
+    C("분양완료", "C");
 
     // 한글 설명
     private final String desc;
