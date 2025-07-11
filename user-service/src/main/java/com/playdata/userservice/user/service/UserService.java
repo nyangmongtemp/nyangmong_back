@@ -314,12 +314,12 @@ public class UserService {
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
             ResponseEntity<?> response
                     = mainClient.modifyNickname(userInfo.getUserId(), encodedNickname);
-            ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
+            // ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             ResponseEntity<?> res2 = boardClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
             // 또는 다른 게시판의 nickname값 수정 중 오류 발생
             if(response.getStatusCode() != HttpStatus.OK
-                    || res1.getStatusCode() != HttpStatus.OK
+               //     || res1.getStatusCode() != HttpStatus.OK
                     || res2.getStatusCode() != HttpStatus.OK) {
                 throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
