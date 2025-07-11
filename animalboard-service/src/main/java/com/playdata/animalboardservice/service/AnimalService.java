@@ -118,7 +118,7 @@ public class AnimalService {
         // 이미지 저장 후, 저장된 파일명 반환
         String newThumbnailImage = setProfileImage(thumbnailImage);
         // DTO → Entity 변환 후 저장
-        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage));
+        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage, userInfo.getNickname()));
     }
 
     /**
