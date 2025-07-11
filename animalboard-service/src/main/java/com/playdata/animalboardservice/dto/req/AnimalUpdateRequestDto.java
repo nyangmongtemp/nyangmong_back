@@ -31,6 +31,7 @@ public class AnimalUpdateRequestDto {
     private NeuterYn neuterYn; // 중성화여부
     @NotBlank
     private String address; // 주소
-    private String fee; // 책임비
+    @NotNull
+    private Integer fee; // 책임비
 
 }
