@@ -32,6 +32,7 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
                 .from(animal)
                 .where(builderCondition(searchDto))
                 .where(animal.active.eq(true))
+                .orderBy(animal.createAt.desc())
                 .offset(pageable.getOffset())       // 페이지 번호 기반 오프셋 적용
                 .limit(pageable.getPageSize())      // 한 페이지 크기 제한
                 .fetch();
@@ -43,8 +44,6 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
                     .from(animal)
                     .where(builderCondition(searchDto))
                     .where(animal.active.eq(true))
-                    .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
                     .fetchOne();
         }
 
@@ -80,7 +79,20 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
             searchBuilder.or(animal.title.containsIgnoreCase(keyword));      // 제목
             searchBuilder.or(animal.petKind.containsIgnoreCase(keyword));    // 품종명
             searchBuilder.or(animal.age.containsIgnoreCase(keyword));        // 나이
-            searchBuilder.or(animal.fee.containsIgnoreCase(keyword));        // 책임비
+            searchBuilder.or(animal.address.containsIgnoreCase(keyword));    // 지역
+            // 책임비(fee) 검색 처리
+            if ("무료".equalsIgnoreCase(keyword.trim())) {
+                // "무료" 입력 시 → 책임비가 0인 경우 검색
+                searchBuilder.or(animal.fee.eq(0));
+            } else {
+                try {
+                    // 숫자 입력 시 → 해당 금액과 일치하는 책임비 검색
+                    Integer feeValue = Integer.parseInt(keyword.trim());
+                    searchBuilder.or(animal.fee.eq(feeValue));
+                } catch (NumberFormatException e) {
+                    // 숫자가 아니면 책임비 검색은 생략
+                }
+            }
 
             // 모든 조건을 하나의 BooleanBuilder에 and로 묶음
             builder.and(searchBuilder);

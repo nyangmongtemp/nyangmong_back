@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,6 +38,9 @@ public class Animal extends BaseTimeEntity {
 
     @Column(name = "user_id", nullable = false)
     private Long userId; // 사용자 id 값
+
+    @Column(name = "nickname", nullable = false)
+    private String nickname;
 
     @Column(name = "thumbnail_image", nullable = false)
     private String thumbnailImage; // 썸넹일 이미지
@@ -72,8 +77,8 @@ public class Animal extends BaseTimeEntity {
     @Column(name = "address", nullable = false)
     private String address; // 주소
 
-    @Column(name = "fee")
-    private String fee; // 책임비
+    @Column(name = "fee", nullable = false)
+    private Integer fee; // 책임비
 
     @Column(name = "active")
     private boolean active; // 게시물 활성화
@@ -118,6 +123,11 @@ public class Animal extends BaseTimeEntity {
     // 예약 상태 변경
     public void reservationStatusAnimal(ReservationStatus reservationReqDto) {
         this.reservationStatus = reservationReqDto;
+    }
+
+    // 닉네임 변경
+    public void changeNickname(String nickname) {
+        this.nickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
     }
 
 }
