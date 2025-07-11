@@ -2,6 +2,9 @@ package com.playdata.animalboardservice.controller;
 
 import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
+import com.playdata.animalboardservice.common.dto.CommonResDto;
+import com.playdata.animalboardservice.common.enumeration.ErrorCode;
+import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
@@ -12,6 +15,8 @@ import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.service.AnimalService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,6 +79,7 @@ public class AnimalBoardController {
                 email = jwtTokenProvider.extractEmail(token);
             } catch (Exception e) {
                 // JWT 파싱 실패 시 로그 기록 (비로그인 사용자로 처리)
+                log.error("e: ", e);
             }
         }
 
@@ -137,5 +144,19 @@ public class AnimalBoardController {
             @RequestBody @Valid ReservationReqDto reservationReqDto) {
         animalService.reservationStatusAnimal(postId, userInfo, reservationReqDto);
         return ResponseEntity.ok().build();
+    }
+
+    // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
+    @DeleteMapping("/deleteUser/{id}")
+    ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
+        CommonResDto resDto = animalService.deleteUserAll(userId);
+        return ResponseEntity.ok(resDto);
+    }
+
+    // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
+    @PutMapping("/modifyNickname/{id}/{nickname}")
+    ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
+        CommonResDto resDto = animalService.changeUserNickname(userId, nickname);
+        return ResponseEntity.ok(resDto);
     }
 }

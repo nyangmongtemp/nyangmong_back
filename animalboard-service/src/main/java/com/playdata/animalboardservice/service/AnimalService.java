@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.service;
 
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
+import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.common.util.ImageValidation;
@@ -17,7 +18,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -176,6 +182,53 @@ public class AnimalService {
         }
         animal.reservationStatusAnimal(reservationReqDto.getReservationStatus());
     }
+
+    /**
+     * 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리
+     * @param userId
+     * @return
+     */
+    @Transactional
+    public CommonResDto deleteUserAll(Long userId) {
+        // 해당 유저가 작성한 게시물 목록 조회
+        List<Animal> animalList = animalRepository.findByUserId(userId)
+                .orElse(Collections.emptyList()); // 게시물이 없는 경우 빈 리스트 반환
+
+        // 게시물이 하나도 없는 경우
+        if (animalList.isEmpty()) {
+            return new CommonResDto(HttpStatus.OK, "삭제할 게시물이 없습니다.", true);
+        }
+
+        // 모든 게시물에 대해 소프트 삭제 처리
+        animalList.forEach(Animal::deleteAnimal);
+
+        return new CommonResDto(HttpStatus.OK, "회원님의 모든 게시물을 삭제하였습니다.", true);
+    }
+
+    /**
+     * 회원의 닉네임이 변경될 경우, 해당 회원이 작성한 모든 게시물의 작성자 닉네임도 함께 변경합니다.
+     *
+     * @param userId 닉네임을 변경한 회원의 ID
+     * @param nickname 닉네임(한글)
+     * @return 닉네임 변경 성공 응답
+     */
+    @Transactional
+    public CommonResDto changeUserNickname(Long userId, String nickname) {
+        // 해당 회원의 게시글 전체 조회
+        List<Animal> animalList = animalRepository.findByUserId(userId)
+                .orElse(Collections.emptyList());
+
+        // 게시글이 없으면 바로 응답
+        if (animalList.isEmpty()) {
+            return new CommonResDto(HttpStatus.OK, "변경할 게시글이 없습니다.", true);
+        }
+
+        // 모든 게시글의 작성자 닉네임을 변경
+        animalList.forEach(animal -> animal.changeNickname(nickname));
+
+        return new CommonResDto(HttpStatus.OK, "회원님의 모든 게시글의 닉네임이 변경되었습니다.", true);
+    }
+
 
     /**
      * Redis를 활용하여 하루 1회만 조회수 증가 처리
