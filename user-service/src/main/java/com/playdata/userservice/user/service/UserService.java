@@ -308,7 +308,7 @@ public class UserService {
             }
         }
         // nickname을 변경하는 경우
-        if(newProfileImage != null) {
+        if(!modiDto.getNickname().equals(foundUser.getNickname())) {
             // feign 요청 시 한글을 PathVariable로 쓰지 못해서, 인코딩 변환
             String encodedNickname = URLEncoder.encode(modiDto.getNickname(), StandardCharsets.UTF_8);
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
