@@ -73,7 +73,6 @@ public class AnimalBoardController {
                 email = jwtTokenProvider.extractEmail(token);
             } catch (Exception e) {
                 // JWT 파싱 실패 시 로그 기록 (비로그인 사용자로 처리)
-                e.printStackTrace();
             }
         }
 
@@ -132,7 +131,7 @@ public class AnimalBoardController {
      * @param userInfo 로그인한 유저 정보
      * @return
      */
-    @PostMapping("/reservation/{postId}")
+    @PatchMapping("/reservation/{postId}")
     public ResponseEntity<?> reservationStatusAnimal(@PathVariable Long postId,
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody @Valid ReservationReqDto reservationReqDto) {

@@ -10,6 +10,7 @@ import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.Token;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -326,10 +327,10 @@ public class UserController {
     }
 
     @GetMapping("/findId/{email}")
-    Long findUserEmail(@PathVariable(name = "email") String email) {
-        Long foundUserId = userService.findByEmail(email);
+    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        Long foundUserId = userService.findByEmail(userInfo.getEmail());
 
-        return foundUserId;
+        return ResponseEntity.ok(foundUserId);
     }
 
     /**
