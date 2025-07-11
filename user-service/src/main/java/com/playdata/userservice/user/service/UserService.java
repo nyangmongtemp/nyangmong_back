@@ -680,7 +680,8 @@ public class UserService {
 
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
     }
-
+    
+    // 카카오로 접근 토큰을 발급 받는 로직
     public String getKakaoAccessToken(String code) {
 
         RestTemplate restTemplate = new RestTemplate();
@@ -701,7 +702,8 @@ public class UserService {
         return (String) responseJSON.get("access_token");
 
     }
-
+    
+    // 발급 받은 카카오 토큰으로 사용자의 정보를 받아오는 로직
     public KakaoUserDto getKakaoUser(String kakaoAccessToken) {
 
         String requestUrl = "https://kapi.kakao.com/v2/user/me";
@@ -717,7 +719,8 @@ public class UserService {
 
         return response.getBody();
     }
-
+    
+    // 받아온 사용자의 정보를 통해 로그인 혹은 회원가입 진행
     public KakaoLoginResDto findOrCreateKakaoUser(KakaoUserDto kakaoUserDto) {
 
         Optional<User> kakao
