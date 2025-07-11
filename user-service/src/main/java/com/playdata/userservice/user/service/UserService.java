@@ -1,5 +1,7 @@
 package com.playdata.userservice.user.service;
 
+import com.playdata.userservice.client.AnimalBoardServiceClient;
+import com.playdata.userservice.client.BoardServiceClient;
 import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
@@ -66,6 +68,8 @@ public class UserService {
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
+    private final AnimalBoardServiceClient animalClient;
+    private final BoardServiceClient boardClient;
 
     // 로그인 토큰 발급용
     private final JwtTokenProvider jwtTokenProvider;
@@ -299,9 +303,13 @@ public class UserService {
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
             ResponseEntity<?> response
                     = mainClient.modifyNickname(userInfo.getUserId(), encodedNickname);
-            
+            ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
+            ResponseEntity<?> res2 = boardClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
-            if(response.getStatusCode() != HttpStatus.OK) {
+            // 또는 다른 게시판의 nickname값 수정 중 오류 발생
+            if(response.getStatusCode() != HttpStatus.OK
+                    || res1.getStatusCode() != HttpStatus.OK
+                    || res2.getStatusCode() != HttpStatus.OK) {
                 throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
@@ -445,9 +453,16 @@ public class UserService {
         user.resignUser();
         // main-service로  회원이 작성한 댓글, 대댓글을 모두 비활성화 요청
         ResponseEntity<?> response = mainClient.deleteUser(userId);
-
+        // animal-board-service로 요청
+        ResponseEntity<?> res1 = animalClient.deleteUser(userId);
+        // board-service로 요청
+        ResponseEntity<?> res2 = boardClient.deleteUser(userId);
+        
         // 댓글, 대댓글 비활성화 처리 중 오류 발생
-        if(response.getStatusCode() != HttpStatus.OK) {
+        // 모든 게시물 비활성화 처리 중 오류 발생
+        if(response.getStatusCode() != HttpStatus.OK
+        || res1.getStatusCode() != HttpStatus.OK
+        || res2.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 

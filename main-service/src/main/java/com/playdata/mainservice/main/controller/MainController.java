@@ -283,7 +283,7 @@ public class MainController {
 
     /**
      * @param contentList --> List<contentId, category>
-     * @return
+     * @return  List<LikeComCountResDto>  --> category, contentId, commentCount(대댓글까지 포함), likeCount
      */
     // feign으로 받으셔야 합니다.
     // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
