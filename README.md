@@ -22,3 +22,11 @@ https://docs.google.com/spreadsheets/d/1w18JaClePrCvDao6CgbzNxxJOVKuJbb6s-7KWtcP
 ---
 ## 화면설계서(와이어프레임)
 https://www.notion.so/21ba57f66b368066a4c3ee305ee44add
+
+---
+## API 명세서
+https://docs.google.com/spreadsheets/d/1X_YTlp7CTOgj-Iuppggapn36RxCNpFQR/edit?gid=1797139636#gid=1797139636
+
+---
+## 수집데이터 (API 데이터)
+https://www.notion.so/API-21fa57f66b368034b53fe755b6f93f90
