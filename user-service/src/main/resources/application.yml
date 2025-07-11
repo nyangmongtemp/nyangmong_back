@@ -1,0 +1,9 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: user-service
+
+imagePath:
+  url: C:\nyangmong_image\user_profile

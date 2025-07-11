@@ -1,0 +1,79 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowed-origins:
+              - "http://localhost:5173"
+            allowed-methods:
+              - GET
+              - POST
+              - DELETE
+              - PATCH
+              - PUT
+              - OPTIONS
+            allowed-headers:
+              - Content-Type
+              - Authorization
+              - X-Requested-With
+            allow-credentials: true
+
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: scheduler-service
+          uri: lb://SCHEDULER-SERVICE
+          predicates:
+            - Path=/scheduler-service/**
+          filters:
+            - RewritePath=/scheduler-service/(?<segment>.*), /${segment}
+            - AuthorizationHeaderFilter
+
+        - id: main-service
+          uri: lb://MAIN-SERVICE
+          predicates:
+            - Path=/main-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/main-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: festival-service
+          uri: lb://FESTIVAL-SERVICE
+          predicates:
+            - Path=/festival-service/**
+          filters:
+            - RewritePath=/festival-service/(?<segment>.*), /${segment}
+            - AuthorizationHeaderFilter
+
+        - id: animalboard-service
+          uri: lb://ANIMALBOARD-SERVICE
+          predicates:
+            - Path=/animalboard-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: board-service
+          uri: lb://BOARD-SERVICE
+          predicates:
+            - Path=/board-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
