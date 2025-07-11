@@ -1,6 +1,8 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
+import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
+import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
 import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
 import com.playdata.userservice.user.dto.res.UserMyPageResDto;
@@ -74,6 +76,17 @@ public class User extends BaseTimeEntity {
         if(modiDto.getPhone() != null) {
             this.phone = modiDto.getPhone();
         }
+    }
+
+    // 카카오 로그인 용
+    public KakaoLoginResDto toKakaoLoginResDto(String token) {
+        return KakaoLoginResDto.builder()
+                .email(this.email)
+                .nickname(this.email)
+                .profileImage(this.profileImage)
+                .token(token)
+                .userId(this.userId)
+                .build();
     }
 
     // 인증이 필요한 이메일 정보를 변경하는 메소드

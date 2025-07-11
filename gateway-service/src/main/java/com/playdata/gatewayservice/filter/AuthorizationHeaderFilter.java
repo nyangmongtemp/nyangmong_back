@@ -35,7 +35,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email", "/user/forget/*", "/user/forget/auth",
             "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail", "/main/reply/list/*"
             ,"/main/introduction", "/board/popular/children", "/board/introduction/list"
-            ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
+            ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals", "/user/kakao"
     );
 
     @Override
