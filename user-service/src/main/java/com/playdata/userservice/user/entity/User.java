@@ -82,7 +82,7 @@ public class User extends BaseTimeEntity {
     public KakaoLoginResDto toKakaoLoginResDto(String token) {
         return KakaoLoginResDto.builder()
                 .email(this.email)
-                .nickname(this.email)
+                .nickname(this.nickname)
                 .profileImage(this.profileImage)
                 .token(token)
                 .userId(this.userId)
