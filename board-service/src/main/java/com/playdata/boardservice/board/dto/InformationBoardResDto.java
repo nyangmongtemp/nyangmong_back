@@ -1,11 +1,12 @@
 package com.playdata.boardservice.board.dto;
 
+import com.playdata.boardservice.board.entity.Category;
+import com.playdata.boardservice.board.entity.InformationBoard;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 public class InformationBoardResDto {
 
     private Long postid;
-    private String category;
+    private Category category;
     private Long userid;
     private String thumbnailimage;
     private String content;
@@ -21,6 +22,23 @@ public class InformationBoardResDto {
     private LocalDateTime updatedat;
     private Integer viewcount;
     private String nickname;
-    private String profileImage;
+    private String title;
 
+    @Builder
+    public static InformationBoardResDto fromEntity(InformationBoard Board) {
+        return InformationBoardResDto.builder()
+                .postid(Board.getPostId())
+                .category(Board.getCategory())
+                .userid(Board.getUserId())
+                .thumbnailimage(Board.getThumbnailImage())
+                .content(Board.getContent())
+                .title(Board.getTitle())
+                .viewcount(Board.getViewCount())
+                .nickname(Board.getNickname())
+                .title(Board.getTitle())
+                .createdat(Board.getCreateAt())
+                .updatedat(Board.getUpdateAt())
+                .build();
+
+    }
 }

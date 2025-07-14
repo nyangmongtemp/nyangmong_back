@@ -16,7 +16,6 @@ public class AnimalInsertRequestDto {
     private Long userId; // 사용자 id 값
     private String thumbnailImage; // 썸넹일 이미지
 
-    @NotBlank
     private String nickname; // 닉네임
     @NotBlank
     private String title; // 제목
@@ -38,7 +37,7 @@ public class AnimalInsertRequestDto {
     @NotNull
     private Integer fee; // 책임비
 
-    public Animal toEntity(Long userId, String newThumbnailImage) {
+    public Animal toEntity(Long userId, String newThumbnailImage, String nickname) {
         return Animal.builder()
                 .userId(userId)
                 .thumbnailImage(newThumbnailImage)

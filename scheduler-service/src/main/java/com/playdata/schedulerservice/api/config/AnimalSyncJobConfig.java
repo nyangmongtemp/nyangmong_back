@@ -52,15 +52,15 @@ public class AnimalSyncJobConfig {
     private final AnimalStepListener listener;
 
     /**
-     * Step 정의 - 'apiToDbStep'
+     * Step 정의 - 'animalApiToDbStep'
      * - 기능: API에서 데이터를 읽고, 가공하고, DB에 저장
      * - 처리 단위(Chunk size): 300개씩 트랜잭션으로 묶어 처리
      */
     @Bean
-    public Step apiToDbStep() {
-        return new StepBuilder("apiToDbStep", jobRepository)
+    public Step animalApiToDbStep() {
+        return new StepBuilder("animalApiToDbStep", jobRepository)
                 // <Input 타입, Output 타입> 설정
-                .<StrayAnimalEntity, StrayAnimalEntity>chunk(250, transactionManager)
+                .<StrayAnimalEntity, StrayAnimalEntity>chunk(300, transactionManager)
                 // Reader: API에서 읽기
                 .reader(reader)
                 // Processor: 가공 (현재는 그대로 반환)
@@ -80,7 +80,7 @@ public class AnimalSyncJobConfig {
     @Bean
     public Job syncAnimalJob() {
         return new JobBuilder("syncAnimalJob", jobRepository)
-                .start(apiToDbStep()) // 시작 Step 지정
+                .start(animalApiToDbStep()) // 시작 Step 지정
                 .build();
     }
 }
