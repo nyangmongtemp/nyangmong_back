@@ -62,8 +62,6 @@ public class FestivalEntity {
     @UpdateTimestamp
     private LocalDateTime updatedAt;           // 데이터 수정 시간
 
-
-
     // 축제 정보 업데이트용 메서드
     public void updateFrom(FestivalEntity source) {
         this.title = source.getTitle();
