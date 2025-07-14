@@ -1,6 +1,7 @@
 package com.playdata.gatewayservice.filter;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,17 +73,19 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             Claims claims;
             String roleHeader = "X-User-Role";
 
-            if (path.startsWith("/admin")) {
-                // 관리자 경로는 adminSecretKey 사용
-                claims = validateJwt(token, adminKey);
-                roleHeader = "X-Admin-Role"; // 필요 시 다르게
-            } else {
-                // 사용자 경로는 userSecretKey 사용
-                claims = validateJwt(token, secretKey);
-            }
-
-            if (claims == null) {
-                return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
+            try {
+                if (path.startsWith("/admin")) {
+                    claims = validateJwt(token, adminKey);
+                } else {
+                    claims = validateJwt(token, secretKey);
+                }
+            } catch (RuntimeException e) {
+                if (e.getMessage().equals("EXPIRED_TOKEN")) {
+                    return onError(exchange, "EXPIRED_TOKEN", HttpStatus.UNAUTHORIZED);
+                } else if (e.getMessage().equals("INVALID_TOKEN")) {
+                    return onError(exchange, "INVALID_TOKEN", HttpStatus.UNAUTHORIZED);
+                }
+                return onError(exchange, "인증 오류 발생", HttpStatus.UNAUTHORIZED);
             }
 
             ServerHttpRequest request = exchange.getRequest()
@@ -114,9 +117,12 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT 만료됨: {}", e.getMessage());
+            throw new RuntimeException("EXPIRED_TOKEN"); // 사용자 정의 예외 메시지
         } catch (Exception e) {
-            log.error("JWT validation failed: {}", e.getMessage());
-            return null;
+            log.error("JWT 파싱 실패: {}", e.getMessage());
+            throw new RuntimeException("INVALID_TOKEN"); // 다른 예외는 따로
         }
     }
 }
