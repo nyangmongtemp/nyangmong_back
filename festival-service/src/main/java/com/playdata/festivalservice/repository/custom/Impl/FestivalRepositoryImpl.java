@@ -41,8 +41,6 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom {
 
         content.forEach(f -> System.out.println("festivalId: " + f.getFestivalId()));
 
-
-
         // 전체 데이터 개수 조회
         long count = 0L;
 
@@ -70,17 +68,15 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom {
             );
         }
 
+        // searchDate (LocalDate) 가 있을 경우, startDate <= searchDate <= endDate 조건 추가
         if (dto.getSearchDate() != null) {
             builder.and(
-                    festival.festivalDate.containsIgnoreCase(dto.getSearchWord())
+                    // loe (<=) 이하, goe (>=) 이상
+                    festival.startDate.loe(dto.getSearchDate())  // startDate <= searchDate
+                            .and(festival.endDate.goe(dto.getSearchDate())) // endDate >= searchDate
             );
         }
 
-
-
-
         return builder;
     }
-
-
 }

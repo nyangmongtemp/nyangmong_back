@@ -27,10 +27,8 @@ public class FestivalController {
      * @return 페이징된 축제 리스트
      */
     @GetMapping("/festivals")
-    public ResponseEntity<Page<FestivalResponseDto>> getFestivalList(
-            FestivalSearchDto festivalSearchDto,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+    public ResponseEntity<Page<FestivalResponseDto>> getFestivalList(FestivalSearchDto festivalSearchDto,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<FestivalResponseDto> resDto = festivalService.findFestivalList(festivalSearchDto, pageable);
         return ResponseEntity.ok(resDto); // 200 OK 응답
     }

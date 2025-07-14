@@ -16,9 +16,4 @@ public interface FestivalRepositoryCustom {
      */
     Page<FestivalEntity> findList(FestivalSearchDto festivalSearchDto, Pageable pageable);
 
-
-
-
-
-
 }
