@@ -43,8 +43,6 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
                     .from(animal)
                     .where(builderCondition(searchDto))
                     .where(animal.active.eq(true))
-                    .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
                     .fetchOne();
         }
 
