@@ -1,4 +1,3 @@
-/*
 package com.playdata.userservice.common.configs;
 
 import org.springframework.amqp.core.*;
@@ -40,16 +39,14 @@ public class RabbitMqConfig {
     @Bean
     public Binding userNotificationBinding() {
 
-        */
-/**
+        /*
          * Exchange와 Queue를 연결하는 규칙
          * "order.created" 패턴의 메시지가 오면 → admin.order.notifications 큐로 보내라!
-         *//*
-
-
+         */
         return BindingBuilder
                 .bind(messageQueue())
                 .to(messageExchange())
+                // 마지막에 receiver의 userId를 넣을 예정
                 .with("message.create.*");
 
     }
@@ -57,12 +54,11 @@ public class RabbitMqConfig {
     @Bean
     public Jackson2JsonMessageConverter jsonMessageConverter() {
 
-        */
-/**
+        /*
          * 우리가 보낼 객체 (OrderNotificationEvent -> DTO)를 JSON으로 변환
          * 받을 때도 JSON을 다시 객체로 변환
          * MessageNotiDto를 전송할 것임 -> 전송자 닉네임 ,전송시각, (전송자 userId)
-         *//*
+         */
 
 
         return new Jackson2JsonMessageConverter();
@@ -93,4 +89,3 @@ public class RabbitMqConfig {
     }
 
 }
-*/

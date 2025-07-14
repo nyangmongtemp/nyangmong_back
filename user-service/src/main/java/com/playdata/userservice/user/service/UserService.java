@@ -15,6 +15,7 @@ import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
 import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
+import com.playdata.userservice.user.dto.noti.MessageNotiDto;
 import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
 import com.playdata.userservice.user.dto.req.UserLoginReqDto;
 import com.playdata.userservice.user.dto.req.UserPasswordModiReqDto;
@@ -32,6 +33,7 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
@@ -79,6 +81,9 @@ public class UserService {
     // 로그인 토큰 발급용
     private final JwtTokenProvider jwtTokenProvider;
 
+    // sse 알림용
+    private final RabbitTemplate rabbitTemplate;
+    
     // Redis 저장용 redisTemplate
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -606,7 +611,15 @@ public class UserService {
         chatRepository.save(chat);
         // 새로운 메시지 생성
         Message message = new Message(senderId, reqDto.getReceiverId(), reqDto.getContent(), chat);
+        
+        // sse 알림용 dto 생성
+        MessageNotiDto notiDto = 
+                new MessageNotiDto(requestNickname, message.getCreateAt(), senderId, reqDto.getReceiverId());
+        
+        String routingKey = "message.create." + reqDto.getReceiverId();
+        rabbitTemplate.convertAndSend("message.exchange", routingKey, notiDto);
 
+        // 화면단 리턴용 메소드
         UserMessageResDto resDto = messageRepository.save(message)
                 .fromEntity(receiverNickname, requestNickname, requestNickname);
 
