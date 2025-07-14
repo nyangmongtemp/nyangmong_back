@@ -36,6 +36,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
             ,"/main/introduction", "/board/popular/children", "/board/introduction/list"
             ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
+            ,"/editor/upload-image"
     );
 
     @Override

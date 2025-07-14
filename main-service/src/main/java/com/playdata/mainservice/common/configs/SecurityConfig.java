@@ -42,7 +42,8 @@ public class SecurityConfig {
 //
                     .requestMatchers(
                             "/main/deleteUser/**", "/main/modifyNickname/**", "/main/modifyProfileImage/**",
-                            "/main/list", "/main/comment/list", "/main/detail", "/main/introduction"
+                            "/main/list", "/main/comment/list", "/main/detail", "/main/introduction",
+                            "/editor/upload-image"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });
