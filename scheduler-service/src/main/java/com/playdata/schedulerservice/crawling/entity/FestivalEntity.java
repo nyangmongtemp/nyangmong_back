@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,6 +35,8 @@ public class FestivalEntity {
     private String money;
     private String imagePath;
     private String reservationDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     @Column(nullable = false, unique = true)
     private String hash;
     @CreationTimestamp
@@ -51,5 +54,7 @@ public class FestivalEntity {
         this.money = sourceEvent.getMoney();
         this.imagePath = sourceEvent.getImagePath();
         this.reservationDate = sourceEvent.getReservationDate();
+        this.startDate = sourceEvent.getStartDate();
+        this.endDate = sourceEvent.getEndDate();
     }
 }
