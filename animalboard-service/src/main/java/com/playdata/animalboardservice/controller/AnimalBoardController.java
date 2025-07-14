@@ -3,8 +3,6 @@ package com.playdata.animalboardservice.controller;
 import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
-import com.playdata.animalboardservice.common.enumeration.ErrorCode;
-import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
@@ -13,10 +11,16 @@ import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.service.AnimalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +40,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+// Swagger 전용 인터페이스를 하나 선언해서 비즈니스 로직 vs 문서화 로직을 분리
+// 컨트롤러는 본연의 역할에만 집중
+@Tag(name = "유기동물/분양 게시판(AnimalBoard)", description = "유기동물 / 분양동물 CRUD 관리하는 API")
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -51,6 +58,10 @@ public class AnimalBoardController {
      * @param pageable 페이지 정보 (size, page, sort 등)
      * @return 페이징된 동물 목록 데이터 (AnimalListResDto)
      */
+    @Operation(
+            summary = "분양동물 목록 조회 (페이징)",
+            description = "페이징이 적용된 고객상담 목록을 조회한다."
+    )
     @GetMapping("/list")
     public ResponseEntity<Page<AnimalListResDto>> getAnimalList(SearchDto searchDto, Pageable pageable) {
         // 검색 조건과 페이지 정보를 바탕으로 목록 조회
@@ -65,6 +76,56 @@ public class AnimalBoardController {
      * @param request 클라이언트 요청 정보(IP, 브라우저 등 추출용)
      * @return Animal 상세 정보
      */
+    @Operation(
+            summary = "분양 게시물 상세 조회",
+            description = """
+        게시물 ID를 기반으로 분양 게시물의 상세 정보를 조회합니다.
+        
+        ## 인증
+        - 로그인 하지 않은 사용자도 조회 가능합니다.
+        - 로그인 상태인 경우, 사용자 정보를 함께 활용하여 개인화된 결과 제공 가능.
+    """,
+            tags = {"분양 게시물"},
+            security = @SecurityRequirement(name = "bearerAuth") // 선택적 인증일 경우 제거해도 무방
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CommonResDto.class),
+                            examples = @ExampleObject(value = """
+                {
+                    "status": "OK",
+                    "message": "상세 조회 성공",
+                    "data": {
+                        "id": 1,
+                        "title": "강아지 분양",
+                        "age": "1살",
+                        "gender": "수컷",
+                        "description": "건강하고 귀여운 강아지 분양합니다.",
+                        "liked": true
+                    }
+                }
+            """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 게시물 ID",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AnimalDetailResDto.class),
+                            examples = @ExampleObject(value = """
+                {
+                    "status": "404",
+                    "message": "게시물을 찾을 수 없습니다."
+                }
+            """)
+                    )
+            )
+    })
     @GetMapping("/public/{postId}")
     public ResponseEntity<AnimalDetailResDto> getAnimal(@PathVariable Long postId,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
