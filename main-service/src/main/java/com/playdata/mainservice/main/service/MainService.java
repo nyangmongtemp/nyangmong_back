@@ -560,9 +560,8 @@ public class MainService {
 
         List<Reply> replies = replyRepository.findActiveByCommentId(commentId);
 
-        List<ReplyDetailResDto> resDto = replies.stream().map(reply -> {
-            return reply.fromEntity(0L);
-        }).collect(Collectors.toList());
+        List<ReplyDetailResDto> resDto = replies.stream().map(reply -> reply.fromEntity(0L))
+                .collect(Collectors.toList());
 
         return new CommonResDto(HttpStatus.OK, "해당 댓글의 모든 대댓글 찾음", resDto);
     }
