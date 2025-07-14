@@ -29,6 +29,7 @@ public class SseService {
                             .data(message));
                 } catch (IOException e) {
                     emitter.completeWithError(e);
+                    sseController.removeEmitter(receiverId);
                 }
             });
         } else {

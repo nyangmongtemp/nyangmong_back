@@ -74,10 +74,38 @@ public class SseController {
 
         return emitter;
     }
+    
+    // sse emitter의 건강상태를 확인하는 메소드
+    @GetMapping("/health-check")
+    public String checkEmitterHealth(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        long userId = userInfo.getUserId();
+
+        Optional<SseEmitter> optionalEmitter = getEmitter(userId);
+
+        if (optionalEmitter.isEmpty()) {
+            return "disconnected"; // emitter가 존재하지 않음
+        }
+
+        SseEmitter emitter = optionalEmitter.get();
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("heartbeat")
+                    .data("ping"));
+            return "connected"; // 정상 응답
+        } catch (IOException e) {
+            removeEmitter(userId); // 연결이 끊긴 경우 제거
+            return "disconnected";
+        }
+    }
 
     // 외부에서 emitter에 접근할 수 있도록 getter 제공
     public Optional<SseEmitter> getEmitter(Long userId) {
         return Optional.ofNullable(sseEmitters.get(userId));
+    }
+    
+    // emitter 제거용
+    public void removeEmitter(Long userId) {
+        sseEmitters.remove(userId);
     }
 
     // 접속 여부 확인 (외부 접근용)
