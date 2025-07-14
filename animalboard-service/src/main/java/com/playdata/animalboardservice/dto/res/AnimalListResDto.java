@@ -22,7 +22,7 @@ public class AnimalListResDto {
     private SexCode sexCode; // 성별
     private NeuterYn neuterYn; // 중성화여부
     private String address; // 주소
-    private String fee; // 책임비
+    private Integer fee; // 책임비
     private boolean active; // 게시물 활성화
 
     @Builder

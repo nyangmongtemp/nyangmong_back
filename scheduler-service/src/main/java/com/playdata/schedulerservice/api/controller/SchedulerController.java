@@ -19,19 +19,36 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
-public class AnimalsController {
+public class SchedulerController {
 
     private final JobLauncher jobLauncher;
     private final Job syncAnimalJob;
+    private final Job syncMapJob;
 
-    @GetMapping("/scheduler/api")
-    public String runApiSyncJob() {
+
+    @GetMapping("/scheduler/api/animal")
+    public String animalRunApiSyncJob() {
         try {
             JobParameters jobParameters = new JobParametersBuilder()
                     .addLong("timestamp", System.currentTimeMillis())
                     .toJobParameters();
 
             JobExecution execution = jobLauncher.run(syncAnimalJob, jobParameters);
+            return "배치 실행 완료 - 상태: " + execution.getStatus();
+
+        } catch (Exception e) {
+            return "배치 실행 실패: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/scheduler/api/map")
+    public String mapRunApiSyncJob() {
+        try {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis())
+                    .toJobParameters();
+
+            JobExecution execution = jobLauncher.run(syncMapJob, jobParameters);
             return "배치 실행 완료 - 상태: " + execution.getStatus();
 
         } catch (Exception e) {

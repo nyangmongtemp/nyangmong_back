@@ -34,7 +34,8 @@ public class SecurityConfig {
             auth
                     .requestMatchers(
                             "/stray-animal-board/**",
-                            "/animal-board/list", "/animal-board/public/{postId}"
+                            "/animal-board/list", "/animal-board/public/{postId}",
+                            "/animal-board/deleteUser/{id}", "/animal-board/modifyNickname/{id}/{nickname}"
                     ).permitAll()
                     .anyRequest().authenticated();
         });

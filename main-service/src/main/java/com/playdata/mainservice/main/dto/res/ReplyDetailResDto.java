@@ -3,6 +3,8 @@ package com.playdata.mainservice.main.dto.res;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class ReplyDetailResDto {
@@ -12,6 +14,8 @@ public class ReplyDetailResDto {
     private String content;
 
     private Long commentId;
+
+    private LocalDateTime createAt;
 
     private Long userId;
 
