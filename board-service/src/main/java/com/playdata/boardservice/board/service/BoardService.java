@@ -325,13 +325,13 @@ public class BoardService {
 
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
     @Transactional
-    public void modifyUserFindBoard(Long userId, String nickname) {
+    public void modifyUserFindBoard(Long userId, String encodedNickname) {
 
         informationBoardRepository.findByUserId(userId)
-                .forEach(InformationBoard -> InformationBoard.nicknameModify(nickname));
+                .forEach(InformationBoard -> InformationBoard.nicknameModify(encodedNickname));
 
         introductionBoardRepository.findByUserId(userId)
-                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(nickname));
+                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(encodedNickname));
 
 
 
