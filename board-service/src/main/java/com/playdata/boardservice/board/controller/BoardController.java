@@ -104,7 +104,7 @@ public class BoardController {
                                                            @RequestParam("category") Category category,
                                                            Pageable pageable) {
 
-        Page<InformationBoardListResDto> resDto = boardService.findInformationBoardList(boardSearchDto, category, pageable);
+        Page<LikeComResDto> resDto = boardService.findInformationBoardList(boardSearchDto, category, pageable);
 
         return ResponseEntity.ok().body(resDto);
     }

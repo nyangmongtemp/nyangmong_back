@@ -23,7 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageUploadController {
 
     // TODO: 실제 s3 주소가 들어가게되면 yml 에 해상 주소 올려서 변경필요
-    @Value("${upload.path:/Users/ubing/Desktop/nyangmong/images/editor}")
+//    @Value("${upload.path:/Users/ubing/Desktop/nyangmong/images/editor}")
+    @Value("${upload.path:C:\\nyangmong_image/images/editor}")
     private String uploadPath;
 
     @PostMapping("/upload-image")
