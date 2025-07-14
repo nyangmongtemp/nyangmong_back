@@ -30,7 +30,7 @@ public class LikeRepositoryImpl implements LikeRepositoryCustom {
                 .selectFrom(like)
                 .where(
                         like.active.isTrue(),
-                        like.category.eq(Category.valueOf(reqDto.getCategory())),
+                        like.category.eq(Category.valueOf(reqDto.getCategory().toUpperCase())),
                         like.contentId.eq(reqDto.getContentId()),
                         like.userId.eq(userId)
                 )

@@ -15,4 +15,5 @@ public class LikeComCountResDto {
 
     private Long commentCount;
 
+    private Long likeCount;
 }

@@ -17,6 +17,7 @@ spring:
               - POST
               - DELETE
               - PATCH
+              - PUT
               - OPTIONS
             allowed-headers:
               - Content-Type
@@ -66,4 +67,13 @@ spring:
           filters:
             - RemoveRequestHeader=Cookie
             - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: board-service
+          uri: lb://BOARD-SERVICE
+          predicates:
+            - Path=/board-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter

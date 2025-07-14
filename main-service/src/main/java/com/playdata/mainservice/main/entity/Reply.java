@@ -51,6 +51,7 @@ public class Reply extends BaseTimeEntity {
                 .likeCount(likeCount)
                 .replyId(replyId)
                 .userId(userId)
+                .createAt(this.getCreateAt())
                 .content(content)
                 .nickname(nickname)
                 .profileImage(profileImage)
