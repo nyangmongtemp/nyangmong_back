@@ -30,30 +30,33 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private String adminKey;
 
     private final List<String> allowUrl = Arrays.asList(
-        // 사용자 관련
-        "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
-        "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
+            // 사용자 관련
+            "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
+            "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
 
-        // 메인 페이지 및 댓글
-        "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
+            // 메인 페이지 및 댓글
+            "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
 
-        // 동물 관련 게시판
-        "/animal-board/list", "/animal-board/public/{postId}", "/stray-animal-board/**",
+            // 동물 관련 게시판
+            "/animal-board/list", "/animal-board/public/{postId}", "/stray-animal-board/**",
 
-        // 스케줄러 API
-        "/scheduler/**",
+            // 스케줄러 API
+            "/scheduler/**",
 
-        // 게시판
-        "/board/popular/children",
-        "/board/introduction/list", "/board/introduction/main",
-        "/board/information/list", "/board/information/main", "/board/information/popular",
-        "/board/detail/**",
+            // 게시판
+            "/board/popular/children",
+            "/board/introduction/list", "/board/introduction/main",
+            "/board/information/list", "/board/information/main", "/board/information/popular",
+            "/board/detail/**",
 
-        // 축제 관련 API
-        "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
+            // 축제 관련 API
+            "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
 
-        // 에디터
-        "/editor/upload-image"
+            // 에디터
+            "/editor/upload-image",
+
+            // 스웨거
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
     );
 
     @Override
