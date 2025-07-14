@@ -1,9 +1,9 @@
 package com.playdata.schedulerservice.api.config;
 
-import com.playdata.schedulerservice.api.batch.processor.AnimalProcessor;
-import com.playdata.schedulerservice.api.batch.reader.AnimalApiItemReader;
-import com.playdata.schedulerservice.api.batch.writer.AnimalCustomItemWriter;
-import com.playdata.schedulerservice.api.entity.StrayAnimalEntity;
+import com.playdata.schedulerservice.api.batch.processor.MapProcessor;
+import com.playdata.schedulerservice.api.batch.reader.MapApiItemReader;
+import com.playdata.schedulerservice.api.batch.writer.MapCustomItemWriter;
+import com.playdata.schedulerservice.api.entity.MapEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -22,16 +22,16 @@ import org.springframework.transaction.PlatformTransactionManager;
  * 전체 배치 흐름을 정의합니다.
 
  * 구성 요소:
- * - AnimalApiItemReader: 외부 API에서 동물 데이터를 읽어옴
- * - AnimalProcessor: 읽은 데이터를 가공 (현재는 PassThrough)
- * - AnimalCustomItemWriter: DB에 insert 또는 update
- * - AnimalStepListener: 스텝 실행 후 정리 작업 (불필요한 데이터 삭제)
+ * - MapApiItemReader: 외부 API에서 동물 데이터를 읽어옴
+ * - MapProcessor: 읽은 데이터를 가공 (현재는 PassThrough)
+ * - MapCustomItemWriter: DB에 insert 또는 update
+ * - MapStepListener: 스텝 실행 후 정리 작업 (불필요한 데이터 삭제)
 
  * 이 구성은 Spring Batch에서 가장 흔한 형태인 Chunk 기반 처리 모델을 사용합니다.
  */
 @Configuration
 @RequiredArgsConstructor
-public class AnimalSyncJobConfig {
+public class MapSyncJobConfig {
 
     // Spring Batch의 내부 실행 상태 저장소
     private final JobRepository jobRepository;
@@ -40,27 +40,27 @@ public class AnimalSyncJobConfig {
     private final PlatformTransactionManager transactionManager;
 
     // 동물 API에서 데이터를 읽는 ItemReader
-    private final AnimalApiItemReader reader;
+    private final MapApiItemReader reader;
 
     // 읽어온 데이터를 처리 (현재는 그대로 반환하는 Processor)
-    private final AnimalProcessor processor;
+    private final MapProcessor processor;
 
     // DB에 데이터를 저장/업데이트하는 ItemWriter
-    private final AnimalCustomItemWriter writer;
+    private final MapCustomItemWriter writer;
 
     // Step 종료 후 불필요한 데이터를 삭제하는 Listener
-    private final AnimalStepListener listener;
+    private final MapStepListener listener;
 
     /**
-     * Step 정의 - 'animalApiToDbStep'
+     * Step 정의 - 'mapApiToDbStep'
      * - 기능: API에서 데이터를 읽고, 가공하고, DB에 저장
      * - 처리 단위(Chunk size): 300개씩 트랜잭션으로 묶어 처리
      */
     @Bean
-    public Step animalApiToDbStep() {
-        return new StepBuilder("animalApiToDbStep", jobRepository)
+    public Step mapApiToDbStep() {
+        return new StepBuilder("mapApiToDbStep", jobRepository)
                 // <Input 타입, Output 타입> 설정
-                .<StrayAnimalEntity, StrayAnimalEntity>chunk(300, transactionManager)
+                .<MapEntity, MapEntity>chunk(300, transactionManager)
                 // Reader: API에서 읽기
                 .reader(reader)
                 // Processor: 가공 (현재는 그대로 반환)
@@ -73,14 +73,14 @@ public class AnimalSyncJobConfig {
     }
 
     /**
-     * Job 정의 - 'syncAnimalJob'
+     * Job 정의 - 'syncMapJob'
      * - 하나의 Step(apiToDbStep)을 순차적으로 실행하는 단일 Step Job 구성
      * - Job 실행 시 자동으로 Step이 시작됨
      */
     @Bean
-    public Job syncAnimalJob() {
-        return new JobBuilder("syncAnimalJob", jobRepository)
-                .start(animalApiToDbStep()) // 시작 Step 지정
+    public Job syncMapJob() {
+        return new JobBuilder("syncMapJob", jobRepository)
+                .start(mapApiToDbStep()) // 시작 Step 지정
                 .build();
     }
 }

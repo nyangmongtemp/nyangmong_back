@@ -48,7 +48,7 @@ public class Animal extends BaseTimeEntity {
     @Column(name = "title", nullable = false)
     private String title; // 제목
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content; // 내용
 
     @Column(name = "view_count")
