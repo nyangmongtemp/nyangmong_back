@@ -30,13 +30,30 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private String adminKey;
 
     private final List<String> allowUrl = Arrays.asList(
-            "/user/login", "/scheduler/**", "/stray-animal-board/**",
-            "/animal-board/list", "/animal-board/public/{postId}",
-            "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email", "/user/forget/*", "/user/forget/auth",
-            "/user/verify-code", "/user/refresh", "/main/list", "/main/comment/list", "/main/detail"
-            ,"/main/introduction", "/board/popular/children", "/board/introduction/list"
-            ,"/api/festivals/**", "/festival-service/api/festivals/**", "/festival-service/api/festivals"
-            ,"/editor/upload-image"
+        // 사용자 관련
+        "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
+        "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
+
+        // 메인 페이지 및 댓글
+        "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
+
+        // 동물 관련 게시판
+        "/animal-board/list", "/animal-board/public/{postId}", "/stray-animal-board/**",
+
+        // 스케줄러 API
+        "/scheduler/**",
+
+        // 게시판
+        "/board/popular/children",
+        "/board/introduction/list", "/board/introduction/main",
+        "/board/information/list", "/board/information/main", "/board/information/popular",
+        "/board/detail/**",
+
+        // 축제 관련 API
+        "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
+
+        // 에디터
+        "/editor/upload-image"
     );
 
     @Override

@@ -18,6 +18,7 @@ spring:
               - POST
               - DELETE
               - PATCH
+              - PUT
               - OPTIONS
             allowed-headers:
               - Content-Type
