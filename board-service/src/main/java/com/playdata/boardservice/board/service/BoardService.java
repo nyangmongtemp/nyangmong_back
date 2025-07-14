@@ -246,15 +246,36 @@ public class BoardService {
     }
 
     // 소개 게시판 게시물 목록 조회
-    public Page<IntroductionBoardListResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
+    public Page<LikeComIntroResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
 
         // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
         Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findList(boardSearchDto, pageable);
 
+        List<LikeComCountReqDto> likeCom = introductionBoardList.stream().map(introductionBoard -> {
+            // ReqDto 에서 category(INTRODUCTION), postId 를 뽑아서 List로 만들겠다.
+            return new LikeComCountReqDto(Category.INTRODUCTION.name(), introductionBoard.getPostId());
+        }).collect(Collectors.toList());
 
+        List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
+        List<LikeComIntroResDto> result = introductionBoardList.stream().map(introductionBoard -> {
+                    for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
+                        if (introductionBoard.getPostId().equals(likeComCountResDto.getContentId())) {
+                            return LikeComIntroResDto.fromEntity(introductionBoard, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
+                        }
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
+        Page<LikeComIntroResDto> dtoPage = new PageImpl<>(
+                result,
+                introductionBoardList.getPageable(),
+                introductionBoardList.getTotalElements()
+        );
         // Entity → DTO 변환
-        return introductionBoardList.map(IntroductionBoardListResDto::new);
+//        return informationBoardList.map(InformationBoardListResDto::new);
+        return dtoPage;
 
     }
 

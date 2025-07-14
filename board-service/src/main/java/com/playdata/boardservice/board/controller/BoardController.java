@@ -114,7 +114,7 @@ public class BoardController {
     public ResponseEntity<Page<?>> getIntroductionBoardList(BoardSearchDto boardSearchDto,
                                                             Pageable pageable) {
 
-        Page<IntroductionBoardListResDto> resDto = boardService.findIntroductionBoardList(boardSearchDto, pageable);
+        Page<LikeComIntroResDto> resDto = boardService.findIntroductionBoardList(boardSearchDto, pageable);
 
         return ResponseEntity.ok().body(resDto);
     }
