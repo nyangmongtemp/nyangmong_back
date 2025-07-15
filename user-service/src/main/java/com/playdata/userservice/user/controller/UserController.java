@@ -310,7 +310,7 @@ public class UserController {
     }
 
     // 대화방 삭제
-    @GetMapping("/clear/{chatId}")
+    @DeleteMapping("/clear/{chatId}")
     public ResponseEntity<?> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "chatId") Long chatId) {
         CommonResDto resDto = userService.clearChat(userInfo.getUserId(), chatId);
