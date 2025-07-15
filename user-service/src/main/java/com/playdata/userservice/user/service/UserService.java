@@ -319,12 +319,12 @@ public class UserService {
             // 댓글, 대댓글에 nickname 값을 변경시키기 위한 feign 요청
             ResponseEntity<?> response
                     = mainClient.modifyNickname(userInfo.getUserId(), encodedNickname);
-            // ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
+            ResponseEntity<?> res1 = animalClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             ResponseEntity<?> res2 = boardClient.modifyNickname(userInfo.getUserId(), encodedNickname);
             // 댓글, 대댓글의 nickname 값 수정 중 오류 발생
             // 또는 다른 게시판의 nickname값 수정 중 오류 발생
             if(response.getStatusCode() != HttpStatus.OK
-               //     || res1.getStatusCode() != HttpStatus.OK
+                    || res1.getStatusCode() != HttpStatus.OK
                     || res2.getStatusCode() != HttpStatus.OK) {
                 throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
@@ -693,8 +693,7 @@ public class UserService {
 
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
     }
-    
-    // 카카오로 접근 토큰을 발급 받는 로직
+
     public String getKakaoAccessToken(String code) {
 
         RestTemplate restTemplate = new RestTemplate();
@@ -715,8 +714,7 @@ public class UserService {
         return (String) responseJSON.get("access_token");
 
     }
-    
-    // 발급 받은 카카오 토큰으로 사용자의 정보를 받아오는 로직
+
     public KakaoUserDto getKakaoUser(String kakaoAccessToken) {
 
         String requestUrl = "https://kapi.kakao.com/v2/user/me";
@@ -732,8 +730,7 @@ public class UserService {
 
         return response.getBody();
     }
-    
-    // 받아온 사용자의 정보를 통해 로그인 혹은 회원가입 진행
+
     public KakaoLoginResDto findOrCreateKakaoUser(KakaoUserDto kakaoUserDto) {
 
         Optional<User> kakao
