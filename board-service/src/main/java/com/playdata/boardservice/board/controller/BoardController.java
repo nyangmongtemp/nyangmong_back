@@ -104,7 +104,7 @@ public class BoardController {
                                                            @RequestParam("category") Category category,
                                                            Pageable pageable) {
 
-        Page<InformationBoardListResDto> resDto = boardService.findInformationBoardList(boardSearchDto, category, pageable);
+        Page<LikeComResDto> resDto = boardService.findInformationBoardList(boardSearchDto, category, pageable);
 
         return ResponseEntity.ok().body(resDto);
     }
@@ -114,7 +114,7 @@ public class BoardController {
     public ResponseEntity<Page<?>> getIntroductionBoardList(BoardSearchDto boardSearchDto,
                                                             Pageable pageable) {
 
-        Page<IntroductionBoardListResDto> resDto = boardService.findIntroductionBoardList(boardSearchDto, pageable);
+        Page<LikeComIntroResDto> resDto = boardService.findIntroductionBoardList(boardSearchDto, pageable);
 
         return ResponseEntity.ok().body(resDto);
     }
@@ -181,9 +181,9 @@ public class BoardController {
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId,
-                                     @PathVariable("nickname") String encodedNickname) {
+                                     @PathVariable("nickname") String nickname) {
 
-        String nickname = URLDecoder.decode(encodedNickname, StandardCharsets.UTF_8);
+        String encodedNickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
 
         boardService.modifyUserFindBoard(userId, nickname);
         log.info(userId + ":" + nickname);

@@ -16,4 +16,5 @@ public class LikeComCountReqDto {
     @NotNull
     private Long contentId;
 
+
 }

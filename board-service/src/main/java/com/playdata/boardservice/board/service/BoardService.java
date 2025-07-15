@@ -6,6 +6,7 @@ import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.board.entity.IntroductionBoard;
 import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
+import com.playdata.boardservice.client.MainServiceClient;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
 import com.playdata.boardservice.common.enumeration.ErrorCode;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -24,10 +26,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,10 @@ public class BoardService {
 
     private final InformationBoardRepository informationBoardRepository;
     private final IntroductionBoardRepository introductionBoardRepository;
+
     private final RedisTemplate<String, String> redisTemplate;
+
+    private final MainServiceClient mainServiceClient;
 
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
@@ -204,28 +208,74 @@ public class BoardService {
     }
 
     // 정보 게시판 게시물 목록 조회
-    public Page<InformationBoardListResDto> findInformationBoardList(BoardSearchDto boardSearchDto,
-                                                                     Category category,
-                                                                     Pageable pageable) {
+    public Page<LikeComResDto> findInformationBoardList(BoardSearchDto boardSearchDto,
+                                                        Category category,
+                                                        Pageable pageable) {
 
         // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
         Page<InformationBoard> informationBoardList = informationBoardRepository.findList(boardSearchDto,
                 category,
                 pageable);
 
-        // Entity → DTO 변환
-        return informationBoardList.map(InformationBoardListResDto::new);
+        List<LikeComCountReqDto> likeCom = informationBoardList.stream().map(informationBoard -> {
+            // ReqDto 에서 category, postId 를 뽑아서 List로 만들겠다. (category는 string 변환)
+            return new LikeComCountReqDto(String.valueOf(informationBoard.getCategory()), informationBoard.getPostId());
+        }).collect(Collectors.toList());
 
+        List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
+        List<LikeComResDto> result = informationBoardList.stream().map(inform -> {
+            for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
+                if (inform.getCategory().equals(Category.valueOf(likeComCountResDto.getCategory())) &&
+                        inform.getPostId().equals(likeComCountResDto.getContentId())) {
+                    return LikeComResDto.fromEntity(inform, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
+                }
+            }
+            return null;
+        })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Page<LikeComResDto> dtoPage = new PageImpl<>(
+                result,
+                informationBoardList.getPageable(),
+                informationBoardList.getTotalElements()
+        );
+        // Entity → DTO 변환
+//        return informationBoardList.map(InformationBoardListResDto::new);
+        return dtoPage;
     }
 
     // 소개 게시판 게시물 목록 조회
-    public Page<IntroductionBoardListResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
+    public Page<LikeComIntroResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
 
         // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
         Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findList(boardSearchDto, pageable);
 
+        List<LikeComCountReqDto> likeCom = introductionBoardList.stream().map(introductionBoard -> {
+            // ReqDto 에서 category(INTRODUCTION), postId 를 뽑아서 List로 만들겠다.
+            return new LikeComCountReqDto(Category.INTRODUCTION.name(), introductionBoard.getPostId());
+        }).collect(Collectors.toList());
+
+        List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
+        List<LikeComIntroResDto> result = introductionBoardList.stream().map(introductionBoard -> {
+                    for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
+                        if (introductionBoard.getPostId().equals(likeComCountResDto.getContentId())) {
+                            return LikeComIntroResDto.fromEntity(introductionBoard, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
+                        }
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Page<LikeComIntroResDto> dtoPage = new PageImpl<>(
+                result,
+                introductionBoardList.getPageable(),
+                introductionBoardList.getTotalElements()
+        );
         // Entity → DTO 변환
-        return introductionBoardList.map(IntroductionBoardListResDto::new);
+//        return informationBoardList.map(InformationBoardListResDto::new);
+        return dtoPage;
 
     }
 
@@ -325,13 +375,13 @@ public class BoardService {
 
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
     @Transactional
-    public void modifyUserFindBoard(Long userId, String nickname) {
+    public void modifyUserFindBoard(Long userId, String encodedNickname) {
 
         informationBoardRepository.findByUserId(userId)
-                .forEach(InformationBoard -> InformationBoard.nicknameModify(nickname));
+                .forEach(InformationBoard -> InformationBoard.nicknameModify(encodedNickname));
 
         introductionBoardRepository.findByUserId(userId)
-                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(nickname));
+                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(encodedNickname));
 
 
 
