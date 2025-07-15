@@ -68,7 +68,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-            // ✅ 허용 경로와 현재 요청 path가 일치하는지 확인
+            //  허용 경로와 현재 요청 path가 일치하는지 확인
             boolean isAllowed = allowUrl.stream()
                     .anyMatch(url -> antPathMatcher.match(url, path));
 
@@ -108,14 +108,25 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 return onError(exchange, "인증 오류 발생", HttpStatus.UNAUTHORIZED);
             }
 
-            ServerHttpRequest request = exchange.getRequest()
-                    .mutate()
-                    .header("X-User-Email", claims.getSubject())
-                    .header(roleHeader, claims.get("role", String.class))
-                    .header("X-User-Id", claims.get("userId", String.class))
-                    .header("X-User-Nickname", claims.get("nickname", String.class))
-                    .build();
+            ServerHttpRequest request;
 
+            if(path.startsWith("/admin")){
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-Admin-Email", claims.getSubject())
+                        .header(roleHeader, claims.get("role", String.class))
+                        .header("X-Admin-Id", claims.get("adminId", String.class))
+                        .build();
+            }
+            else {
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-User-Email", claims.getSubject())
+                        .header(roleHeader, claims.get("role", String.class))
+                        .header("X-User-Id", claims.get("userId", String.class))
+                        .header("X-User-Nickname", claims.get("nickname", String.class))
+                        .build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         };
     }
