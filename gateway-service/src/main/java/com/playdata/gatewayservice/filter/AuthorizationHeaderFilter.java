@@ -56,7 +56,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/editor/upload-image",
 
             // 스웨거
-            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
+            "/**/swagger-ui.html", "/**/swagger-ui/**", "/**/v3/api-docs/**", "/**/swagger-resources/**"
     );
 
     @Override
@@ -67,7 +67,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-            // ✅ 허용 경로와 현재 요청 path가 일치하는지 확인
+            // 허용 경로와 현재 요청 path가 일치하는지 확인
             boolean isAllowed = allowUrl.stream()
                     .anyMatch(url -> antPathMatcher.match(url, path));
 

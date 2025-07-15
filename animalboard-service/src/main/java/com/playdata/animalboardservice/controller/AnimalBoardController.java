@@ -3,6 +3,7 @@ package com.playdata.animalboardservice.controller;
 import com.playdata.animalboardservice.common.auth.JwtTokenProvider;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
+import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
@@ -59,8 +60,8 @@ public class AnimalBoardController {
      * @return 페이징된 동물 목록 데이터 (AnimalListResDto)
      */
     @Operation(
-            summary = "분양동물 목록 조회 (페이징)",
-            description = "페이징이 적용된 고객상담 목록을 조회한다."
+            summary = "분양동물 목록 조회 (검색, 페이징)",
+            description = "검색, 페이징이 적용된 고객상담 목록을 조회한다."
     )
     @GetMapping("/list")
     public ResponseEntity<Page<AnimalListResDto>> getAnimalList(SearchDto searchDto, Pageable pageable) {
@@ -79,12 +80,12 @@ public class AnimalBoardController {
     @Operation(
             summary = "분양 게시물 상세 조회",
             description = """
-        게시물 ID를 기반으로 분양 게시물의 상세 정보를 조회합니다.
-        
-        ## 인증
-        - 로그인 하지 않은 사용자도 조회 가능합니다.
-        - 로그인 상태인 경우, 사용자 정보를 함께 활용하여 개인화된 결과 제공 가능.
-    """,
+                게시물 ID를 기반으로 분양 게시물의 상세 정보를 조회합니다.
+                
+                ## 인증
+                - 로그인 하지 않은 사용자도 조회 가능합니다.
+                - 로그인 상태인 경우, 사용자 정보를 함께 활용하여 개인화된 결과 제공 가능.
+            """,
             tags = {"분양 게시물"},
             security = @SecurityRequirement(name = "bearerAuth") // 선택적 인증일 경우 제거해도 무방
     )
@@ -94,21 +95,30 @@ public class AnimalBoardController {
                     description = "조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = CommonResDto.class),
+                            schema = @Schema(implementation = AnimalDetailResDto.class),
                             examples = @ExampleObject(value = """
-                {
-                    "status": "OK",
-                    "message": "상세 조회 성공",
-                    "data": {
-                        "id": 1,
-                        "title": "강아지 분양",
-                        "age": "1살",
-                        "gender": "수컷",
-                        "description": "건강하고 귀여운 강아지 분양합니다.",
-                        "liked": true
-                    }
-                }
-            """)
+                                {
+                                    "createAt": "2025-07-08T10:30:12.7888",
+                                    "updateAt": null,
+                                    "postId": 1,
+                                    "userId": 2,
+                                    "thumbnailImage": "656c15d9-0fee-4e31-8eb2-8eab55c2a29c_춘식이.jpg",
+                                    "nickName": "테스터",
+                                    "title": "2살 믹스견 분양합니다",
+                                    "content": "우리강아지 분양합니다",
+                                    "viewCount": 8,
+                                    "petCategory": "강아지",
+                                    "petKind": "믹스견",
+                                    "age": "2살",
+                                    "vaccine": "1차접종 완료, 2차접종 준비중",
+                                    "sexCode": "M",
+                                    "neuterYn": "N",
+                                    "address": "서울시 서초구",
+                                    "fee": 200000,
+                                    "active": true,
+                                    "reservationStatus": "R"
+                                }
+                            """)
                     )
             ),
             @ApiResponse(
@@ -116,13 +126,13 @@ public class AnimalBoardController {
                     description = "존재하지 않는 게시물 ID",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = AnimalDetailResDto.class),
+                            schema = @Schema(implementation = CommonException.class),
                             examples = @ExampleObject(value = """
-                {
-                    "status": "404",
-                    "message": "게시물을 찾을 수 없습니다."
-                }
-            """)
+                                {
+                                    "code": "GET-002",
+                                    "message": "요청 데이터가 존재하지 않습니다."
+                                }
+                            """)
                     )
             )
     })

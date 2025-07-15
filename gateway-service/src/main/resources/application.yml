@@ -33,7 +33,7 @@ spring:
             - Path=/user-service/**
           filters:
             - RemoveRequestHeader=Cookie
-            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - RewritePath=/user-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
         - id: scheduler-service
@@ -50,7 +50,7 @@ spring:
             - Path=/main-service/**
           filters:
             - RemoveRequestHeader=Cookie
-            - RewritePath=/main-service/(?<segment>.*), /$\{segment}
+            - RewritePath=/main-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
         - id: festival-service
@@ -64,10 +64,10 @@ spring:
         - id: animalboard-service
           uri: lb://ANIMALBOARD-SERVICE
           predicates:
-            - Path=/animalboard-service/**
+            - Path=/animalboard-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
             - RemoveRequestHeader=Cookie
-            - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
+            - RewritePath=/animalboard-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
 
         - id: board-service
@@ -76,5 +76,5 @@ spring:
             - Path=/board-service/**
           filters:
             - RemoveRequestHeader=Cookie
-            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
+            - RewritePath=/board-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter

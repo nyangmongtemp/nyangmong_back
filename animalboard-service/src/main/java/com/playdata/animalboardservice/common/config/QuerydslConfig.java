@@ -1,4 +1,4 @@
-package com.playdata.animalboardservice.config;
+package com.playdata.animalboardservice.common.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
