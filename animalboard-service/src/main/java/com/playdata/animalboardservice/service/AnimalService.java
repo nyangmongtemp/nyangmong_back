@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.service;
 
+import com.playdata.animalboardservice.client.MainServiceClient;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
@@ -8,8 +9,10 @@ import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
+import com.playdata.animalboardservice.dto.req.LikeComCountReqDto;
 import com.playdata.animalboardservice.dto.req.ReservationReqDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
+import com.playdata.animalboardservice.dto.res.LikeComCountResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.entity.ReservationStatus;
 import com.playdata.animalboardservice.repository.AnimalRepository;
@@ -21,16 +24,15 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -46,6 +48,7 @@ public class AnimalService {
 
     private final AnimalRepository animalRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final MainServiceClient mainClient;
 
     // application.yml에서 설정한 이미지 저장 경로를 주입받음
     @Value("${imagePath.url}")
@@ -64,12 +67,30 @@ public class AnimalService {
         // animalRepository에서 커스텀 쿼리로 조건에 맞는 목록을 조회
         Page<Animal> animalList = animalRepository.findList(searchDto, pageable);
 
-        // Entity → DTO로 변환 (View에 필요한 필드만 노출)
-        return animalList.map(animal ->
-                AnimalListResDto.builder()
-                        .animal(animal)
-                        .build()
-        );
+        // 요청 DTO 리스트 생성
+        List<LikeComCountReqDto> target = animalList.stream()
+                .map(animal -> new LikeComCountReqDto("ADOPT", animal.getPostId()))
+                .toList();
+
+        // 응답 결과를 Map으로 변환해 빠른 매칭 가능
+        Map<Long, LikeComCountResDto> resDtoMap = mainClient.getListLikeCommentCount(target)
+                .stream()
+                .collect(Collectors.toMap(LikeComCountResDto::getContentId, dto -> dto));
+
+        // 순서를 유지하며 DTO 변환
+        List<AnimalListResDto> result = animalList.stream()
+                .map(animal -> {
+                    LikeComCountResDto dto = resDtoMap.get(animal.getPostId());
+                    if (dto != null) {
+                        return new AnimalListResDto(animal, dto.getLikeCount(), dto.getCommentCount());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new PageImpl<>(result, animalList.getPageable(), animalList.getTotalElements());
+
     }
 
     /**
