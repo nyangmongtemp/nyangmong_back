@@ -630,7 +630,7 @@ public class MainService {
     // 게시물 상세 조회 시, 댓글의 정보들 + 좋아요 수 + 대댓글 여부를 담은 dto 변환 메소드
     private static CommentDetailResDto getDetailResDto(Comment comment) {
         return CommentDetailResDto.builder()
-                .contentId(comment.getCommentId())
+                .contentId(comment.getContentId())
                 .category(String.valueOf(comment.getCategory()))
                 .content(comment.getContent())
                 // 대댓글 존재 여부

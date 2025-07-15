@@ -69,3 +69,21 @@ spring:
             - RemoveRequestHeader=Cookie
             - RewritePath=/animalboard-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
+
+        - id: board-service
+          uri: lb://BOARD-SERVICE
+          predicates:
+            - Path=/board-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: admin-service
+          uri: lb://ADMIN-SERVICE
+          predicates:
+            - Path=/admin-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/admin-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter

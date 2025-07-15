@@ -1,6 +1,7 @@
 package com.playdata.festivalservice.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -55,6 +56,10 @@ public class FestivalEntity {
     @Column(nullable = false, unique = true, length = 64)
     private String hash;                       // 중복 방지용 해시 값 (예: 축제 제목+날짜 해시)
 
+    private LocalDate startDate;               // 시작날짜
+
+    private LocalDate endDate;                 // 종료날짜
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;           // 데이터 생성 시간
@@ -73,5 +78,7 @@ public class FestivalEntity {
         this.money = source.getMoney();
         this.imagePath = source.getImagePath();
         this.reservationDate = source.getReservationDate();
+        this.startDate = source.getStartDate();
+        this.endDate = source.getEndDate();
     }
 }

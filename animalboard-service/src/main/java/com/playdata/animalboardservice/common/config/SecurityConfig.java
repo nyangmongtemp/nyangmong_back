@@ -35,7 +35,8 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/stray-animal-board/**",
                             "/animal-board/list", "/animal-board/public/{postId}",
-                            "/animal-board/deleteUser/{id}", "/animal-board/modifyNickname/{id}/{nickname}"
+                            "/animal-board/deleteUser/{id}", "/animal-board/modifyNickname/{id}/{nickname}",
+                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
                     ).permitAll()
                     .anyRequest().authenticated();
         });

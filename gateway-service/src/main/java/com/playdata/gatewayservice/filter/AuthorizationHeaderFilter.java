@@ -1,6 +1,7 @@
 package com.playdata.gatewayservice.filter;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,30 +31,33 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private String adminKey;
 
     private final List<String> allowUrl = Arrays.asList(
-        // 사용자 관련
-        "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
-        "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
+            // 사용자 관련
+            "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
+            "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
 
-        // 메인 페이지 및 댓글
-        "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
+            // 메인 페이지 및 댓글
+            "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
 
-        // 동물 관련 게시판
-        "/animal-board/list", "/animal-board/public/{postId}", "/stray-animal-board/**",
+            // 동물 관련 게시판
+            "/animal-board/list", "/animal-board/public/{postId}", "/stray-animal-board/**",
 
-        // 스케줄러 API
-        "/scheduler/**",
+            // 스케줄러 API
+            "/scheduler/**",
 
-        // 게시판
-        "/board/popular/children",
-        "/board/introduction/list", "/board/introduction/main",
-        "/board/information/list", "/board/information/main", "/board/information/popular",
-        "/board/detail/**",
+            // 게시판
+            "/board/popular/children",
+            "/board/introduction/list", "/board/introduction/main",
+            "/board/information/list", "/board/information/main", "/board/information/popular",
+            "/board/detail/**",
 
-        // 축제 관련 API
-        "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
+            // 축제 관련 API
+            "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
 
-        // 에디터
-        "/editor/upload-image"
+            // 에디터
+            "/editor/upload-image",
+
+            // 스웨거
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
     );
 
     @Override
@@ -64,7 +68,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-            // ✅ 허용 경로와 현재 요청 path가 일치하는지 확인
+            //  허용 경로와 현재 요청 path가 일치하는지 확인
             boolean isAllowed = allowUrl.stream()
                     .anyMatch(url -> antPathMatcher.match(url, path));
 
@@ -89,27 +93,40 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             Claims claims;
             String roleHeader = "X-User-Role";
 
-            if (path.startsWith("/admin")) {
-                // 관리자 경로는 adminSecretKey 사용
-                claims = validateJwt(token, adminKey);
-                roleHeader = "X-Admin-Role"; // 필요 시 다르게
-            } else {
-                // 사용자 경로는 userSecretKey 사용
-                claims = validateJwt(token, secretKey);
+            try {
+                if (path.startsWith("/admin")) {
+                    claims = validateJwt(token, adminKey);
+                } else {
+                    claims = validateJwt(token, secretKey);
+                }
+            } catch (RuntimeException e) {
+                if (e.getMessage().equals("EXPIRED_TOKEN")) {
+                    return onError(exchange, "EXPIRED_TOKEN", HttpStatus.UNAUTHORIZED);
+                } else if (e.getMessage().equals("INVALID_TOKEN")) {
+                    return onError(exchange, "INVALID_TOKEN", HttpStatus.UNAUTHORIZED);
+                }
+                return onError(exchange, "인증 오류 발생", HttpStatus.UNAUTHORIZED);
             }
 
-            if (claims == null) {
-                return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
+            ServerHttpRequest request;
+
+            if(path.startsWith("/admin")){
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-Admin-Email", claims.getSubject())
+                        .header(roleHeader, claims.get("role", String.class))
+                        .header("X-Admin-Id", claims.get("adminId", String.class))
+                        .build();
             }
-
-            ServerHttpRequest request = exchange.getRequest()
-                    .mutate()
-                    .header("X-User-Email", claims.getSubject())
-                    .header(roleHeader, claims.get("role", String.class))
-                    .header("X-User-Id", claims.get("userId", String.class))
-                    .header("X-User-Nickname", claims.get("nickname", String.class))
-                    .build();
-
+            else {
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-User-Email", claims.getSubject())
+                        .header(roleHeader, claims.get("role", String.class))
+                        .header("X-User-Id", claims.get("userId", String.class))
+                        .header("X-User-Nickname", claims.get("nickname", String.class))
+                        .build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         };
     }
@@ -131,9 +148,12 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT 만료됨: {}", e.getMessage());
+            throw new RuntimeException("EXPIRED_TOKEN"); // 사용자 정의 예외 메시지
         } catch (Exception e) {
-            log.error("JWT validation failed: {}", e.getMessage());
-            return null;
+            log.error("JWT 파싱 실패: {}", e.getMessage());
+            throw new RuntimeException("INVALID_TOKEN"); // 다른 예외는 따로
         }
     }
 }
