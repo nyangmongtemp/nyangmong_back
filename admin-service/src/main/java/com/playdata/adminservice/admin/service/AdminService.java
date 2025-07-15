@@ -3,6 +3,7 @@ package com.playdata.adminservice.admin.service;
 import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
 import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
+import com.playdata.adminservice.admin.dto.res.AdminLoginResDto;
 import com.playdata.adminservice.admin.entity.Admin;
 import com.playdata.adminservice.admin.repository.AdminRepository;
 import com.playdata.adminservice.common.auth.JwtTokenProvider;
@@ -116,7 +117,6 @@ public class AdminService {
         // 인증 코드 유효시간이 만료된 경우
         if(foundCode == null) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
-            //throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
         }
 
         // 인증 시도 횟수 증가
@@ -129,7 +129,6 @@ public class AdminService {
                 // 최대 시도 횟수 초과 시 해당 이메일 인증 차단
                 blockUser(email);
                 throw new CommonException(ErrorCode.BAD_REQUEST);
-                // throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
             }
 //            // 인증 횟수 차감하여 프론트로 메시지 전송
 //            int remainingAttempt = 3 - attemptCount;
@@ -141,7 +140,16 @@ public class AdminService {
         // 인증 완료 했기 때문에, redis에 있는 인증 관련 데이터를 삭제하자.
         redisTemplate.delete(key);
 
-        return new CommonResDto(HttpStatus.OK, "인증되었습니다.", true);
+        // admin 정보 가져오기
+        Admin admin = adminRepository.findByEmail(email).orElseThrow(() -> new CommonException(ErrorCode.BAD_REQUEST));
+
+        // 토큰 생성
+        String token = jwtTokenProvider.createToken(admin.getEmail(), admin.getRole(), admin.getAdminId());
+
+        // token과 email을 화면단으로 리턴
+        return new CommonResDto(HttpStatus.OK,
+                "로그인에 성공하였습니다.",
+                new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token));
     }
 
 
