@@ -24,9 +24,13 @@ public class AnimalListResDto {
     private String address; // 주소
     private Integer fee; // 책임비
     private boolean active; // 게시물 활성화
+    
+    // 좋아요, 댓글 개수
+    private Long likeCount;
+    private Long commentCount;
 
     @Builder
-    public AnimalListResDto(Animal animal) {
+    public AnimalListResDto(Animal animal, Long likeCount, Long commentCount) {
         this.postId = animal.getPostId();
         this.userId = animal.getUserId();
         this.thumbnailImage = animal.getThumbnailImage();
@@ -42,6 +46,8 @@ public class AnimalListResDto {
         this.address = animal.getAddress();
         this.fee = animal.getFee();
         this.active = animal.isActive();
+        this.likeCount = likeCount;
+        this.commentCount = commentCount;
     }
 
 }

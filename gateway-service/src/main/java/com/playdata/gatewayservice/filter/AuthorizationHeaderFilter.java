@@ -130,6 +130,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                         .header("X-User-Nickname", claims.get("nickname", String.class))
                         .build();
             }
+            log.info("필터통과됨!!!!");
             return chain.filter(exchange.mutate().request(request).build());
         };
     }

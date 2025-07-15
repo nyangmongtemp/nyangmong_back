@@ -460,14 +460,9 @@ public class MainService {
         Page<Comment> foundUserComment = commentRepository.findActiveByUserId(userId, pageable);
 
         // 조회된 댓글의 좋아요 개수를 계산하는 로직
-        List<CommentDetailResDto> myCommentList = foundUserComment.stream().map(comment -> {
-            // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
-            Long likeCount
-                    = likeRepository.countByContentIdAndActiveTrue(comment.getCommentId());
-
-            // 댓글의 정보 + 좋아요개수 + 대댓글 존재 여부
-            return getDetailResDto(comment);
-        }).collect(Collectors.toList());
+        // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
+        // 댓글의 정보 + 좋아요개수 + 대댓글 존재 여부
+        Page<CommentDetailResDto> myCommentList = foundUserComment.map(MainService::getDetailResDto);
 
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글 정보 조회", myCommentList);
     }
