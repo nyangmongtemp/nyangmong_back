@@ -1,5 +1,6 @@
 package com.playdata.adminservice.common.auth;
 
+import com.playdata.adminservice.admin.entity.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,26 +32,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
 
         // 게이트웨이가 토큰 내에 클레임을 헤더에 담아서 보내준다.
-        String userEmail = request.getHeader("X-User-Email");
-        String userRole = request.getHeader("X-User-Role");
-        String userId = request.getHeader("X-User-Id");
-        String nickname = request.getHeader("X-User-Nickname");
-        log.info("userEmail:{}", userEmail);
-        log.info("userRole:{}", userRole);
-        log.info("userId:{}", userId);
-        log.info("nickname:{}", nickname);
+        String adminEmail = request.getHeader("X-Admin-Email");
+        String adminRole = request.getHeader("X-Admin-Role");
+        String adminId = request.getHeader("X-Admin-Id");
+        log.info("Email:{}", adminEmail);
+        log.info("Role:{}", adminRole);
+        log.info("adminId:{}", adminId);
 
-        if (userEmail != null  && userRole != null && userId != null && nickname != null) {
+        if (adminEmail != null  && adminRole != null && adminId != null) {
 
             List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
 
-            authorityList.add(new SimpleGrantedAuthority("ROLE_" + userRole));
-
-            nickname = JwtTokenProvider.urlDecode(nickname);
-            log.info("decoded nickname:{}", nickname);
+            authorityList.add(new SimpleGrantedAuthority("ROLE_" + adminRole));
 
             Authentication auth = new UsernamePasswordAuthenticationToken(
-                    new TokenUserInfo(userEmail, userRole, nickname, Long.valueOf(userId)),
+                    new TokenUserInfo(adminEmail, Role.valueOf(adminRole) ,Long.valueOf(adminId)),
                     "",
                     authorityList // 인가 정보 (권한)
             );

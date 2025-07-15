@@ -1,5 +1,6 @@
 package com.playdata.adminservice.common.auth;
 
+import com.playdata.adminservice.admin.entity.Role;
 import lombok.*;
 
 @Setter
@@ -11,7 +12,6 @@ import lombok.*;
 public class TokenUserInfo {
 
     private String email;
-    private String role;
-    private String nickname;
-    private Long userId;
+    private Role role;
+    private Long adminId;
 }

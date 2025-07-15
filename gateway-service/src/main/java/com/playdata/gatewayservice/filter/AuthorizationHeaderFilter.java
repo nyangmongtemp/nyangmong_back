@@ -56,6 +56,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             // 에디터
             "/editor/upload-image",
 
+            // 관리자
+            "/admin/login", "/admin/create", "/admin/verify-code",
+
             // 스웨거
             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
     );
@@ -92,6 +95,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             Claims claims;
             String roleHeader = "X-User-Role";
+            String adminRoleHeader = "X-Admin-Role";
 
             try {
                 if (path.startsWith("/admin")) {
@@ -114,7 +118,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 request = exchange.getRequest()
                         .mutate()
                         .header("X-Admin-Email", claims.getSubject())
-                        .header(roleHeader, claims.get("role", String.class))
+                        .header(adminRoleHeader, claims.get("role", String.class))
                         .header("X-Admin-Id", claims.get("adminId", String.class))
                         .build();
             }

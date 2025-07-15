@@ -30,6 +30,7 @@ public class Admin extends BaseTimeEntity {
     private String password;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(nullable = false)
@@ -37,6 +38,12 @@ public class Admin extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String name;
+
+    // 디폴트 값 설정
+    @PrePersist
+    protected void onCreate() {
+        this.active = true;
+    }
 
 
 
