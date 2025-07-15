@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,14 +35,18 @@ public class IntroductionBoardRepositoryImpl implements  IntroductionBoardReposi
                 .limit(pageable.getPageSize()) // 페이지당 개수
                 .fetch();
 
-        // 전체 개수 조회 (페이징 계산용)
-        long total = jpaQueryFactory.select(introductionBoard.count())
-                .from(introductionBoard)
-                .where(createCondition(boardSearchDto))
-                .fetchOne();
+
+        // 전체 데이터 개수 조회 (페이징을 위해 필요)
+        Long count = 0L;
+        if (!CollectionUtils.isEmpty(content)) {
+            count = jpaQueryFactory.select(introductionBoard.count().coalesce(0L).as("cnt"))
+                    .from(introductionBoard)
+                    .where(createCondition(boardSearchDto))
+                    .fetchOne();
+        }
 
         // Page 형태로 리턴
-        return new PageImpl<>(content, pageable, total);
+        return new PageImpl<>(content, pageable, count);
     }
 
     // 소개 게시판 메인 최신 게시물 조회

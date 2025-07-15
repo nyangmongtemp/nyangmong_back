@@ -1,6 +1,7 @@
 package com.playdata.boardservice.board.repository.custom.Impl;
 
 import static com.playdata.boardservice.board.entity.QInformationBoard.informationBoard;
+import static com.playdata.boardservice.board.entity.QIntroductionBoard.introductionBoard;
 
 import com.playdata.boardservice.board.dto.BoardSearchDto;
 import com.playdata.boardservice.board.entity.Category;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,14 +33,17 @@ public class InformationBoardRepositoryImpl implements InformationBoardRepositor
                 .limit(pageable.getPageSize()) // 가져올 개수 , 설정 해 놓은 한페이지에 가져올 수
                 .fetch();
 
-        // 전체 게시글 수 조회 (count 쿼리에는 offset/limit 적용하지 않음)
-        long total = jpaQueryFactory.select(informationBoard.count())
-                .from(informationBoard)
-                .where(createCondition(boardSearchDto))
-                .fetchOne();
+        // 전체 데이터 개수 조회 (페이징을 위해 필요)
+        Long count = 0L;
+        if (!CollectionUtils.isEmpty(content)) {
+            count = jpaQueryFactory.select(informationBoard.count().coalesce(0L).as("cnt"))
+                    .from(informationBoard)
+                    .where(createCondition(boardSearchDto))
+                    .fetchOne();
+        }
 
         // Page 객체로 리턴
-        return new PageImpl<>(content, pageable, total);
+        return new PageImpl<>(content, pageable, count);
     }
 
     // 정보 게시판 메인에 최신 게시물 조회
