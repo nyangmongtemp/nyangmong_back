@@ -32,6 +32,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                                                    @Param("contentId") Long contentId, Pageable pageable);
 
     // 모든 활성화된 사용자의 댓글 페이징 조회
-    Page<Comment> findActiveByUserId(Long userId, Pageable pageable);
+    @Query("SELECT c FROM Comment c WHERE c.userId = :userId AND c.active = true ORDER BY c.commentId DESC")
+    Page<Comment> findActiveByUserId(@Param("userId") Long userId, Pageable pageable);
 
 }

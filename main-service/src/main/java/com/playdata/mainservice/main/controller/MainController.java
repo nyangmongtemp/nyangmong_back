@@ -7,7 +7,10 @@ import com.playdata.mainservice.main.dto.res.LikeComCountResDto;
 import com.playdata.mainservice.main.service.MainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -169,14 +172,21 @@ public class MainController {
     /**
      *
      * @param userInfo
-     * @param pageable  -->  ?page=2&size=10&sort=createTime
+     * @param page
+     * @param size
+     * @param sort
      * @return
      */
     // 마이페이지에서 내가 쓴 댓글 목록 조회
     @GetMapping("/comment/mypage")
-    public ResponseEntity<?> getMyComment(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
+    public ResponseEntity<?> getMyComment(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "commentId,desc") String sort
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("commentId")));
         CommonResDto resDto = mainService.getMyComment(userInfo.getUserId(), pageable);
-
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
