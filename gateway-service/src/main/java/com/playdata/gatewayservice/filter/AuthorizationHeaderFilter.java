@@ -92,6 +92,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             Claims claims;
             String roleHeader = "X-User-Role";
+            String adminRoleHeader = "X-Admin-Role";
 
             try {
                 if (path.startsWith("/admin")) {
@@ -114,7 +115,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 request = exchange.getRequest()
                         .mutate()
                         .header("X-Admin-Email", claims.getSubject())
-                        .header(roleHeader, claims.get("role", String.class))
+                        .header(adminRoleHeader, claims.get("role", String.class))
                         .header("X-Admin-Id", claims.get("adminId", String.class))
                         .build();
             }
