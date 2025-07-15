@@ -4,16 +4,15 @@ import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
 import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.service.AdminService;
+import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin")
@@ -31,7 +30,6 @@ public class AdminController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
-
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> adminLogin(@RequestBody @Valid AdminLoginReqDto adminLoginReqDto) {
@@ -46,6 +44,18 @@ public class AdminController {
         CommonResDto resDto = adminService.verifyCode(authResDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    /**
+     *
+     * @param userInfo
+     * @return
+     */
+    // 토큰 검증용 메소드 --> 추후 삭제 예정
+    @GetMapping("/temp22")
+    public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
+        log.info(userInfo.toString());
+        return ResponseEntity.ok(userInfo);
     }
 
 }

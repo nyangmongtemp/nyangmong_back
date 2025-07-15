@@ -12,6 +12,9 @@ public class AdminEmailAuthResDto {
     private String email;
 
     @NotBlank
+    private String password;
+
+    @NotBlank
     private String authCode;
 
 }

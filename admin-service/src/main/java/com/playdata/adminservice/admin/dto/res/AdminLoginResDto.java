@@ -14,5 +14,6 @@ public class AdminLoginResDto {
 
     private Role role;
 
+    private String token;
 
 }
