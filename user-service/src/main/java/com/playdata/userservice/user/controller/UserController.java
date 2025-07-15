@@ -357,6 +357,7 @@ public class UserController {
     // 화면단에서 요청하는 메소드
     @PostMapping("/refresh")
     public ResponseEntity<?> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
+        log.error("refresh 발급 로직 발동!");
         CommonResDto resDto = userService.reProvideToken(userEmail.get("email"));
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
