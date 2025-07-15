@@ -2,6 +2,12 @@ package com.playdata.boardservice.board.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.boardservice.board.dto.*;
+import com.playdata.boardservice.board.dto.req.InformationBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.req.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.res.InformationBoardListResDto;
+import com.playdata.boardservice.board.dto.res.IntroductionBoardListResDto;
+import com.playdata.boardservice.board.dto.res.LikeComIntroResDto;
+import com.playdata.boardservice.board.dto.res.LikeComResDto;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.service.BoardService;

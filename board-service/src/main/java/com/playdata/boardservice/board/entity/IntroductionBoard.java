@@ -1,13 +1,11 @@
 package com.playdata.boardservice.board.entity;
 
 import com.playdata.boardservice.board.dto.BoardModiDto;
-import com.playdata.boardservice.board.dto.IntroductionBoardResDto;
+import com.playdata.boardservice.board.dto.res.IntroductionBoardResDto;
 import com.playdata.boardservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Getter
 @ToString

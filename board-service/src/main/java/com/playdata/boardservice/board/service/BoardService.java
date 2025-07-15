@@ -1,6 +1,10 @@
 package com.playdata.boardservice.board.service;
 
 import com.playdata.boardservice.board.dto.*;
+import com.playdata.boardservice.board.dto.req.InformationBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.req.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.req.LikeComCountReqDto;
+import com.playdata.boardservice.board.dto.res.*;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.board.entity.IntroductionBoard;

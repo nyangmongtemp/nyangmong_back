@@ -1,17 +1,15 @@
-package com.playdata.boardservice.board.dto;
+package com.playdata.boardservice.board.dto.res;
 
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class InformationBoardResDto {
+public class LikeComResDto { // 좋아요 수, 댓글 수 를 화면단으로 보내기 위한 용도
 
     private Long postid;
     private Category category;
@@ -24,9 +22,15 @@ public class InformationBoardResDto {
     private String nickname;
     private String title;
 
-    @Builder
-    public static InformationBoardResDto fromEntity(InformationBoard Board) {
-        return InformationBoardResDto.builder()
+    // 좋아요 수
+    private Long likeCount;
+
+    // 댓글 수
+    private Long commentCount;
+
+
+    public static LikeComResDto fromEntity(InformationBoard Board, Long likeCount, Long commentCount) {
+        return LikeComResDto.builder()
                 .postid(Board.getPostId())
                 .category(Board.getCategory())
                 .userid(Board.getUserId())
@@ -38,7 +42,9 @@ public class InformationBoardResDto {
                 .title(Board.getTitle())
                 .createdat(Board.getCreateAt())
                 .updatedat(Board.getUpdateAt())
+                .likeCount(likeCount)
+                .commentCount(commentCount)
                 .build();
-
     }
+
 }

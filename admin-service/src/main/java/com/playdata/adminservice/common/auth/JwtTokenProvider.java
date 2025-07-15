@@ -1,0 +1,47 @@
+package com.playdata.adminservice.common.auth;
+
+
+import com.playdata.adminservice.admin.entity.Role;
+import com.playdata.adminservice.common.auth.TokenUserInfo;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+@Component
+@Slf4j
+public class JwtTokenProvider {
+
+    @Value("${jwt.secretAdminKey}")
+    private String secretKey;
+
+    @Value("${jwt.expirationAdmin}")
+    private int expiration;
+
+    public String createToken(String email, Role role, Long adminId) {
+
+
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("role", String.valueOf(role));
+        claims.put("adminId", adminId.toString());
+
+        Date now = new Date();
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                // 현재 시간 밀리초에 30분을 더한 시간만큼을 만료시간으로 세팅
+                .setExpiration(new Date(now.getTime() + expiration * 60 * 1000))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+    }
+
+
+}

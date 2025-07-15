@@ -1,7 +1,7 @@
 package com.playdata.boardservice.board.entity;
 
 import com.playdata.boardservice.board.dto.BoardModiDto;
-import com.playdata.boardservice.board.dto.InformationBoardResDto;
+import com.playdata.boardservice.board.dto.res.InformationBoardResDto;
 import com.playdata.boardservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;

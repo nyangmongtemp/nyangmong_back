@@ -55,8 +55,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             // 에디터
             "/editor/upload-image",
 
+            // 관리자
+            "/admin/login", "/admin/create", "/admin/verify-code",
+
             // 스웨거
-            "/**/swagger-ui.html", "/**/swagger-ui/**", "/**/v3/api-docs/**", "/**/swagger-resources/**"
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
     );
 
     @Override
@@ -67,7 +70,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-            // 허용 경로와 현재 요청 path가 일치하는지 확인
+            //  허용 경로와 현재 요청 path가 일치하는지 확인
             boolean isAllowed = allowUrl.stream()
                     .anyMatch(url -> antPathMatcher.match(url, path));
 
@@ -91,28 +94,42 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             Claims claims;
             String roleHeader = "X-User-Role";
+            String adminRoleHeader = "X-Admin-Role";
 
-            if (path.startsWith("/admin")) {
-                // 관리자 경로는 adminSecretKey 사용
-                claims = validateJwt(token, adminKey);
-                roleHeader = "X-Admin-Role"; // 필요 시 다르게
-            } else {
-                // 사용자 경로는 userSecretKey 사용
-                claims = validateJwt(token, secretKey);
+            try {
+                if (path.startsWith("/admin")) {
+                    claims = validateJwt(token, adminKey);
+                } else {
+                    claims = validateJwt(token, secretKey);
+                }
+            } catch (RuntimeException e) {
+                if (e.getMessage().equals("EXPIRED_TOKEN")) {
+                    return onError(exchange, "EXPIRED_TOKEN", HttpStatus.UNAUTHORIZED);
+                } else if (e.getMessage().equals("INVALID_TOKEN")) {
+                    return onError(exchange, "INVALID_TOKEN", HttpStatus.UNAUTHORIZED);
+                }
+                return onError(exchange, "인증 오류 발생", HttpStatus.UNAUTHORIZED);
             }
 
-            if (claims == null) {
-                return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
+            ServerHttpRequest request;
+
+            if(path.startsWith("/admin")){
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-Admin-Email", claims.getSubject())
+                        .header(adminRoleHeader, claims.get("role", String.class))
+                        .header("X-Admin-Id", claims.get("adminId", String.class))
+                        .build();
             }
-
-            ServerHttpRequest request = exchange.getRequest()
-                    .mutate()
-                    .header("X-User-Email", claims.getSubject())
-                    .header(roleHeader, claims.get("role", String.class))
-                    .header("X-User-Id", claims.get("userId", String.class))
-                    .header("X-User-Nickname", claims.get("nickname", String.class))
-                    .build();
-
+            else {
+                request = exchange.getRequest()
+                        .mutate()
+                        .header("X-User-Email", claims.getSubject())
+                        .header(roleHeader, claims.get("role", String.class))
+                        .header("X-User-Id", claims.get("userId", String.class))
+                        .header("X-User-Nickname", claims.get("nickname", String.class))
+                        .build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         };
     }
@@ -134,9 +151,12 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT 만료됨: {}", e.getMessage());
+            throw new RuntimeException("EXPIRED_TOKEN"); // 사용자 정의 예외 메시지
         } catch (Exception e) {
-            log.error("JWT validation failed: {}", e.getMessage());
-            return null;
+            log.error("JWT 파싱 실패: {}", e.getMessage());
+            throw new RuntimeException("INVALID_TOKEN"); // 다른 예외는 따로
         }
     }
 }

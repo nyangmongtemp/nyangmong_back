@@ -1,4 +1,4 @@
-package com.playdata.boardservice.board.dto;
+package com.playdata.boardservice.board.dto.req;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
