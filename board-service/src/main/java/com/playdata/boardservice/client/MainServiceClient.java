@@ -1,7 +1,7 @@
 package com.playdata.boardservice.client;
 
-import com.playdata.boardservice.board.dto.LikeComCountReqDto;
-import com.playdata.boardservice.board.dto.LikeComCountResDto;
+import com.playdata.boardservice.board.dto.req.LikeComCountReqDto;
+import com.playdata.boardservice.board.dto.res.LikeComCountResDto;
 import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

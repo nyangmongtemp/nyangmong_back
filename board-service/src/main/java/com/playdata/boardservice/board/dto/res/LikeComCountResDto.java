@@ -1,4 +1,4 @@
-package com.playdata.boardservice.board.dto;
+package com.playdata.boardservice.board.dto.res;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

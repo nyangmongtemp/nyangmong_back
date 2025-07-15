@@ -1,4 +1,4 @@
-package com.playdata.boardservice.board.dto;
+package com.playdata.boardservice.board.dto.res;
 
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;

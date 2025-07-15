@@ -1,18 +1,20 @@
-package com.playdata.boardservice.board.dto;
+package com.playdata.boardservice.board.dto.res;
 
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
-import com.playdata.boardservice.board.entity.IntroductionBoard;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class LikeComIntroResDto {
+public class InformationBoardResDto {
 
     private Long postid;
+    private Category category;
     private Long userid;
     private String thumbnailimage;
     private String content;
@@ -22,16 +24,11 @@ public class LikeComIntroResDto {
     private String nickname;
     private String title;
 
-    // 좋아요 수
-    private Long likeCount;
-
-    // 댓글 수
-    private Long commentCount;
-
-
-    public static LikeComIntroResDto fromEntity(IntroductionBoard Board, Long likeCount, Long commentCount) {
-        return LikeComIntroResDto.builder()
+    @Builder
+    public static InformationBoardResDto fromEntity(InformationBoard Board) {
+        return InformationBoardResDto.builder()
                 .postid(Board.getPostId())
+                .category(Board.getCategory())
                 .userid(Board.getUserId())
                 .thumbnailimage(Board.getThumbnailImage())
                 .content(Board.getContent())
@@ -41,9 +38,7 @@ public class LikeComIntroResDto {
                 .title(Board.getTitle())
                 .createdat(Board.getCreateAt())
                 .updatedat(Board.getUpdateAt())
-                .likeCount(likeCount)
-                .commentCount(commentCount)
                 .build();
-    }
 
+    }
 }
