@@ -69,7 +69,7 @@ public class AdminService {
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
 
-        // 부가적인 정보를 담아서 User를 DB에 저장
+        // 부가적인 정보를 담아서 admin을 DB에 저장
         Admin createdAdmin = adminSaveReqDto.toEntity(encodedPassword);
         // DB에 저장
         adminRepository.save(createdAdmin);
@@ -98,6 +98,7 @@ public class AdminService {
                 throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
             }
             // 비밀번호가 일치 하지 않는 경우
+            // password = 날 것의 비밀번호, foundAdmin.getPassword() = 인코딩된 비밀번호
             if(!passwordEncoder.matches(password, foundAdmin.getPassword())) {
                 throw new CommonException(ErrorCode.INVALID_PASSWORD);
             } else {
@@ -149,7 +150,7 @@ public class AdminService {
         // token과 email을 화면단으로 리턴
         return new CommonResDto(HttpStatus.OK,
                 "로그인에 성공하였습니다.",
-                new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token));
+                new AdminLoginResDto(admin.getEmail(), admin.getName(), admin.getRole(), token));
     }
 
 
