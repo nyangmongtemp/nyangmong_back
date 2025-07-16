@@ -37,7 +37,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     // java mail sender
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // 시큐리티
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    // 유효성 검증
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.cloud:spring-cloud-starter'

@@ -3,7 +3,6 @@ package com.playdata.adminservice.common.auth;
 import com.playdata.adminservice.admin.entity.Role;
 import lombok.*;
 
-@Setter
 @Getter
 @ToString
 @NoArgsConstructor
