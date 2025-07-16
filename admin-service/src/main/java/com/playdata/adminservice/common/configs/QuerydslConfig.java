@@ -1,4 +1,4 @@
-package com.playdata.festivalservice.common.config;
+package com.playdata.adminservice.common.configs;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
