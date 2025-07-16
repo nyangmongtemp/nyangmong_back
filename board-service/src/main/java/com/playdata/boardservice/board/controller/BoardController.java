@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.boardservice.board.dto.*;
 import com.playdata.boardservice.board.dto.req.InformationBoardSaveReqDto;
 import com.playdata.boardservice.board.dto.req.IntroductionBoardSaveReqDto;
-import com.playdata.boardservice.board.dto.res.InformationBoardListResDto;
-import com.playdata.boardservice.board.dto.res.IntroductionBoardListResDto;
-import com.playdata.boardservice.board.dto.res.LikeComIntroResDto;
-import com.playdata.boardservice.board.dto.res.LikeComResDto;
+import com.playdata.boardservice.board.dto.res.*;
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.repository.InformationBoardRepository;
 import com.playdata.boardservice.board.service.BoardService;
@@ -197,6 +194,16 @@ public class BoardController {
 
         // 요청 완료 응답
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * 소개 게시판 좋아요순 3개 목록 조회
+     * @return
+     */
+    @GetMapping("/introduction/main")
+    public ResponseEntity<?> introductionMainList() {
+        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
+        return ResponseEntity.ok(resDto);
     }
 
 }
