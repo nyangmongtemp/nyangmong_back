@@ -155,61 +155,66 @@ public class NaverPetEventCrawler {
 
     /**
      * 상세 페이지에서 박람회 정보를 추출하는 메서드.
-     * 현재 driver가 상세 페이지에 위치해 있어야 함.
+     * - 제목, 이미지, 기간, 장소, 시간, 요금 등 기본 정보
+     * - 지도 주소 (addr) 추출 포함
      *
-     * @param driver Selenium WebDriver 상세 페이지 컨텍스트
-     * @return FestivalEntity 빌더로 생성된 행사 데이터 객체
+     * @param driver Selenium WebDriver 인스턴스 (상세 페이지 위치)
+     * @return FestivalEntity 빌더로 생성한 행사 정보 객체
      */
     private FestivalEntity extractDetails(WebDriver driver) {
-        // 기본 정보: 제목과 상태 텍스트 (종료 여부 등)
+        // 제목 (예: 2025 PET&MORE 박람회)
         String eventTitle = safeFindText(driver, By.cssSelector(".title strong._text"));
+
+        // 상태 정보 (예: 종료됨, 진행중 등)
         String source = safeFindText(driver, By.cssSelector(".title span.state_end"));
 
-        // 행사 공식 웹사이트 URL (있을 수도, 없을 수도 있음)
+        // 공식 웹사이트 링크 (있을 수도, 없을 수도 있음)
         String eventUrl = safeFindAttribute(driver, By.cssSelector(".title._title_ellipsis a.area_text_title"), "href");
 
-        // 행사 대표 이미지 URL을 추출 후 로컬로 다운로드 처리
+        // 행사 이미지 다운로드 및 로컬 저장
         String imagePath = "";
         try {
             WebElement imageEl = driver.findElement(By.cssSelector(".detail_info img"));
             imagePath = downloadImage(imageEl.getAttribute("src"));
         } catch (NoSuchElementException ignored) {
-            // 이미지가 없으면 빈 문자열 유지
+            // 이미지가 없는 경우는 무시
         }
 
-        // 기타 상세 정보 변수 초기화
-        String eventDate = "";
-        String reservationDate = "";
-        String eventTime = "";
-        String location = "";
-        String eventMoney = "";
+        // 행사 상세 정보 초기화
+        String eventDate = "";        // "2025.12.01 ~ 2025.12.05"
+        String reservationDate = "";  // "2025.03.01 ~ 2025.11.30"
+        String eventTime = "";        // "10:00 ~ 18:00"
+        String location = "";         // "수원컨벤션센터"
+        String eventMoney = "";       // "사전등록 무료"
+        String addr = "";             // 지도 페이지에서 추출할 실제 주소
 
-        // 행사 기간 파싱용 변수
+        // 시작일과 종료일은 LocalDate로 별도 저장
         LocalDate startDate = null;
         LocalDate endDate = null;
 
-        // 상세 정보 그룹 리스트 수집 (.info_group)
+        // 상세정보 섹션(.info_group)을 모두 가져와 반복 처리
         List<WebElement> infoGroups = driver.findElements(By.cssSelector(".info_group"));
 
         for (WebElement info : infoGroups) {
-            String label = info.getText();
+            String label = info.getText(); // 구분 텍스트 추출
 
-            // 기간 정보 추출
+            // 기간(행사일정) 추출
             if (label.contains("기간") && label.contains("~")) {
                 try {
-                    // .text 요소들에서 시작날짜, 종료날짜 텍스트 취득
+                    // 날짜 범위 텍스트 2개 추출
                     List<WebElement> dates = info.findElements(By.cssSelector(".text"));
                     if (dates.size() >= 2) {
                         eventDate = dates.get(0).getText() + " " + dates.get(1).getText();
 
-                        // 정규식으로 "yyyy.MM.dd" 형식 날짜 추출
+                        // 정규식으로 yyyy.MM.dd 형식 날짜 추출
                         Matcher matcher = DATE_RANGE_PATTERN.matcher(eventDate);
                         if (matcher.find()) {
                             startDate = LocalDate.parse(matcher.group(1), FORMATTER);
                             endDate = LocalDate.parse(matcher.group(2), FORMATTER);
                         }
                     }
-                    // 예약 기간 텍스트 추출 (숨겨진 .more_list .text 에서 자바스크립트로 가져옴)
+
+                    // 숨겨진 예약 기간 정보 추출 (자바스크립트 실행)
                     WebElement hiddenEl = info.findElement(By.cssSelector(".more_list .text"));
                     JavascriptExecutor js = (JavascriptExecutor) driver;
                     reservationDate = (String) js.executeScript("return arguments[0].textContent;", hiddenEl);
@@ -217,24 +222,69 @@ public class NaverPetEventCrawler {
                     reservationDate = "";
                 }
             }
-            // 행사 시간 정보 추출
+
+            // 행사 시간 정보
             else if (label.contains("시간")) {
                 eventTime = safeFindText(info, By.cssSelector("dd"));
             }
-            // 행사 장소 정보 추출
+
+            // 행사 장소 정보
             else if (label.contains("장소")) {
                 location = safeFindText(info, By.cssSelector("dd a"));
             }
-            // 행사 요금 정보 추출
+
+            // 행사 요금 정보
             else if (label.contains("요금")) {
                 eventMoney = safeFindText(info, By.cssSelector(".desc._text"));
             }
         }
 
-        // MD5 해시 생성: 제목 + URL + 장소 문자열 조합 (중복 체크용)
+        // 지도 버튼 클릭 → iframe 내부에서 실제 주소 추출
+        try {
+            // .cm_info_box 내 .button_area 안의 .place 클래스를 가진 모든 요소(지도 버튼)를 찾음
+            List<WebElement> mapButtons = driver.findElements(By.cssSelector(".cm_info_box .button_area .place"));
+
+            // 버튼이 존재하는 경우에만 처리
+            if (!mapButtons.isEmpty()) {
+                // 첫 번째 지도 버튼 요소를 선택
+                WebElement mapButton = mapButtons.get(0);
+
+                // 버튼의 href 속성(네이버 지도 URL)을 가져옴
+                String mapHref = mapButton.getAttribute("href");
+
+                // href가 존재하고 네이버 지도 URL일 경우에만 이동
+                if (mapHref != null && mapHref.startsWith("https://map.naver.com")) {
+                    // 해당 지도 페이지로 이동
+                    driver.get(mapHref);
+
+                    // 최대 10초 대기 설정
+                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+                    // id가 entryIframe인 iframe이 로드되고 접근 가능해질 때까지 대기 후 iframe으로 전환
+                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("entryIframe")));
+
+                    // iframe 내부에서 주소가 담긴 요소가 DOM에 나타날 때까지 대기
+                    WebElement addressEl = wait.until(
+                            ExpectedConditions.presenceOfElementLocated(
+                                    By.cssSelector(".place_section_content .LDgIH")  // 주소 요소 CSS 셀렉터
+                            )
+                    );
+
+                    // 주소 텍스트를 추출하여 변수에 저장
+                    addr = addressEl.getText();
+
+                    // iframe에서 빠져나와 기본 컨텐츠로 전환
+                    driver.switchTo().defaultContent();
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("주소 추출 중 오류 발생: " + e.getMessage());
+        }
+
+        // 중복 체크용 고유 해시 생성 (제목 + URL + 장소 기준)
         String hash = generateHash(eventTitle, eventUrl, location);
 
-        // FestivalEntity 객체를 빌더로 생성하여 반환
+        // 추출된 데이터를 기반으로 FestivalEntity 생성 및 반환
         return FestivalEntity.builder()
                 .title(eventTitle)
                 .source(source)
@@ -248,6 +298,7 @@ public class NaverPetEventCrawler {
                 .location(location)
                 .imagePath(imagePath)
                 .hash(hash)
+                .addr(addr) // 실제 주소
                 .build();
     }
 
