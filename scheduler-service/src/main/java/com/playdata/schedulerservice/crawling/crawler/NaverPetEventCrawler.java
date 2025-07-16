@@ -239,34 +239,46 @@ public class NaverPetEventCrawler {
             }
         }
 
-        // 지도 버튼 클릭 → 네이버 지도 페이지에서 실제 주소(addr) 추출
+        // 지도 버튼 클릭 → iframe 내부에서 실제 주소 추출
         try {
-            WebElement mapButton = driver.findElement(By.cssSelector(".cm_info_box .button_area .place"));
-            if (mapButton != null) {
+            // .cm_info_box 내 .button_area 안의 .place 클래스를 가진 모든 요소(지도 버튼)를 찾음
+            List<WebElement> mapButtons = driver.findElements(By.cssSelector(".cm_info_box .button_area .place"));
+
+            // 버튼이 존재하는 경우에만 처리
+            if (!mapButtons.isEmpty()) {
+                // 첫 번째 지도 버튼 요소를 선택
+                WebElement mapButton = mapButtons.get(0);
+
+                // 버튼의 href 속성(네이버 지도 URL)을 가져옴
                 String mapHref = mapButton.getAttribute("href");
+
+                // href가 존재하고 네이버 지도 URL일 경우에만 이동
                 if (mapHref != null && mapHref.startsWith("https://map.naver.com")) {
+                    // 해당 지도 페이지로 이동
                     driver.get(mapHref);
 
+                    // 최대 10초 대기 설정
                     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-                    // ✅ iframe 전환
+                    // id가 entryIframe인 iframe이 로드되고 접근 가능해질 때까지 대기 후 iframe으로 전환
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("entryIframe")));
 
-                    // ✅ iframe 안에서 주소 요소 대기 및 추출
+                    // iframe 내부에서 주소가 담긴 요소가 DOM에 나타날 때까지 대기
                     WebElement addressEl = wait.until(
                             ExpectedConditions.presenceOfElementLocated(
-                                    By.cssSelector(".place_section_content .LDgIH")  // 클래스명이 바뀔 수도 있음
+                                    By.cssSelector(".place_section_content .LDgIH")  // 주소 요소 CSS 셀렉터
                             )
                     );
+
+                    // 주소 텍스트를 추출하여 변수에 저장
                     addr = addressEl.getText();
 
-                    // ✅ 다시 기본 프레임으로 전환
+                    // iframe에서 빠져나와 기본 컨텐츠로 전환
                     driver.switchTo().defaultContent();
                 }
             }
         } catch (Exception e) {
             System.out.println("주소 추출 중 오류 발생: " + e.getMessage());
-            addr = "";
         }
 
         // 중복 체크용 고유 해시 생성 (제목 + URL + 장소 기준)
