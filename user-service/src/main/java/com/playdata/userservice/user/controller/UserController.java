@@ -358,6 +358,7 @@ public class UserController {
     @PostMapping("/refresh")
     public ResponseEntity<?> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
         log.error("refresh 발급 로직 발동!!!");
+        log.error( "userEmail: {}",userEmail.get("email"));
         CommonResDto resDto = userService.reProvideToken(userEmail.get("email"));
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);

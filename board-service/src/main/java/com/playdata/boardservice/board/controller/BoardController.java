@@ -189,9 +189,10 @@ public class BoardController {
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId,
                                      @PathVariable("nickname") String nickname) {
 
-        String encodedNickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
+        String decodedNickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
 
-        boardService.modifyUserFindBoard(userId, nickname);
+        // 디코딩된
+        boardService.modifyUserFindBoard(userId, decodedNickname);
         log.info(userId + ":" + nickname);
 
         // 요청 완료 응답
