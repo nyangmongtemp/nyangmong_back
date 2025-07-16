@@ -159,7 +159,7 @@ public class BoardController {
     @GetMapping("/introduction/main")
     public ResponseEntity<?> findIntroductionMainList() {
         // 소개 게시판의 게시물 조회
-        List<IntroductionBoardListResDto> resDto = boardService.findIntroductionMainList();
+        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
         return ResponseEntity.ok().body(resDto);
     }
 
@@ -194,16 +194,6 @@ public class BoardController {
 
         // 요청 완료 응답
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    /**
-     * 소개 게시판 좋아요순 3개 목록 조회
-     * @return
-     */
-    @GetMapping("/introduction/main")
-    public ResponseEntity<?> introductionMainList() {
-        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
-        return ResponseEntity.ok(resDto);
     }
 
 }

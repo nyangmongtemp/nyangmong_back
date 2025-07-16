@@ -16,6 +16,7 @@ public class FestivalResponseDto {
     String reservationDate;
     String description;
     String festivalTime;
+    String addr;
 
     @Builder(builderMethodName = "fromEntityBuilder")
     public FestivalResponseDto(FestivalEntity festivalEntity) {
@@ -29,5 +30,6 @@ public class FestivalResponseDto {
         this.reservationDate = festivalEntity.getReservationDate();
         this.description = festivalEntity.getDescription();
         this.festivalTime = festivalEntity.getFestivalTime();
+        this.addr = festivalEntity.getAddr();
     }
 }

@@ -51,7 +51,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/board/detail/**",
 
             // 축제 관련 API
-            "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**",
+            "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**", "/api/all",
 
             // 에디터
             "/editor/upload-image",
