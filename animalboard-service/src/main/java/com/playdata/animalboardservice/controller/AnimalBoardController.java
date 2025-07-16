@@ -11,6 +11,8 @@ import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.service.AnimalService;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -143,6 +145,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
     }
 
     // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
+    @Operation(hidden = true) // Swagger 문서에서 제외할 메서드들에 붙여주면 된다
     @DeleteMapping("/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
         CommonResDto resDto = animalService.deleteUserAll(userId);
@@ -150,6 +153,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
     }
 
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
+    @Operation(hidden = true)
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = animalService.changeUserNickname(userId, nickname);
