@@ -37,6 +37,7 @@ public class FestivalEntity {
     private String reservationDate;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String addr;
     @Column(nullable = false, unique = true)
     private String hash;
     @CreationTimestamp
