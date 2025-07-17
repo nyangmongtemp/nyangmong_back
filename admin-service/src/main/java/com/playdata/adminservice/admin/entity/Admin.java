@@ -39,10 +39,14 @@ public class Admin extends BaseTimeEntity {
     @Column(nullable = false)
     private String name; // 관리자 이름
 
+    @Column(nullable = false)
+    private Boolean isFirst;
+
     // 디폴트 값 설정
     @PrePersist
     protected void onCreate() {
         this.active = true;
+        this.isFirst = true;
     }
 
 

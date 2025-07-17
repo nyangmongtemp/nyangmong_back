@@ -62,15 +62,9 @@ public class AdminService {
         if (findAdmin.isPresent()) {
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
-        // 이메일 중복 검증 후
-        // 비밀번호 인코딩
-        String password = adminSaveReqDto.getPassword();
 
-        // DB에 저장을 위해 패스워드 인코딩
-        String encodedPassword = passwordEncoder.encode(password);
-
-        // 부가적인 정보를 담아서 User를 DB에 저장
-        Admin createdAdmin = adminSaveReqDto.toEntity(encodedPassword);
+        // 부가적인 정보를 담아서 Admin을 던짐
+        Admin createdAdmin = adminSaveReqDto.toEntity(passwordEncoder);
         // DB에 저장
         adminRepository.save(createdAdmin);
 
@@ -79,6 +73,25 @@ public class AdminService {
 
     }
 
+    // 관리자 생성
+    public CommonResDto plus(AdminSaveReqDto adminSaveReqDto) {
+
+        Optional<Admin> findAdmin = adminRepository.findByEmail(adminSaveReqDto.getEmail());
+
+        // 이메일 중복 검증
+        if (findAdmin.isPresent()) {
+            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일 입니다.");
+        }
+
+        // 부가적인 정보를 담아서 Admin을 던짐
+        Admin PlusAdmin = adminSaveReqDto.toEntity(passwordEncoder);
+
+        // DB에 저장
+        adminRepository.save(PlusAdmin);
+
+        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "관리자 생성에 성공하였습니다.", true);
+        return resDto;
+    }
 
     // 로그인
     public CommonResDto login(AdminLoginReqDto adminLoginReqDto) {
@@ -86,7 +99,7 @@ public class AdminService {
         // Admin email 조회
         Optional<Admin> findAdmin = adminRepository.findByEmail(adminLoginReqDto.getEmail());
 
-        if(!findAdmin.isPresent()) { // email 정보가 없다면 회원가입 x
+        if (!findAdmin.isPresent()) { // email 정보가 없다면 회원가입 x
             throw new EntityNotFoundException("회원가입이 되지 않은 이메일입니다.");
         } else  {
             // 위 findAdmin 에서 조회를 하고 꺼내서 아래 인코딩된 비밀번호를 찾아야함
@@ -101,6 +114,16 @@ public class AdminService {
             if(!passwordEncoder.matches(password, foundAdmin.getPassword())) {
                 throw new CommonException(ErrorCode.INVALID_PASSWORD);
             } else {
+                if (foundAdmin.getIsFirst()) {
+                    // 토큰 생성
+                    String token = jwtTokenProvider.createToken(foundAdmin.getEmail(), foundAdmin.getRole(), foundAdmin.getAdminId());
+
+                    // token과 email을 화면단으로 리턴
+                    return new CommonResDto(HttpStatus.OK,
+                            "로그인에 성공하였습니다.",
+                            new AdminLoginResDto(foundAdmin.getEmail(), foundAdmin.getName(),
+                                    foundAdmin.getRole(), token, foundAdmin.getIsFirst()));
+                }
                 return sendVerifyEmailCode(adminLoginReqDto.getEmail());
             }
         }
@@ -149,10 +172,8 @@ public class AdminService {
         // token과 email을 화면단으로 리턴
         return new CommonResDto(HttpStatus.OK,
                 "로그인에 성공하였습니다.",
-                new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token));
+                new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token, admin.getIsFirst()));
     }
-
-
 
     /**
      *

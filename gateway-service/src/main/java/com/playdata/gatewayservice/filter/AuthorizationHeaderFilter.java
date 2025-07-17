@@ -57,7 +57,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/editor/upload-image",
 
             // 관리자
-            "/admin/login", "/admin/create", "/admin/verify-code",
+            "/admin/login", "/admin/create", "/admin/admin-create", "/admin/verify-code",
 
             // 스웨거
             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"

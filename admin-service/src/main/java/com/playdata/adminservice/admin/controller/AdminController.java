@@ -22,10 +22,18 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // 회원가입 (총 관리자 DB 넣기 용)
+    // 회원가입 (총 관리자 회원가입)
     @PostMapping("/create")
     public ResponseEntity<?> adminCreate(@RequestBody AdminSaveReqDto adminSaveReqDto){
         CommonResDto resDto = adminService.create(adminSaveReqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
+    // 관리자 생성
+    @PostMapping("/admin-create")
+    public ResponseEntity<?> adminPlus(@RequestBody AdminSaveReqDto adminSaveReqDto){
+        CommonResDto resDto = adminService.plus(adminSaveReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }

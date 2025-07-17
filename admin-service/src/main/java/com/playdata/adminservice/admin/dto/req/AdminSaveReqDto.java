@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @Builder
@@ -34,13 +35,13 @@ public class AdminSaveReqDto {
     @NotNull
     private String name;
 
-    public Admin toEntity(String encodedPassword) {
+    public Admin toEntity(PasswordEncoder encoder) {
         return Admin.builder()
                 .email(email)
                 .phone(phone)
                 .role(role)
                 .name(name)
-                .password(encodedPassword)
+                .password(encoder.encode(password))
                 .build();
     }
 }
