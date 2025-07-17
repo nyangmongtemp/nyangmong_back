@@ -50,6 +50,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/board/information/list", "/board/information/main", "/board/information/popular",
             "/board/detail/**",
 
+            // 맵 관련 정보 서비스
+            "/map/find", "/map/detail/**",
+
             // 축제 관련 API
             "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**", "/api/all",
 
