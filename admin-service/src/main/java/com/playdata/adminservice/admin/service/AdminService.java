@@ -69,13 +69,12 @@ public class AdminService {
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
 
-        // 부가적인 정보를 담아서 User를 DB에 저장
+        // 부가적인 정보를 담아서 admin을 DB에 저장
         Admin createdAdmin = adminSaveReqDto.toEntity(encodedPassword);
         // DB에 저장
         adminRepository.save(createdAdmin);
 
-        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
-        return resDto;
+        return new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
 
     }
 
@@ -84,26 +83,22 @@ public class AdminService {
     public CommonResDto login(AdminLoginReqDto adminLoginReqDto) {
 
         // Admin email 조회
-        Optional<Admin> findAdmin = adminRepository.findByEmail(adminLoginReqDto.getEmail());
+        Admin findAdmin = adminRepository.findByEmail(adminLoginReqDto.getEmail())
+                .orElseThrow(() -> new CommonException(ErrorCode.INVALID_PASSWORD));
 
-        if(!findAdmin.isPresent()) { // email 정보가 없다면 회원가입 x
-            throw new EntityNotFoundException("회원가입이 되지 않은 이메일입니다.");
-        } else  {
-            // 위 findAdmin 에서 조회를 하고 꺼내서 아래 인코딩된 비밀번호를 찾아야함
-            Admin foundAdmin = findAdmin.get();
-            String password = adminLoginReqDto.getPassword();
-
-            // 탈퇴한 관리자면 에러
-            if (!findAdmin.get().isActive()) {
-                throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
-            }
-            // 비밀번호가 일치 하지 않는 경우
-            if(!passwordEncoder.matches(password, foundAdmin.getPassword())) {
-                throw new CommonException(ErrorCode.INVALID_PASSWORD);
-            } else {
-                return sendVerifyEmailCode(adminLoginReqDto.getEmail());
-            }
+        // 탈퇴한 관리자면 에러
+        if (!findAdmin.isActive()) {
+            throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
         }
+
+        // 비밀번호가 일치 하지 않는 경우
+        // password = 날 것의 비밀번호, foundAdmin.getPassword() = 인코딩된 비밀번호
+        if (!passwordEncoder.matches(adminLoginReqDto.getPassword(), findAdmin.getPassword())) {
+            throw new CommonException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        return sendVerifyEmailCode(adminLoginReqDto.getEmail());
+
     }
 
     // 이메일 인증번호 검증 로직
@@ -149,7 +144,7 @@ public class AdminService {
         // token과 email을 화면단으로 리턴
         return new CommonResDto(HttpStatus.OK,
                 "로그인에 성공하였습니다.",
-                new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token));
+                new AdminLoginResDto(admin.getEmail(), admin.getName(), admin.getRole(), token));
     }
 
 
