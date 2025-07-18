@@ -89,6 +89,22 @@ public class SwaggerExampleConstants {
             "}";
 
     /**
+     * [분양 동물] 생성 요청 Request Json 예시
+     */
+    public static final String ANIMAL_CREATE_REQUEST = "{\n" +
+            "  \"title\": \"2살 믹스견 분양합니다111\",\n" +
+            "  \"content\": \"우리강아지 분양합니다\",\n" +
+            "  \"petCategory\": \"강아지\",\n" +
+            "  \"petKind\": \"믹스견\",\n" +
+            "  \"age\": \"2살\",\n" +
+            "  \"vaccine\": \"1차접종 완료, 2차접종 준비중\",\n" +
+            "  \"sexCode\": \"M\",\n" +
+            "  \"neuterYn\": \"N\",\n" +
+            "  \"address\": \"서울시 서초구\",\n" +
+            "  \"fee\": \"20000\"\n" +
+            "}";
+
+    /**
      * [공통] 없는데이터 Exception Response Json
      */
     public static final String ANIMAL_DETAIL_EXCEPTION = "{\n" +
