@@ -93,25 +93,55 @@ public class CsvBatchConfig {
                             business_status_code, business_status_name, detailed_business_status_code,
                             detailed_business_status_name, closure_date, temporary_closure_start_date,
                             temporary_closure_end_date, reopening_date, phone_number,
-                            site_area, postal_code, full_address,
-                            road_address, road_postal_code, business_name,
-                            last_modified, data_update_type, data_update_date,
-                            business_type, coordinate_x, coordinate_y,
-                            task_type, detailed_task_type, rights_holder_number,
-                            total_employees
+                            site_area, postal_code, full_address, road_address,
+                            road_postal_code, business_name, last_modified,
+                            data_update_type, data_update_date, business_type,
+                            coordinate_x, coordinate_y, task_type,
+                            detailed_task_type, rights_holder_number, total_employees
                         ) VALUES (
                             :id, :serviceName, :serviceId, :regionCode,
                             :managementNumber, :approvalDate, :permitCancelDate,
                             :businessStatusCode, :businessStatusName, :detailedBusinessStatusCode,
                             :detailedBusinessStatusName, :closureDate, :temporaryClosureStartDate,
                             :temporaryClosureEndDate, :reopeningDate, :phoneNumber,
-                            :siteArea, :postalCode, :fullAddress,
-                            :roadAddress, :roadPostalCode, :businessName,
-                            :lastModified, :dataUpdateType, :dataUpdateDate,
-                            :businessType, :coordinateX, :coordinateY,
-                            :taskType, :detailedTaskType, :rightsHolderNumber,
-                            :totalEmployees
+                            :siteArea, :postalCode, :fullAddress, :roadAddress,
+                            :roadPostalCode, :businessName, :lastModified,
+                            :dataUpdateType, :dataUpdateDate, :businessType,
+                            :coordinateX, :coordinateY, :taskType,
+                            :detailedTaskType, :rightsHolderNumber, :totalEmployees
                         )
+                        ON DUPLICATE KEY UPDATE
+                            service_name = VALUES(service_name),
+                            service_id = VALUES(service_id),
+                            region_code = VALUES(region_code),
+                            management_number = VALUES(management_number),
+                            approval_date = VALUES(approval_date),
+                            permit_cancel_date = VALUES(permit_cancel_date),
+                            business_status_code = VALUES(business_status_code),
+                            business_status_name = VALUES(business_status_name),
+                            detailed_business_status_code = VALUES(detailed_business_status_code),
+                            detailed_business_status_name = VALUES(detailed_business_status_name),
+                            closure_date = VALUES(closure_date),
+                            temporary_closure_start_date = VALUES(temporary_closure_start_date),
+                            temporary_closure_end_date = VALUES(temporary_closure_end_date),
+                            reopening_date = VALUES(reopening_date),
+                            phone_number = VALUES(phone_number),
+                            site_area = VALUES(site_area),
+                            postal_code = VALUES(postal_code),
+                            full_address = VALUES(full_address),
+                            road_address = VALUES(road_address),
+                            road_postal_code = VALUES(road_postal_code),
+                            business_name = VALUES(business_name),
+                            last_modified = VALUES(last_modified),
+                            data_update_type = VALUES(data_update_type),
+                            data_update_date = VALUES(data_update_date),
+                            business_type = VALUES(business_type),
+                            coordinate_x = VALUES(coordinate_x),
+                            coordinate_y = VALUES(coordinate_y),
+                            task_type = VALUES(task_type),
+                            detailed_task_type = VALUES(detailed_task_type),
+                            rights_holder_number = VALUES(rights_holder_number),
+                            total_employees = VALUES(total_employees)
                         """)
                 .dataSource(dataSource) // 데이터베이스 정보 전달
                 .build();
@@ -124,9 +154,9 @@ public class CsvBatchConfig {
         return new StepBuilder("csvToDbStep", jobRepository)
                 // <AnimalHospital, AnimalHospital>: Reader에서 읽어온 타입과 Writer로 전달하는 데이터 타입 명시
                 // chunk: step이 작업을 처리할 때 기준에 맞춰 나눠서 작업을 처리.
-                // chunk(10): 10개씩 묵어서 처리, 단위별로 작업 후 commit, 문제가 있다면 rollback
+                // chunk(500): 500개씩 묵어서 처리, 단위별로 작업 후 commit, 문제가 있다면 rollback
                 // 단위를 나눠놓지 않으면 전체 데이터가 rollback 되기 때문에, 작은 단위로 나눠 작업을 진행
-                .<AnimalHospital, AnimalHospital>chunk(1000, transactionManager)
+                .<AnimalHospital, AnimalHospital>chunk(500, transactionManager)
                 .reader(animalHospitalReader())
                 .writer(animalHospitalWriter())
                 .build();
