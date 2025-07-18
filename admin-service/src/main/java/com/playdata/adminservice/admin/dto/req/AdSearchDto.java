@@ -1,6 +1,7 @@
 package com.playdata.adminservice.admin.dto.req;
 
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDate;
 
 /**
@@ -8,6 +9,10 @@ import java.time.LocalDate;
  * 검색 조건으로 제목, 활성 상태, 시작일, 종료일을 입력받음
  */
 @Data
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AdSearchDto {
 
     // 광고 제목 (부분 검색 가능)

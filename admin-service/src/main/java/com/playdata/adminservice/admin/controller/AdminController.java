@@ -96,7 +96,7 @@ public class AdminController {
 
     // 광고 목록 조회 API
     @PostMapping("/ads/search")
-    public ResponseEntity<?> searchAds(@RequestBody AdSearchDto searchDto,
+    public ResponseEntity<?> searchAds(AdSearchDto searchDto,
                                        @RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "10") int size,
                                        @RequestParam(defaultValue = "createdAt,DESC") String sort) {
