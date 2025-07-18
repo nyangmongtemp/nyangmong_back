@@ -15,21 +15,28 @@ public class Advertisement extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "banner_id")
+    @Column(name = "advertisement_id")
     private Long id;
 
+    @Column(nullable = false, length = 500)
     private String thumbnailImage;
 
+    @Column(nullable = false, length = 100)
     private String title;
 
+    @Column(nullable = false, length = 1000)
     private String description;
 
+    @Column(nullable = false)
     private Boolean active;
 
+    @Column(nullable = false)
     private Integer orderNum;
 
+    @Column(nullable = false)
     private LocalDate startDate;
 
+    @Column(nullable = false)
     private LocalDate endDate;
 
     public void update(String title, String description, Boolean active, Integer orderNum,

@@ -1,32 +1,44 @@
 package com.playdata.adminservice.admin.dto.req;
 
+import jakarta.validation.constraints.*;
 import lombok.Data;
+
 import java.time.LocalDate;
 
 /**
- * 광고 등록 및 수정 요청 시 사용하는 DTO 클래스
+ * 광고 등록 및 수정 요청 DTO
  */
 @Data
 public class AdRegisterReqDto {
 
-    // 광고 썸네일 이미지 URL
+    // 광고 썸네일 이미지 URL (필수)
+    @NotBlank(message = "썸네일 이미지는 필수입니다.")
     private String thumbnailImage;
 
-    // 광고 제목
+    // 광고 제목 (필수)
+    @NotBlank(message = "광고 제목은 필수입니다.")
+    @Size(max = 100, message = "제목은 100자 이하로 입력해주세요.")
     private String title;
 
-    // 광고 설명
+    // 광고 설명 (필수)
+    @NotBlank(message = "광고 설명은 필수입니다.")
+    @Size(max = 1000, message = "설명은 1000자 이하로 입력해주세요.")
     private String description;
 
-    // 광고 활성화 여부 (true: 활성, false: 비활성)
+    // 광고 활성화 여부 (필수)
+    @NotNull(message = "광고 활성화 여부는 필수입니다.")
     private Boolean active;
 
-    // 광고 노출 순서
+    // 광고 노출 순서 (필수, 양수만)
+    @NotNull(message = "광고 순서는 필수입니다.")
+    @Positive(message = "광고 순서는 양수여야 합니다.")
     private Integer orderNum;
 
-    // 광고 시작 날짜
+    // 광고 시작 날짜 (필수)
+    @NotNull(message = "광고 시작일은 필수입니다.")
     private LocalDate startDate;
 
-    // 광고 종료 날짜
+    // 광고 종료 날짜 (필수)
+    @NotNull(message = "광고 종료일은 필수입니다.")
     private LocalDate endDate;
 }
