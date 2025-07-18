@@ -85,20 +85,6 @@ dependencyManagement {
 tasks.named('test') {
     useJUnitPlatform()
 }
-// Q 클래스가 생성될 디렉토리
-def querydslDir =  "src/generated/querydsl"
-// Q 클래스 경로를 소스셋에 포함시킴 (컴파일 및 IDE 인식용)
-sourceSets {
-    main.java.srcDirs += [ querydslDir ]
-}
-tasks.withType(JavaCompile) {
-    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
-}
-
-// clean 시 생성된 Q 클래스 디렉토리 삭제
-clean.doLast {
-    delete file(querydslDir)
-}
 
 
 

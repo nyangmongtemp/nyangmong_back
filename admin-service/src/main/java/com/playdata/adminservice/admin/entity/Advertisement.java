@@ -2,10 +2,12 @@ package com.playdata.adminservice.admin.entity;
 
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+
 
 @Entity
 @Table(name = "advertisements")
@@ -27,8 +29,9 @@ public class Advertisement extends BaseTimeEntity {
     @Column(nullable = false, length = 1000)
     private String description;
 
+
     @Column(nullable = false)
-    private Boolean active;
+    private Boolean active = true;
 
     @Column(nullable = false)
     private Integer orderNum;
@@ -49,4 +52,17 @@ public class Advertisement extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    @Builder
+    public Advertisement(String thumbnailImage, String title, String description,
+                         Boolean active, Integer orderNum, LocalDate startDate, LocalDate endDate) {
+        this.thumbnailImage = thumbnailImage;
+        this.title = title;
+        this.description = description;
+        this.active = active;
+        this.orderNum = orderNum;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
 }

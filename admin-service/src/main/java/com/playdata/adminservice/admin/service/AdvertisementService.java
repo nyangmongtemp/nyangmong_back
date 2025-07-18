@@ -6,6 +6,7 @@ import com.playdata.adminservice.admin.dto.res.AdResDto;
 import com.playdata.adminservice.admin.entity.Advertisement;
 import com.playdata.adminservice.admin.repository.AdvertisementRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
  * 광고 서비스 클래스
  * 광고 등록, 수정, 삭제, 단건 조회, 목록 조회 기능을 제공
  */
+@Getter
 @Service
 @RequiredArgsConstructor
 public class AdvertisementService {
@@ -28,11 +30,18 @@ public class AdvertisementService {
      * @return 등록된 광고 정보를 담은 응답 DTO
      */
     public AdResDto registerAd(AdRegisterReqDto dto) {
-        Advertisement ad = new Advertisement();
-        ad.update(dto.getTitle(), dto.getDescription(), dto.getActive(), dto.getOrderNum(),
-                dto.getThumbnailImage(), dto.getStartDate(), dto.getEndDate());
-        Advertisement saved = adRepository.save(ad); // DB에 저장
-        return convertToDto(saved); // 응답 DTO로 변환 후 반환
+        Advertisement ad = Advertisement.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .active(dto.getActive())
+                .orderNum(dto.getOrderNum())
+                .thumbnailImage(dto.getThumbnailImage())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .build();
+
+        Advertisement saved = adRepository.save(ad);
+        return convertToDto(saved);
     }
 
     /**

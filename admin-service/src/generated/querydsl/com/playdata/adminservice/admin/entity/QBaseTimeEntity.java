@@ -1,4 +1,4 @@
-package com.playdata.adminservice.common.entity;
+package com.playdata.adminservice.admin.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -15,15 +15,11 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultSupertypeSerializer")
 public class QBaseTimeEntity extends EntityPathBase<BaseTimeEntity> {
 
-    private static final long serialVersionUID = -947919506L;
+    private static final long serialVersionUID = -510613144L;
 
     public static final QBaseTimeEntity baseTimeEntity = new QBaseTimeEntity("baseTimeEntity");
 
-    public final DateTimePath<java.time.LocalDateTime> createAt = createDateTime("createAt", java.time.LocalDateTime.class);
-
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
-
-    public final DateTimePath<java.time.LocalDateTime> updateAt = createDateTime("updateAt", java.time.LocalDateTime.class);
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 

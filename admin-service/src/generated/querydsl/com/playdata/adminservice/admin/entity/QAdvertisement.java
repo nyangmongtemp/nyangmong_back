@@ -19,9 +19,15 @@ public class QAdvertisement extends EntityPathBase<Advertisement> {
 
     public static final QAdvertisement advertisement = new QAdvertisement("advertisement");
 
+    public final com.playdata.adminservice.common.entity.QBaseTimeEntity _super = new com.playdata.adminservice.common.entity.QBaseTimeEntity(this);
+
     public final BooleanPath active = createBoolean("active");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createAt = _super.createAt;
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final StringPath description = createString("description");
 
@@ -37,7 +43,11 @@ public class QAdvertisement extends EntityPathBase<Advertisement> {
 
     public final StringPath title = createString("title");
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updateAt = _super.updateAt;
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QAdvertisement(String variable) {
         super(Advertisement.class, forVariable(variable));

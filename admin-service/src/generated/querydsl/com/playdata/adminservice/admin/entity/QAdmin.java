@@ -28,6 +28,9 @@ public class QAdmin extends EntityPathBase<Admin> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createAt = _super.createAt;
 
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
+
     public final StringPath email = createString("email");
 
     public final StringPath name = createString("name");
@@ -40,6 +43,9 @@ public class QAdmin extends EntityPathBase<Admin> {
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updateAt = _super.updateAt;
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QAdmin(String variable) {
         super(Admin.class, forVariable(variable));
