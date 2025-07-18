@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 광고 서비스 클래스
@@ -29,6 +30,7 @@ public class AdvertisementService {
      * @param dto 광고 등록 요청 DTO
      * @return 등록된 광고 정보를 담은 응답 DTO
      */
+    @Transactional
     public AdResDto registerAd(AdRegisterReqDto dto) {
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
@@ -41,6 +43,7 @@ public class AdvertisementService {
                 .build();
 
         Advertisement saved = adRepository.save(ad);
+
         return convertToDto(saved);
     }
 
@@ -50,6 +53,7 @@ public class AdvertisementService {
      * @param dto 광고 수정 요청 DTO
      * @return 수정된 광고 응답 DTO
      */
+    @Transactional
     public AdResDto updateAd(Long id, AdRegisterReqDto dto) {
         Advertisement ad = adRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("광고가 존재하지 않습니다."));
@@ -62,6 +66,7 @@ public class AdvertisementService {
      * 광고 삭제
      * @param id 삭제할 광고 ID
      */
+    @Transactional
     public void deleteAd(Long id) {
         adRepository.deleteById(id);
     }
