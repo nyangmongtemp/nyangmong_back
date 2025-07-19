@@ -1,7 +1,7 @@
 package com.playdata.mapservice.map.controller;
 
 import com.playdata.mapservice.common.dto.CommonResDto;
-import com.playdata.mapservice.map.dto.req.MapSearchReqDto;
+import com.playdata.mapservice.map.dto.map.req.MapSearchReqDto;
 import com.playdata.mapservice.map.service.MapService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

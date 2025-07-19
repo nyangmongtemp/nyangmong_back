@@ -1,7 +1,7 @@
 package com.playdata.mapservice.map.entity;
 
-import com.playdata.mapservice.map.dto.res.MapDetailResDto;
-import com.playdata.mapservice.map.dto.res.MapSearchResDto;
+import com.playdata.mapservice.map.dto.map.res.MapDetailResDto;
+import com.playdata.mapservice.map.dto.map.res.MapSearchResDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

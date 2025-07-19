@@ -1,4 +1,4 @@
-package com.playdata.mapservice.map.dto.req;
+package com.playdata.mapservice.map.dto.map.req;
 
 import lombok.Builder;
 import lombok.Getter;
