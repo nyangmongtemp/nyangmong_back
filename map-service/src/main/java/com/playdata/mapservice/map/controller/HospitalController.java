@@ -19,12 +19,22 @@ public class HospitalController {
 
     private final HospitalService hospitalService;
 
+    // 너무 정보 갯수가 많아서, 도,시를 받고 시,구를 받는 식으로 수정함.
     // 지역을 받아서 해당 지역의 모든 동물병원 목록을 리턴해주는 메소드
-    @GetMapping("/list/{addressCode}")
-    public ResponseEntity<CommonResDto> hospitalList(@PathVariable String addressCode) {
-        CommonResDto resDto = hospitalService.findHospitalList(addressCode);
+    @GetMapping("/list/{addressCode}/{detailAddress}")
+    public ResponseEntity<CommonResDto> hospitalList(@PathVariable(name = "addressCode") String addressCode,
+                                                     @PathVariable(name = "detailAddress") String detailAddress) {
+        CommonResDto resDto = hospitalService.findHospitalList(addressCode, detailAddress);
 
-        return new ResponseEntity<CommonResDto>(resDto, HttpStatus.OK);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 큰 지역의 구 혹은 시의 값들을 리턴해주는 메소드
+    @GetMapping("/category/{addressCode}")
+    public ResponseEntity<?> regionCategory(@PathVariable String addressCode) {
+        CommonResDto resDto = hospitalService.findRegionDetail(addressCode);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     // id값을 통해 특정 동물병원의 상세 정보를 리턴해주는 메소드

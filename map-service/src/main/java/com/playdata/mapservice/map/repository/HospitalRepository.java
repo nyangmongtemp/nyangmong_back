@@ -17,4 +17,9 @@ public interface HospitalRepository extends JpaRepository<AnimalHospital, Long> 
     @Query("SELECT a FROM AnimalHospital a WHERE a.fullAddress LIKE concat(:region, '%') " +
             "AND a.businessStatusCode = '1'")
     List<AnimalHospital> findByRegion(@Param("region") String region);
+    
+    // 특정 지역의 세부 지역 정보 추출을 위한 메소드
+    @Query("SELECT a.fullAddress FROM AnimalHospital a WHERE a.fullAddress LIKE concat(:region, '%') " +
+            "AND a.businessStatusCode = '1'")
+    List<String> findFullAddressByRegion(@Param("region") String desc);
 }
