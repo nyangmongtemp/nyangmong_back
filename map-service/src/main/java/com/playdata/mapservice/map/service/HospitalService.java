@@ -34,7 +34,8 @@ public class HospitalService {
         String targetAddress = region.getDesc() + " " + detailAddress;
 
         log.error(targetAddress);
-
+        
+        // dto 변환
         List<HospitalListDto> collect = hospitalRepository.findByRegion(targetAddress)
                 .stream().map(AnimalHospital::listInfoFromEntity).collect(Collectors.toList());
 
@@ -44,6 +45,7 @@ public class HospitalService {
     // id값을 통한 특정 병원의 정보를 리턴
     public CommonResDto findHospitalDetail(Long hospitalId) {
         
+        // pk인 id값으로 특정 병원 조회
         HospitalDetailResDto res = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new CommonException(ErrorCode.BAD_REQUEST)).detailInfoFromEntity();
 

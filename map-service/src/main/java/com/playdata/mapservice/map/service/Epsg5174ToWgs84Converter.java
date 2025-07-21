@@ -2,6 +2,9 @@ package com.playdata.mapservice.map.service;
 
 import org.locationtech.proj4j.*;
 
+
+// 아주아주 문제가 많음. 오차가 생기는데, 지도에 핀을 박을 수 없을 정도의 오차를 냄.
+// 원리는 잘 모름. 나중에 사용하지 않을 예정.
 public class Epsg5174ToWgs84Converter {
     
     // EPSG5174 좌표를 표준 위도, 경도로 변환해주는 메소드

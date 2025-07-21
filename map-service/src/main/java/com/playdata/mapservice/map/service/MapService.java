@@ -25,11 +25,12 @@ public class MapService {
     private final MapRepository mapRepository;
 
     public CommonResDto findMapList(MapSearchReqDto reqDto) {
-
+        
+        // 요청 카테고리 추출
         ContentType contentType = ContentType.from(reqDto.getContentType());
-        log.error(contentType.toString());
+        // 요청 주소 추출
         AddressCode addressCode = AddressCode.from(reqDto.getRegion());
-        log.error(addressCode.toString());
+        // 주소와 카테고리로 해당하는 객체 전체 조회
         List<MapSearchResDto> result = mapRepository.findByTypeAndRegionList(contentType, addressCode).stream()
                 .map(MapEntity::fromEntityToListDto).collect(Collectors.toList());
 
@@ -37,7 +38,8 @@ public class MapService {
     }
 
     public CommonResDto findMapDetail(Long mapId) {
-
+        
+        // id 값으로 해당하는 특정 map 정보 추출
         MapEntity foundMap
                 = mapRepository.findByMapId(mapId)
                 .orElseThrow(() -> new CommonException(ErrorCode.BAD_REQUEST));

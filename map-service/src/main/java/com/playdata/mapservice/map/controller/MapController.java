@@ -29,7 +29,6 @@ public class MapController {
     @GetMapping("/detail/{id}")
     public ResponseEntity<?> findMapDetail(@PathVariable(name = "id") Long mapId){
 
-        log.error(String.valueOf(mapId));
         CommonResDto resDto = mapService.findMapDetail(mapId);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
