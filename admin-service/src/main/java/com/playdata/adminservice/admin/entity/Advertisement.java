@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -30,10 +31,12 @@ public class Advertisement extends BaseTimeEntity {
     private String description;
 
 
+
+    @Setter
     @Column(nullable = false)
     private Boolean active = true;
 
-    @Column(nullable = false)
+    @Setter
     private Integer orderNum;
 
     @Column(nullable = false)
@@ -42,8 +45,11 @@ public class Advertisement extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDate endDate;
 
+    @Column(name = "link_url")
+    private String linkUrl;
+
     public void update(String title, String description, Boolean active, Integer orderNum,
-                       String thumbnailImage, LocalDate startDate, LocalDate endDate) {
+                       String thumbnailImage, LocalDate startDate, LocalDate endDate, String linkUrl) {
         this.title = title;
         this.description = description;
         this.active = active;
@@ -51,11 +57,12 @@ public class Advertisement extends BaseTimeEntity {
         this.thumbnailImage = thumbnailImage;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.linkUrl = linkUrl;
     }
 
     @Builder
     public Advertisement(String thumbnailImage, String title, String description,
-                         Boolean active, Integer orderNum, LocalDate startDate, LocalDate endDate) {
+                         Boolean active, Integer orderNum, LocalDate startDate, LocalDate endDate, String linkUrl) {
         this.thumbnailImage = thumbnailImage;
         this.title = title;
         this.description = description;
@@ -63,6 +70,8 @@ public class Advertisement extends BaseTimeEntity {
         this.orderNum = orderNum;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.linkUrl = linkUrl;
+
     }
 
 }

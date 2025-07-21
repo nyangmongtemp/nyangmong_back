@@ -13,4 +13,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AdvertisementRepository extends JpaRepository<Advertisement, Long>, AdvertisementRepositoryCustom {
     // JpaRepository: 기본 CRUD 메서드 제공 (findById, save, delete 등)
     // AdvertisementRepositoryCustom: 커스텀 검색 쿼리 (QueryDSL 기반)
+
+
 }

@@ -26,4 +26,6 @@ public class AdSearchDto {
 
     // 광고 종료일 이전의 광고 검색 (포함)
     private LocalDate endDate;
+    // 아이디로 검색
+    private Long id;
 }

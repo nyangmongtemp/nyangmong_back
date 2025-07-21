@@ -41,4 +41,7 @@ public class AdRegisterReqDto {
     // 광고 종료 날짜 (필수)
     @NotNull(message = "광고 종료일은 필수입니다.")
     private LocalDate endDate;
+
+    // 광고 링크 주소
+    private String linkUrl;
 }
