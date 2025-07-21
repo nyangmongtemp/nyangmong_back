@@ -54,8 +54,8 @@ public class Admin extends BaseTimeEntity {
         this.email = newEmail;
     }
 
-    public Admin modifyPassword(PasswordEncoder encoder){
-        this.password = encoder.encode(password);
+    public Admin modifyPassword(PasswordEncoder encoder, String newPassword){
+        this.password = encoder.encode(newPassword);
         return this;
     }
 

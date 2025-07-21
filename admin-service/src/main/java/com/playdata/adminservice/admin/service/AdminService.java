@@ -296,7 +296,7 @@ public class AdminService {
         Admin admin = findAdmin.get();
 
         // 변경된 이메일 인코딩
-        Admin encoder = admin.modifyPassword(passwordEncoder);
+        Admin encoder = admin.modifyPassword(passwordEncoder, modifyReqDto.getPassword());
 
         // DB에 저장
         adminRepository.save(encoder);
