@@ -14,15 +14,12 @@ import com.playdata.animalboardservice.dto.req.ReservationReqDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.dto.res.LikeComCountResDto;
 import com.playdata.animalboardservice.entity.Animal;
-import com.playdata.animalboardservice.entity.ReservationStatus;
 import com.playdata.animalboardservice.repository.AnimalRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,7 +35,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -249,6 +245,37 @@ public class AnimalService {
 
         return new CommonResDto(HttpStatus.OK, "회원님의 모든 게시글의 닉네임이 변경되었습니다.", true);
     }
+    
+    // 마이페이지 조회용 페이징 메소드 made by 이은혁
+    public PageImpl<AnimalListResDto> findMyAdoptPost(Long userId, Pageable pageable) {
+
+        Page<Animal> animalList = animalRepository.findMyPost(userId, pageable);
+
+        // 요청 DTO 리스트 생성
+        List<LikeComCountReqDto> target = animalList.stream()
+                .map(animal -> new LikeComCountReqDto("ADOPT", animal.getPostId()))
+                .toList();
+
+        // 응답 결과를 Map으로 변환해 빠른 매칭 가능
+        Map<Long, LikeComCountResDto> resDtoMap = mainClient.getListLikeCommentCount(target)
+                .stream()
+                .collect(Collectors.toMap(LikeComCountResDto::getContentId, dto -> dto));
+
+        // 순서를 유지하며 DTO 변환
+        List<AnimalListResDto> result = animalList.stream()
+                .map(animal -> {
+                    LikeComCountResDto dto = resDtoMap.get(animal.getPostId());
+                    if (dto != null) {
+                        return new AnimalListResDto(animal, dto.getLikeCount(), dto.getCommentCount());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new PageImpl<>(result, animalList.getPageable(), animalList.getTotalElements());
+
+    }
 
 
     /**
@@ -369,4 +396,5 @@ public class AnimalService {
 
         return profileImagePath;
     }
+    
 }

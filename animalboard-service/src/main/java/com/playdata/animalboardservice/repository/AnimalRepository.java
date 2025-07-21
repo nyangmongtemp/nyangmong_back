@@ -4,7 +4,12 @@ import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.repository.custom.AnimalRepositoryCustom;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface AnimalRepository extends JpaRepository<Animal, Long>, AnimalRepositoryCustom {
 
@@ -23,4 +28,7 @@ public interface AnimalRepository extends JpaRepository<Animal, Long>, AnimalRep
      */
     Optional<List<Animal>> findByUserId(Long userId);
 
+    // 마이페이지 용 페이징 조회 메소드 made by 이은혁
+    @Query("SELECT a FROM Animal a WHERE a.userId = :userId AND a.active = true")
+    Page<Animal> findMyPost(@Param("userId") Long userId, Pageable pageable);
 }

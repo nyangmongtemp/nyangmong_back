@@ -2,6 +2,8 @@ package com.playdata.boardservice.board.repository;
 
 import com.playdata.boardservice.board.entity.IntroductionBoard;
 import com.playdata.boardservice.board.repository.custom.IntroductionBoardRepositoryCustom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +16,6 @@ public interface IntroductionBoardRepository extends JpaRepository<IntroductionB
     @Query("SELECT i FROM IntroductionBoard i WHERE i.userId = :userId")
     List<IntroductionBoard> findByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT i FROM IntroductionBoard i WHERE i.userId = :userId AND i.active = true")
+    Page<IntroductionBoard> findMyPost(@Param("userId") Long userId, Pageable pageable);
 }

@@ -16,7 +16,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -194,6 +196,19 @@ public class BoardController {
 
         // 요청 완료 응답
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 마이페이지에서 token을 통한, 내 게시물 조회
+    @GetMapping("/mypage/{category}")
+    public ResponseEntity<?> myPost(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                    @PathVariable(name = "category") String category,
+                                    @RequestParam(value = "page", defaultValue = "0") int page,
+                                    @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
+        CommonResDto resDto = boardService.findMyPost(userInfo.getUserId(), category, pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
 }

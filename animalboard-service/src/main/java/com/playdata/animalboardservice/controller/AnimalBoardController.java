@@ -15,21 +15,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -155,4 +145,18 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
         CommonResDto resDto = animalService.changeUserNickname(userId, nickname);
         return ResponseEntity.ok(resDto);
     }
+
+    // 마이페이지에서 보여줄 게시물 목록 조회 메소드 입니다. made by 이은혁
+    @GetMapping("/mypage")
+    ResponseEntity<?> getMyAdopt(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                 @RequestParam(value = "page", defaultValue = "0") int page,
+                                 @RequestParam(value = "size", defaultValue = "10") int size) {
+        // pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
+        PageImpl<AnimalListResDto> resDto = animalService.findMyAdoptPost(userInfo.getUserId(), pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
 }

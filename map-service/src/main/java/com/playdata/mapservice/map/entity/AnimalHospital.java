@@ -99,8 +99,14 @@ public class AnimalHospital {
     public HospitalDetailResDto detailInfoFromEntity() {
 
         // EPSG5174를 표준 위도, 경도로 변환
-        ProjCoordinate result
-                = Epsg5174ToWgs84Converter.convertEPSG5174ToWGS84(this.coordinateX, this.coordinateY);
+        double tempx = 0.0;
+        double tempy = 0.0;
+        if(this.coordinateX != null && this.coordinateY != null) {
+            ProjCoordinate result
+                    = Epsg5174ToWgs84Converter.convertEPSG5174ToWGS84(this.coordinateX, this.coordinateY);
+            tempx = result.x;
+            tempy = result.y;
+        }
 
         return HospitalDetailResDto.builder()
                 .id(this.id)
@@ -115,8 +121,8 @@ public class AnimalHospital {
                 .roadPostalCode(this.roadPostalCode)
                 .businessName(this.businessName)
                 .lastModified(this.lastModified)
-                .mapx(result.x)
-                .mapy(result.y)
+                .mapx(tempx)
+                .mapy(tempy)
                 .build();
     }
 
