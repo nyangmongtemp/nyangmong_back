@@ -14,14 +14,6 @@ import java.util.List;
  */
 public interface AdvertisementRepositoryCustom {
 
-    /**
-     * 특정 광고 ID들을 제외하고, 주어진 orderNum 리스트와 중복되는 광고를 조회합니다.
-     *
-     * @param orderNums 중복 여부를 확인할 orderNum 리스트
-     * @param excludeIds 제외할 광고 ID 리스트
-     * @return 중복되는 광고 리스트
-     */
-    List<Advertisement> findConflictingOrderNums(List<Integer> orderNums, List<Long> excludeIds);
 
     /**
      * 광고 목록을 조건과 페이징 정보로 조회합니다.
@@ -40,12 +32,7 @@ public interface AdvertisementRepositoryCustom {
      */
     List<Advertisement> findByOrderNumGreaterThan(Integer orderNum);
 
-    /**
-     * 특정 orderNum이 활성 광고에 존재하는지 여부를 확인합니다.
-     *
-     * @param orderNum 확인할 orderNum
-     * @return 존재하면 true, 아니면 false
-     */
-    boolean existsByOrderNum(Integer orderNum);
+
+    Integer findMaxOrderNum();
 
 }

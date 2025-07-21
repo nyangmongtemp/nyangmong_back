@@ -108,29 +108,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
     }
 
 
-    /**
-     * 요청한 orderNum 리스트 중, 현재 수정 대상이 아닌 광고들 중에서
-     * 동일한 orderNum을 가진 광고가 DB에 존재하는지 조회합니다.
-     *
-     * <중복 순서 체크 용도>
-     * - 사용 예: 광고 순서를 변경할 때, 이미 다른 광고가 해당 순서를 사용 중인 경우를 방지
-     *
-     * @param orderNums    클라이언트가 요청한 광고 순서 번호 리스트
-     * @param excludeIds   현재 수정 대상 광고들의 ID 리스트 (이 광고들은 중복 검사에서 제외)
-     * @return             DB에 이미 존재하는 중복된 orderNum을 가진 광고 리스트
-     */
-    @Override
-    public List<Advertisement> findConflictingOrderNums(List<Integer> orderNums, List<Long> excludeIds) {
-        QAdvertisement ad = QAdvertisement.advertisement;
 
-        return queryFactory
-                .selectFrom(ad)
-                .where(
-                        ad.orderNum.in(orderNums),     // 요청한 순서 번호들 중
-                        ad.id.notIn(excludeIds)        // 수정 대상이 아닌 광고들에서만 검색
-                )
-                .fetch();
-    }
 
     @Override
     public List<Advertisement> findByOrderNumGreaterThan(Integer orderNum) {
@@ -144,16 +122,17 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                 .fetch(); // 결과 리스트 반환
     }
 
-    // 특정 orderNum을 가진 활성 광고가 존재하는지 여부만 알려줌 (존재하면 true, 없으면 false)
-    public boolean existsByOrderNum(Integer orderNum) {
+
+
+    @Override
+    public Integer findMaxOrderNum() {
         QAdvertisement ad = QAdvertisement.advertisement;
 
-        Integer result = queryFactory
-                .selectOne()
+        // 광고 중 활성화된 것 중 가장 큰 orderNum을 조회
+        return queryFactory
+                .select(ad.orderNum.max())
                 .from(ad)
-                .where(ad.orderNum.eq(orderNum), ad.active.isTrue())
-                .fetchFirst(); // 있으면 1개만 가져오고 바로 끝냄
-
-        return result != null;
+                .where(ad.active.isTrue()) // 비활성 광고는 제외
+                .fetchOne();
     }
 }

@@ -30,7 +30,7 @@ public class AdRegisterReqDto {
     private Boolean active;
 
     // 광고 노출 순서 (필수, 양수만)
-    @NotNull(message = "광고 순서는 필수입니다.")
+
     @Positive(message = "광고 순서는 양수여야 합니다.")
     private Integer orderNum;
 

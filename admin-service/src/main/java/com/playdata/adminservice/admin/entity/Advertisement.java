@@ -74,4 +74,8 @@ public class Advertisement extends BaseTimeEntity {
 
     }
 
+    public void changrOrderNum(Integer orderNum) {
+        this.orderNum = orderNum;
+    }
+
 }

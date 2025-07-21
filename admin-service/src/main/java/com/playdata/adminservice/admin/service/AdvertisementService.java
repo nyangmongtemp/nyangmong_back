@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,34 +37,34 @@ public class AdvertisementService {
     private final AdvertisementRepository adRepository;
 
     /**
-     * 광고 등록
+     * 광고 등록 (자동 순서 지정)
      *
      * @param dto 광고 등록 요청 DTO
      * @return 등록된 광고 정보를 담은 응답 DTO
      */
     @Transactional
     public CommonResDto registerAd(AdRegisterReqDto dto) {
-        // 1. 중복된 순서가 있는지 확인
-        boolean exists = adRepository.existsByOrderNum(dto.getOrderNum());
-        if (exists) {
-            throw new IllegalStateException("이미 존재하는 순서 번호입니다: " + dto.getOrderNum());
-        }
+        // 1. 현재 가장 큰 orderNum 조회
+        Integer maxOrderNum = adRepository.findMaxOrderNum();
+        int newOrderNum = (maxOrderNum != null) ? maxOrderNum + 1 : 1;
 
         // 2. 광고 엔티티 생성 및 저장
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .active(dto.getActive())
-                .orderNum(dto.getOrderNum())
                 .thumbnailImage(dto.getThumbnailImage())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .linkUrl(dto.getLinkUrl())
                 .build();
 
+
+        // 3. 자동 증가된 orderNum 세팅
+        ad.setOrderNum(newOrderNum);
         Advertisement saved = adRepository.save(ad);
 
-        // 3. 결과 반환
+        // 4. 결과 반환
         return new CommonResDto(HttpStatus.CREATED, "광고 등록 성공", saved);
     }
 
@@ -140,41 +141,16 @@ public class AdvertisementService {
 
     @Transactional
     public void updateAdOrder(List<AdOrderReqDto> orderDtoList) {
-        // 1. 요청 내 중복 순서 체크
-        Set<Integer> orderSet = new HashSet<>();
-        for (AdOrderReqDto dto : orderDtoList) {
-            if (!orderSet.add(dto.getOrderNum())) {
-                throw new IllegalArgumentException("요청에 중복된 순서 번호가 있습니다: " + dto.getOrderNum());
-            }
-        }
+        List<Advertisement> adsToUpdate = new ArrayList<>();
 
-        // 2. DB에 이미 존재하는 동일한 orderNum 체크 (요청 대상 외 광고)
-        List<Integer> orderNums = orderDtoList.stream()
-                .map(AdOrderReqDto::getOrderNum)
-                .toList();
-
-        List<Long> updateIds = orderDtoList.stream()
-                .map(AdOrderReqDto::getId)
-                .toList();
-
-        // 현재 수정하려는 광고(id) 외에, 동일한 orderNum이 존재하는지 검사
-        List<Advertisement> duplicatesInDb = adRepository
-                .findConflictingOrderNums(orderNums, updateIds);
-
-        if (!duplicatesInDb.isEmpty()) {
-            String conflictInfo = duplicatesInDb.stream()
-                    .map(ad -> "[id=" + ad.getId() + ", orderNum=" + ad.getOrderNum() + "]")
-                    .collect(Collectors.joining(", "));
-            throw new IllegalStateException("DB에 중복된 순서 번호가 이미 존재합니다: " + conflictInfo);
-        }
-
-        // 3. 순서 업데이트
         for (AdOrderReqDto dto : orderDtoList) {
             Advertisement ad = adRepository.findById(dto.getId())
                     .orElseThrow(() -> new EntityNotFoundException("ID " + dto.getId() + "인 광고가 존재하지 않습니다."));
             ad.setOrderNum(dto.getOrderNum());
+            adsToUpdate.add(ad);
         }
-    }
 
+        adRepository.saveAll(adsToUpdate);
+    }
 
 }
