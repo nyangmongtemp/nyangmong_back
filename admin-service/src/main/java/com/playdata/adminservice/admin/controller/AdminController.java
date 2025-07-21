@@ -1,7 +1,8 @@
 package com.playdata.adminservice.admin.controller;
 
 import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminRoleModifyReqDto;
+import com.playdata.adminservice.admin.dto.req.AdminPasswordAuthReqDto;
+import com.playdata.adminservice.admin.dto.req.AdminPasswordModifyReqDto;
 import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.service.AdminService;
@@ -63,8 +64,8 @@ public class AdminController {
 //        return new ResponseEntity<>(resDto, HttpStatus.OK);
 //    }
 
-    // 관리자 이메일 변경
-    @PatchMapping("/modify-email")
+    // 관리자 이메일 변경 요청
+    @GetMapping("/modify-email")
     public ResponseEntity<?> emailModify(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
                                          @RequestParam String newEmail) {
 
@@ -86,6 +87,33 @@ public class AdminController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    // 관리자 비밀변호 변경 요청
+    @GetMapping("/modify-password-req")
+    public ResponseEntity<?> passwordModifyReq(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        CommonResDto resDto = adminService.modifyPasswordReq(userInfo.getEmail());
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 관리자 비밀번호 변경 요청 검증
+    @PatchMapping("/verify-new-password")
+    public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                               @RequestBody @Valid AdminPasswordAuthReqDto authReqDto) {
+
+        CommonResDto resDto = adminService.verifyNewPassword(userInfo, authReqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 관리자 비밀번호 변경
+    @PatchMapping("/modify-password")
+    public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                            @RequestBody AdminPasswordModifyReqDto modifyReqDto) {
+
+        CommonResDto resDto = adminService.modifyPassword(userInfo, modifyReqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
     /**
      *

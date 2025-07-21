@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Getter
@@ -53,8 +54,9 @@ public class Admin extends BaseTimeEntity {
         this.email = newEmail;
     }
 
-    public void modifyPassword(String newPassword){
-        this.password = newPassword;
+    public Admin modifyPassword(PasswordEncoder encoder){
+        this.password = encoder.encode(password);
+        return this;
     }
 
 

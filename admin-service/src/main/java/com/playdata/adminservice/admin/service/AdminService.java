@@ -1,12 +1,12 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminRoleModifyReqDto;
+import com.playdata.adminservice.admin.dto.req.AdminPasswordAuthReqDto;
+import com.playdata.adminservice.admin.dto.req.AdminPasswordModifyReqDto;
 import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.dto.res.AdminLoginResDto;
 import com.playdata.adminservice.admin.entity.Admin;
-import com.playdata.adminservice.admin.entity.Role;
 import com.playdata.adminservice.admin.repository.AdminRepository;
 import com.playdata.adminservice.common.auth.JwtTokenProvider;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
@@ -250,6 +250,60 @@ public class AdminService {
         return resDto;
     }
 
+    // 관리자 비밀번호 변경 요청
+    public CommonResDto modifyPasswordReq(String email) {
+
+        Optional<Admin> findAdmin = adminRepository.findByEmail(email);
+
+        // 계정이 존재하고 활성화 상태인지 조회
+        if (!findAdmin.isPresent() ||  !findAdmin.get().isActive()) {
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
+        }
+        // 이메일 발송 로직 호출
+        String authCode = sendEmailAuthCode(email, "MODIFY");
+
+        // 추후 배포 시 인증코드 제거 후 리턴
+        return new CommonResDto(HttpStatus.OK, "인증 코드가 이메일로 전송되었습니다.", authCode);
+    }
+
+    // 관리자 비밀번호 변경 요청 검증
+    public CommonResDto verifyNewPassword(TokenUserInfo userInfo, AdminPasswordAuthReqDto authReqDto) {
+
+        // 기존 이메일 값과, 인증번호 값 받기
+        AdminEmailAuthResDto required = new AdminEmailAuthResDto(userInfo.getEmail(), authReqDto.getAuthCode());
+
+        // 인증번호 검증 로직 호출
+        CommonResDto resDto = verifyEmailCode(required);
+
+        // HttpStatus 값이 false 일 때 에러 = 검증 실패
+        if (!(boolean) resDto.getResult()) {
+            throw new CommonException(ErrorCode.INVALID_AUTH_CODE);
+        }
+
+        return resDto;
+    }
+
+    // 관리자 비밀번호 변경
+    public CommonResDto modifyPassword(TokenUserInfo userInfo, AdminPasswordModifyReqDto modifyReqDto) {
+
+        Optional<Admin> findAdmin = adminRepository.findByEmail(userInfo.getEmail());
+
+        // 계정이 존재하고 활성화 상태인지 조회
+        if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND, "회원이 존재하지 않습니다.");
+        }
+
+        Admin admin = findAdmin.get();
+
+        // 변경된 이메일 인코딩
+        Admin encoder = admin.modifyPassword(passwordEncoder);
+
+        // DB에 저장
+        adminRepository.save(encoder);
+
+        return new CommonResDto(HttpStatus.OK, "비밀번호를 변경 하였습니다. 다시 로그인 해주세요", true);
+    }
+
     /**
      *
      * @param authResDto  --> email, authCode (인증번호)
@@ -259,7 +313,6 @@ public class AdminService {
     private CommonResDto verifyEmailCode(AdminEmailAuthResDto authResDto) {
 
         String email = authResDto.getEmail();
-        String password = authResDto.getPassword();
         String authCode = authResDto.getAuthCode();
 
         // redis에 저장된 인증 코드 조회
@@ -297,10 +350,6 @@ public class AdminService {
 
         return new CommonResDto(HttpStatus.OK, "인증되었습니다.", true);
     }
-
-
-
-
 
     /**
      *
