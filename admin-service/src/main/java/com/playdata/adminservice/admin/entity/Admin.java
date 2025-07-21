@@ -49,6 +49,14 @@ public class Admin extends BaseTimeEntity {
         this.isFirst = true;
     }
 
+    public void modifyEmail(String newEmail){
+        this.email = newEmail;
+    }
+
+    public void modifyPassword(String newPassword){
+        this.password = newPassword;
+    }
+
 
 
 
