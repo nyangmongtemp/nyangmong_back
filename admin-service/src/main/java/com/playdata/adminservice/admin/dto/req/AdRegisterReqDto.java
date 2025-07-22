@@ -17,22 +17,14 @@ public class AdRegisterReqDto {
 
     // 광고 제목 (필수)
     @NotBlank(message = "광고 제목은 필수입니다.")
-    @Size(max = 100, message = "제목은 100자 이하로 입력해주세요.")
     private String title;
 
     // 광고 설명 (필수)
     @NotBlank(message = "광고 설명은 필수입니다.")
-    @Size(max = 1000, message = "설명은 1000자 이하로 입력해주세요.")
     private String description;
 
-    // 광고 활성화 여부 (필수)
-    @NotNull(message = "광고 활성화 여부는 필수입니다.")
+    //활성화 여부
     private Boolean active;
-
-    // 광고 노출 순서 (필수, 양수만)
-
-    @Positive(message = "광고 순서는 양수여야 합니다.")
-    private Integer orderNum;
 
     // 광고 시작 날짜 (필수)
     @NotNull(message = "광고 시작일은 필수입니다.")

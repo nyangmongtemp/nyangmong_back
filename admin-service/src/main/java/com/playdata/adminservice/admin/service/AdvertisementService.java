@@ -52,7 +52,7 @@ public class AdvertisementService {
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
-                .active(dto.getActive())
+                .active(true)
                 .thumbnailImage(dto.getThumbnailImage())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
