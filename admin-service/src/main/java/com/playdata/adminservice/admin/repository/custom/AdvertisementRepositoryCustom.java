@@ -24,15 +24,6 @@ public interface AdvertisementRepositoryCustom {
      */
     Page<Advertisement> searchAds(AdSearchDto searchDto, Pageable pageable);
 
-    /**
-     * 특정 orderNum 보다 큰 orderNum을 가진 광고들을 조회합니다.
-     *
-     * @param orderNum 기준 orderNum
-     * @return 조건에 맞는 광고 리스트
-     */
-    List<Advertisement> findByOrderNumGreaterThan(Integer orderNum);
-
-
-    Integer findMaxOrderNum();
-
+    List<Advertisement> findByConfirmedTrueAndActiveTrue();
+    List<Advertisement> findByConfirmedFalseRandomLimit(int limit);
 }

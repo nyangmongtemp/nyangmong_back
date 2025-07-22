@@ -30,14 +30,11 @@ public class Advertisement extends BaseTimeEntity {
     @Column(nullable = false, length = 1000)
     private String description;
 
-
+    private Boolean confirmed;
 
     @Setter
     @Column(nullable = false)
     private Boolean active = true;
-
-    @Setter
-    private Integer orderNum;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -48,34 +45,42 @@ public class Advertisement extends BaseTimeEntity {
     @Column(name = "link_url")
     private String linkUrl;
 
-    public void update(String title, String description, Boolean active, Integer orderNum,
+    public void update(String title, String description, Boolean active, Boolean confirmed,
                        String thumbnailImage, LocalDate startDate, LocalDate endDate, String linkUrl) {
         this.title = title;
         this.description = description;
         this.active = active;
-        this.orderNum = orderNum;
+        this.confirmed = confirmed;
         this.thumbnailImage = thumbnailImage;
         this.startDate = startDate;
         this.endDate = endDate;
         this.linkUrl = linkUrl;
+
     }
 
     @Builder
-    public Advertisement(String thumbnailImage, String title, String description,
-                         Boolean active, Integer orderNum, LocalDate startDate, LocalDate endDate, String linkUrl) {
+    public Advertisement(String thumbnailImage, String title, String description, Boolean confirmed,
+                         Boolean active,  LocalDate startDate, LocalDate endDate, String linkUrl) {
         this.thumbnailImage = thumbnailImage;
         this.title = title;
         this.description = description;
         this.active = active;
-        this.orderNum = orderNum;
+        this.confirmed = confirmed;
         this.startDate = startDate;
         this.endDate = endDate;
         this.linkUrl = linkUrl;
 
     }
 
-    public void changrOrderNum(Integer orderNum) {
-        this.orderNum = orderNum;
+    @PrePersist
+    protected void onCreate() {
+        if (this.active == null) {
+            this.active = true;
+        }
+        if (this.confirmed == null) {
+            this.confirmed = false;
+        }
     }
+
 
 }

@@ -6,6 +6,9 @@ import com.playdata.adminservice.admin.entity.QAdvertisement;
 import com.playdata.adminservice.admin.repository.custom.AdvertisementRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,7 +26,10 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
 
     private final JPAQueryFactory queryFactory;
 
+    @PersistenceContext
+    private EntityManager em;
 
+    private final QAdvertisement ad = QAdvertisement.advertisement;
 
 
 
@@ -49,7 +55,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                         betweenStartDate(searchDto.getStartDate()), // 시작일 이후
                         betweenEndDate(searchDto.getEndDate())      // 종료일 이전
                 )
-                .orderBy(ad.orderNum.asc())    // 정렬: orderNum 오름차순
+                .orderBy(ad.id.asc())    // 정렬: id 오름차순
                 .offset(pageable.getOffset()) // 시작 위치
                 .limit(pageable.getPageSize()) // 페이지 크기
                 .fetch();
@@ -111,28 +117,20 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
 
 
     @Override
-    public List<Advertisement> findByOrderNumGreaterThan(Integer orderNum) {
-        QAdvertisement ad = QAdvertisement.advertisement;
-
-        return queryFactory
-                .selectFrom(ad)
-                // 주어진 orderNum보다 큰 순서 번호를 가진 광고들 중
-                .where(ad.orderNum.gt(orderNum), ad.active.isTrue()) // 비활성화된 광고는 제외하고
-                .orderBy(ad.orderNum.asc()) // 순서 번호 기준 오름차순 정렬
-                .fetch(); // 결과 리스트 반환
+    public List<Advertisement> findByConfirmedFalseRandomLimit(int limit) {
+        //  승인되지 않았지만 활성화된 광고를 랜덤하게 limit 개수만큼 조회 (Native SQL 사용)
+        String nativeSql = "SELECT * FROM advertisements WHERE confirmed = false AND active = true ORDER BY RAND() LIMIT :limit";
+        Query query = em.createNativeQuery(nativeSql, Advertisement.class);
+        query.setParameter("limit", limit);
+        return query.getResultList();
     }
 
-
-
     @Override
-    public Integer findMaxOrderNum() {
-        QAdvertisement ad = QAdvertisement.advertisement;
-
-        // 광고 중 활성화된 것 중 가장 큰 orderNum을 조회
+    public List<Advertisement> findByConfirmedTrueAndActiveTrue() {
+        //  승인되고 활성화된 모든 광고를 조회 (정렬/개수 제한 없음)
         return queryFactory
-                .select(ad.orderNum.max())
-                .from(ad)
-                .where(ad.active.isTrue()) // 비활성 광고는 제외
-                .fetchOne();
+                .selectFrom(ad)
+                .where(ad.confirmed.isTrue(), ad.active.isTrue())
+                .fetch();
     }
 }
