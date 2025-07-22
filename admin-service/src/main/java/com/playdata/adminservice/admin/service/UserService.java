@@ -17,6 +17,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    /**
+     * [관리자] - 사용자 목록 조회 (검색, 페이징)
+     * @param userSearchDto
+     * @param pageable
+     * @return
+     */
     public Page<UserListResDto> findUserList(UserSearchDto userSearchDto, Pageable pageable) {
         Page<User> userList =  userRepository.findList(userSearchDto, pageable);
 

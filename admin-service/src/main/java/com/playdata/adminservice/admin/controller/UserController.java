@@ -23,6 +23,12 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * [관리자] - 사용자 목록 조회 (검색, 페이징)
+     * @param userSearchDto 검색조건
+     * @param pageable 페이지
+     * @return
+     */
     @PreAuthorize("hasAnyRole('BOSS', 'CONTENT')")
     @GetMapping("/user/list")
     public ResponseEntity<CommonResDto> userList(UserSearchDto userSearchDto, Pageable pageable) {

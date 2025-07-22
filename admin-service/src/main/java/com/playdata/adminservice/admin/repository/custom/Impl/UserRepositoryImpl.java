@@ -20,6 +20,12 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    /**
+     * [관리자] - 사용자 목록 조회 (검색, 페이징)
+     * @param userSearchDto
+     * @param pageable
+     * @return
+     */
     @Override
     public Page<User> findList(UserSearchDto userSearchDto, Pageable pageable) {
 
