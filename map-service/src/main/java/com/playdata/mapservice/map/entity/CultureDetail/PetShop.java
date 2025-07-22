@@ -1,5 +1,7 @@
-package com.playdata.mapservice.map.entity;
+package com.playdata.mapservice.map.entity.CultureDetail;
 
+import com.playdata.mapservice.map.dto.CultureDetail.PetStyle.res.PetStyleDetailResDto;
+import com.playdata.mapservice.map.dto.CultureDetail.PetStyle.res.PetStyleListResDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,8 +13,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "pet_culture")
-public class PetCulture {
+@Table(name = "pet_shop") // 반려동물용품점
+public class PetShop {
 
     // 데이터에 pk 값이 없어서 임의로 추가함.
     @Id
@@ -54,6 +56,42 @@ public class PetCulture {
     private String extraFee;  // 반려동물동반추가요금값
     private LocalDate lastUpdate;  // 최종수정일자
 
+    // 목록 조회 시 사용되는 dto 변환 메소드
+    public PetStyleListResDto toPetStyleListResDto() {
+        return PetStyleListResDto.builder()
+                .id(this.id)
+                .facilityName(this.facilityName)
+                .fullAddress(this.fullAddress)
+                .roadAddress(this.roadAddress)
+                .build();
+    }
 
+    // 상세 조회 시 사용되는 dto 변환 메소드
+    public PetStyleDetailResDto toPetStyleDetailResDto() {
+        return PetStyleDetailResDto.builder()
+                .id(this.id)
+                .facilityName(this.facilityName)
+                .fullAddress(this.fullAddress)
+                .roadAddress(this.roadAddress)
+                .mapx(this.mapy)
+                .mapy(this.mapx)
+                .zipNo(this.zipNo)
+                .telNum(this.telNum)
+                .url(this.url)
+                .restInfo(this.restInfo)
+                .operTime(this.operTime)
+                .parking(this.parking)
+                .price(this.price)
+                .petWith(this.petWith)
+                .petInfo(this.petInfo)
+                .petSize(this.petSize)
+                .petRestrict(this.petRestrict)
+                .inPlace(this.inPlace)
+                .outPlace(this.outPlace)
+                .infoDesc(this.infoDesc)
+                .extraFee(this.extraFee)
+                .lastUpdate(this.lastUpdate)
+                .build();
+    }
 
 }

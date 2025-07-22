@@ -51,7 +51,13 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/board/detail/**",
 
             // 맵 관련 정보 서비스
-            "/map/find", "/map/detail/**", "/hospital/list/**", "/hospital/detail/**", "/hospital/category/**",
+            "/map/find", "/map/detail/**",
+
+            // 동물 병원
+            "/hospital/list/**", "/hospital/detail/**", "/hospital/category/**",
+
+            // 동물 미용실
+            "/style/**",
 
             // 축제 관련 API
             "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**", "/api/all",

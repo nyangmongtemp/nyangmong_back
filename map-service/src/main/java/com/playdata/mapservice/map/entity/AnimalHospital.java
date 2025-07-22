@@ -2,7 +2,7 @@ package com.playdata.mapservice.map.entity;
 
 import com.playdata.mapservice.map.dto.hospital.res.HospitalDetailResDto;
 import com.playdata.mapservice.map.dto.hospital.res.HospitalListDto;
-import com.playdata.mapservice.map.service.Epsg5174ToWgs84Converter;
+import com.playdata.mapservice.map.util.Epsg5174ToWgs84Converter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -1,4 +1,4 @@
-package com.playdata.mapservice.map.service;
+package com.playdata.mapservice.map.util;
 
 import org.locationtech.proj4j.*;
 
