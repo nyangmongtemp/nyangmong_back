@@ -1,11 +1,9 @@
-package com.playdata.schedulerservice.api.entity;
+package com.playdata.schedulerservice.api.entity.CultureDetail;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -13,8 +11,8 @@ import java.util.Map;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "pet_culture")
-public class PetCulture {
+@Table(name = "drug_store")
+public class DrugStore {
 
     // 데이터에 pk 값이 없어서 임의로 추가함.
     @Id
@@ -55,44 +53,5 @@ public class PetCulture {
     private String infoDesc;  // 시설정보설명
     private String extraFee;  // 반려동물동반추가요금값
     private LocalDate lastUpdate;  // 최종수정일자
-
-    
-    // 디테일 테이블로의 삽입을 위한 Map 변환 메소드
-    public Map<String, Object> convertToParamMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("facilityName", this.facilityName);
-        map.put("categoryOne", this.categoryOne);
-        map.put("categoryTwo", this.categoryTwo);
-        map.put("categoryThree", this.categoryThree);
-        map.put("sido", this.sido);
-        map.put("sigungu", this.sigungu);
-        map.put("legalDong", this.legalDong);
-        map.put("liName", this.liName);
-        map.put("lnbrNo", this.lnbrNo);
-        map.put("roadName", this.roadName);
-        map.put("buildingNo", this.buildingNo);
-        map.put("mapx", this.mapx);
-        map.put("mapy", this.mapy);
-        map.put("zipNo", this.zipNo);
-        map.put("roadAddress", this.roadAddress);
-        map.put("fullAddress", this.fullAddress);
-        map.put("telNum", this.telNum);
-        map.put("url", this.url);
-        map.put("restInfo", this.restInfo);
-        map.put("operTime", this.operTime);
-        map.put("parking", this.parking);
-        map.put("price", this.price);
-        map.put("petWith", this.petWith);
-        map.put("petInfo", this.petInfo);
-        map.put("petSize", this.petSize);
-        map.put("petRestrict", this.petRestrict);
-        map.put("inPlace", this.inPlace);
-        map.put("outPlace", this.outPlace);
-        map.put("infoDesc", this.infoDesc);
-        map.put("extraFee", this.extraFee);
-        map.put("lastUpdate", this.lastUpdate);
-        return map;
-    }
-
 
 }

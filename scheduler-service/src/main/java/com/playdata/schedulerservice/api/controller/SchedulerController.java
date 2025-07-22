@@ -1,5 +1,6 @@
 package com.playdata.schedulerservice.api.controller;
 
+import com.playdata.schedulerservice.api.service.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -29,7 +30,10 @@ public class SchedulerController {
     private final Job syncMapJob;
 
     private final Job csvToDbJob;
+
+    // made By 이은혁
     private final Job csvToDbJobCulture;
+    private final SchedulerService schedulerService;
 
 
     @GetMapping("/scheduler/api/animal")
@@ -106,5 +110,13 @@ public class SchedulerController {
             log.error("배치 실행 중 오류 발생!", e);
             return "배치 실행 실패!: " + e.getMessage();
         }
+    }
+
+    @PostMapping("/scheduler/detail")
+    public String runPetCultureJobDetail() {
+
+        schedulerService.petCultureToDetailTable();
+        return "성공적으로 테이블로 매핑됨!";
+
     }
 }
