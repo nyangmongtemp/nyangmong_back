@@ -56,8 +56,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             // 동물 병원
             "/hospital/list/**", "/hospital/detail/**", "/hospital/category/**",
 
-            // 동물 미용실
-            "/style/**",
+            // 동물 시설 정보들
+            "/culture/**",
 
             // 축제 관련 API
             "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**", "/api/all",
