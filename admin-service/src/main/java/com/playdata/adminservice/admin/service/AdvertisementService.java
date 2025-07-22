@@ -1,23 +1,22 @@
 package com.playdata.adminservice.admin.service;
 
-import com.playdata.adminservice.admin.dto.req.AdOrderReqDto;
-import com.playdata.adminservice.admin.dto.req.AdRegisterReqDto;
-import com.playdata.adminservice.admin.dto.req.AdSearchDto;
-import com.playdata.adminservice.admin.dto.req.AdUpdateReqDto;
+import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdResDto;
 import com.playdata.adminservice.admin.entity.Advertisement;
 import com.playdata.adminservice.admin.repository.AdvertisementRepository;
+import com.playdata.adminservice.admin.repository.AdvertisementSettingRepository;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.playdata.adminservice.admin.entity.AdvertisementCount;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,11 +30,13 @@ import java.util.stream.Collectors;
 @Getter
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdvertisementService {
 
     // 광고 Repository 주입
     private final AdvertisementRepository adRepository;
 
+    private final AdvertisementSettingRepository adSettingRepository;
     /**
      * 광고 등록
      *
@@ -110,4 +111,48 @@ public class AdvertisementService {
     }
 
 
+
+
+
+    // 광고 노출 개수 설정 변경
+    @Transactional
+    public CommonResDto updateAdCount(AdCountReqDto dto) {
+        // 최근 설정된 광고 노출 개수를 조회 (없으면 새로 생성)
+        AdvertisementCount setting = adSettingRepository.findTopByOrderByAdNumIdDesc()
+                .orElse(AdvertisementCount.builder().build());
+        log.info("광고 노출 개수 조회 결과: {}", setting);
+        // 새로운 광고 노출 개수로 설정값 업데이트
+        setting.setAdNum(dto.getAdNum()); // 필드명 일치 확인
+        adSettingRepository.save(setting); // DB에 저장
+
+        // 성공 응답 반환
+        return new CommonResDto(HttpStatus.OK, "광고 노출 개수 수정 완료", null);
+    }
+
+    //  광고 노출 리스트 조회
+    public List<Advertisement> getAdListForDisplay() {
+        // 최신 광고 노출 개수 설정값을 가져옴 (없으면 0)
+        int adCount = adSettingRepository.findTopByOrderByAdNumIdDesc()
+                .map(AdvertisementCount::getAdNum)
+                .orElse(0);
+
+        // 설정값이 0 이하라면 빈 리스트 반환
+        if (adCount <= 0) return List.of();
+
+        // 1차로 승인되고 활성화된 광고 전체 조회
+        List<Advertisement> confirmedAds = adRepository.findByConfirmedTrueAndActiveTrue();
+        List<Advertisement> result = new ArrayList<>(confirmedAds); // 결과 리스트에 추가
+
+        // 설정된 노출 개수에서 현재 확보된 광고 수 차이 계산
+        int remain = adCount - confirmedAds.size();
+
+        // 부족한 수만큼 승인되지 않은 랜덤 광고로 채움
+        if (remain > 0) {
+            List<Advertisement> randomUnconfirmed = adRepository.findByConfirmedFalseRandomLimit(remain);
+            result.addAll(randomUnconfirmed);
+        }
+
+        // 최종 광고 리스트 반환
+        return result;
+    }
 }

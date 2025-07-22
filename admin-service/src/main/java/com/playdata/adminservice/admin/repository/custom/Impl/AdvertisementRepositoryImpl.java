@@ -6,6 +6,9 @@ import com.playdata.adminservice.admin.entity.QAdvertisement;
 import com.playdata.adminservice.admin.repository.custom.AdvertisementRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,7 +26,10 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
 
     private final JPAQueryFactory queryFactory;
 
+    @PersistenceContext
+    private EntityManager em;
 
+    private final QAdvertisement ad = QAdvertisement.advertisement;
 
 
 
@@ -110,9 +116,21 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
 
 
 
+    @Override
+    public List<Advertisement> findByConfirmedFalseRandomLimit(int limit) {
+        //  승인되지 않았지만 활성화된 광고를 랜덤하게 limit 개수만큼 조회 (Native SQL 사용)
+        String nativeSql = "SELECT * FROM advertisements WHERE confirmed = false AND active = true ORDER BY RAND() LIMIT :limit";
+        Query query = em.createNativeQuery(nativeSql, Advertisement.class);
+        query.setParameter("limit", limit);
+        return query.getResultList();
+    }
 
-
-
-
-
+    @Override
+    public List<Advertisement> findByConfirmedTrueAndActiveTrue() {
+        //  승인되고 활성화된 모든 광고를 조회 (정렬/개수 제한 없음)
+        return queryFactory
+                .selectFrom(ad)
+                .where(ad.confirmed.isTrue(), ad.active.isTrue())
+                .fetch();
+    }
 }

@@ -1,10 +1,8 @@
 package com.playdata.adminservice.admin.controller;
 
-import com.playdata.adminservice.admin.dto.req.AdOrderReqDto;
-import com.playdata.adminservice.admin.dto.req.AdRegisterReqDto;
-import com.playdata.adminservice.admin.dto.req.AdSearchDto;
-import com.playdata.adminservice.admin.dto.req.AdUpdateReqDto;
+import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdResDto;
+import com.playdata.adminservice.admin.entity.Advertisement;
 import com.playdata.adminservice.admin.service.AdvertisementService;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.validation.Valid;
@@ -58,6 +56,27 @@ public class AdvertisementController {
         Page<AdResDto> pageResult = advertisementService.searchAds(searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "검색 완료", pageResult);
         return ResponseEntity.ok(resDto);
+    }
+
+    /**
+     * 광고 개수 수정
+     *
+     * @param dto 광고 개수 수정 요청 DTO
+     * @return 공통 응답 DTO
+     */
+    @PatchMapping("/ads/count")
+    public ResponseEntity<CommonResDto> updateAdCount(@RequestBody @Valid AdCountReqDto dto) {
+        log.info("/ads/count: Patch, dto: {}", dto.toString());
+        CommonResDto response = advertisementService.updateAdCount(dto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 광고 노출용 리스트 조회 API
+    @GetMapping("/ads/display")
+    public ResponseEntity<CommonResDto> getAdsForDisplay() {
+        List<Advertisement> ads = advertisementService.getAdListForDisplay();
+        CommonResDto response = new CommonResDto(HttpStatus.OK, "광고 노출 리스트 조회 성공", ads);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

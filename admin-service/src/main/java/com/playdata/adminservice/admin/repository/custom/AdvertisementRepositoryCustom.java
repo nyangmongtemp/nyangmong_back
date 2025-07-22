@@ -24,5 +24,6 @@ public interface AdvertisementRepositoryCustom {
      */
     Page<Advertisement> searchAds(AdSearchDto searchDto, Pageable pageable);
 
-
+    List<Advertisement> findByConfirmedTrueAndActiveTrue();
+    List<Advertisement> findByConfirmedFalseRandomLimit(int limit);
 }
