@@ -59,6 +59,10 @@ public class Admin extends BaseTimeEntity {
         return this;
     }
 
+    public void changeIsFirst(){
+        this.isFirst = false;
+    }
+
 
 
 

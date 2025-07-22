@@ -130,15 +130,6 @@ public class AdminService {
                 return sendVerifyEmailCode(adminLoginReqDto.getEmail());
             }
         }
-
-        // 비밀번호가 일치 하지 않는 경우
-        // password = 날 것의 비밀번호, foundAdmin.getPassword() = 인코딩된 비밀번호
-        if (!passwordEncoder.matches(adminLoginReqDto.getPassword(), findAdmin.getPassword())) {
-            throw new CommonException(ErrorCode.INVALID_PASSWORD);
-        }
-
-        return sendVerifyEmailCode(adminLoginReqDto.getEmail());
-
     }
   
     /**
@@ -252,6 +243,9 @@ public class AdminService {
 
         // entity 에서 수정 생성자 호출
         admin.modifyEmail(authResDto.getEmail());
+        
+        // isFirst = false로 변경
+        admin.changeIsFirst();
 
         // DB 저장
         adminRepository.save(admin);
