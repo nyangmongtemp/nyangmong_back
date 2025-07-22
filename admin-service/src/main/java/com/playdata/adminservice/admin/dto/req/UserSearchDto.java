@@ -14,7 +14,7 @@ import lombok.Setter;
 public class UserSearchDto {
 
     private String username;
-    private Boolean pause;
+    private Boolean report;
     private String email;
 
 }

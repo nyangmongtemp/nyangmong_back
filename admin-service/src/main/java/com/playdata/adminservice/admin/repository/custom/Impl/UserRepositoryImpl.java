@@ -59,9 +59,9 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
             builder.and(user.email.startsWithIgnoreCase(userSearchDto.getEmail()));
         }
 
-        if (userSearchDto.getPause() != null && userSearchDto.getPause()) {
+        if (userSearchDto.getReport() != null && userSearchDto.getReport()) {
             // pause가 true일 때만 pauseCount >= 1 조건 추가
-            builder.and(user.pauseCount.goe(1));
+            builder.and(user.reportCount.goe(1));
         }
 
         return builder;
