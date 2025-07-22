@@ -49,7 +49,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                         betweenStartDate(searchDto.getStartDate()), // 시작일 이후
                         betweenEndDate(searchDto.getEndDate())      // 종료일 이전
                 )
-                .orderBy(ad.orderNum.asc())    // 정렬: orderNum 오름차순
+                .orderBy(ad.id.asc())    // 정렬: id 오름차순
                 .offset(pageable.getOffset()) // 시작 위치
                 .limit(pageable.getPageSize()) // 페이지 크기
                 .fetch();
@@ -110,29 +110,9 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
 
 
 
-    @Override
-    public List<Advertisement> findByOrderNumGreaterThan(Integer orderNum) {
-        QAdvertisement ad = QAdvertisement.advertisement;
-
-        return queryFactory
-                .selectFrom(ad)
-                // 주어진 orderNum보다 큰 순서 번호를 가진 광고들 중
-                .where(ad.orderNum.gt(orderNum), ad.active.isTrue()) // 비활성화된 광고는 제외하고
-                .orderBy(ad.orderNum.asc()) // 순서 번호 기준 오름차순 정렬
-                .fetch(); // 결과 리스트 반환
-    }
 
 
 
-    @Override
-    public Integer findMaxOrderNum() {
-        QAdvertisement ad = QAdvertisement.advertisement;
 
-        // 광고 중 활성화된 것 중 가장 큰 orderNum을 조회
-        return queryFactory
-                .select(ad.orderNum.max())
-                .from(ad)
-                .where(ad.active.isTrue()) // 비활성 광고는 제외
-                .fetchOne();
-    }
+
 }

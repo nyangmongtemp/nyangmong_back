@@ -36,4 +36,7 @@ public class AdRegisterReqDto {
 
     // 광고 링크 주소
     private String linkUrl;
+
+    // 광고 노출 필수 여부
+    private Boolean confirmed;
 }

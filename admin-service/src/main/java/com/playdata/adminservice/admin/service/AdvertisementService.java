@@ -37,22 +37,21 @@ public class AdvertisementService {
     private final AdvertisementRepository adRepository;
 
     /**
-     * 광고 등록 (자동 순서 지정)
+     * 광고 등록
      *
      * @param dto 광고 등록 요청 DTO
      * @return 등록된 광고 정보를 담은 응답 DTO
      */
     @Transactional
     public CommonResDto registerAd(AdRegisterReqDto dto) {
-        // 1. 현재 가장 큰 orderNum 조회
-        Integer maxOrderNum = adRepository.findMaxOrderNum();
-        int newOrderNum = (maxOrderNum != null) ? maxOrderNum + 1 : 1;
 
-        // 2. 광고 엔티티 생성 및 저장
+
+        // 광고 엔티티 생성 및 저장
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
-                .active(true)
+                .active(dto.getActive())
+                .confirmed(dto.getConfirmed())
                 .thumbnailImage(dto.getThumbnailImage())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
@@ -60,11 +59,9 @@ public class AdvertisementService {
                 .build();
 
 
-        // 3. 자동 증가된 orderNum 세팅
-        ad.setOrderNum(newOrderNum);
         Advertisement saved = adRepository.save(ad);
 
-        // 4. 결과 반환
+        //  결과 반환
         return new CommonResDto(HttpStatus.CREATED, "광고 등록 성공", saved);
     }
 
@@ -80,40 +77,13 @@ public class AdvertisementService {
         Advertisement ad = adRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("광고가 존재하지 않습니다."));
 
-        ad.update(dto.getTitle(), dto.getDescription(), dto.getActive(), dto.getOrderNum(),
+        ad.update(dto.getTitle(), dto.getDescription(), dto.getActive(), dto.getConfirmed(),
                 dto.getThumbnailImage(), dto.getStartDate(), dto.getEndDate(), dto.getLinkUrl());
 
         return new CommonResDto(HttpStatus.OK, "광고 수정 완료", ad);
     }
 
-    /**
-     * 광고 삭제 (active = false 방식)
-     *
-     * @param id 삭제할 광고 ID
-     * @return 공통 응답 DTO
-     */
-    @Transactional
-    public CommonResDto deleteAd(Long id) {
-        // 1. ID로 광고 조회 (없으면 예외 발생)
-        Advertisement ad = adRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("해당 광고가 존재하지 않습니다."));
 
-        Integer deletedOrderNum = ad.getOrderNum();
-
-        // 2. 광고 비활성화 처리 및 순서 번호 제거
-        ad.setActive(false);           // 실제 삭제하지 않고 active = false 처리
-        ad.setOrderNum(null);         // 삭제된 광고의 순서 번호 제거
-
-        // 3. 삭제된 광고보다 뒤에 있는 광고들의 순서를 한 칸씩 앞으로 당김
-        List<Advertisement> adsToUpdate = adRepository.findByOrderNumGreaterThan(deletedOrderNum);
-
-        for (Advertisement a : adsToUpdate) {
-            a.setOrderNum(a.getOrderNum() - 1); // 순서 번호 -1
-        }
-
-        // 4. 결과 반환
-        return new CommonResDto(HttpStatus.OK, "광고 삭제 처리 및 순서 재정렬 완료", null);
-    }
 
     /**
      * 광고 단건 조회
@@ -139,18 +109,5 @@ public class AdvertisementService {
                 .map(AdResDto::from);
     }
 
-    @Transactional
-    public void updateAdOrder(List<AdOrderReqDto> orderDtoList) {
-        List<Advertisement> adsToUpdate = new ArrayList<>();
-
-        for (AdOrderReqDto dto : orderDtoList) {
-            Advertisement ad = adRepository.findById(dto.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("ID " + dto.getId() + "인 광고가 존재하지 않습니다."));
-            ad.setOrderNum(dto.getOrderNum());
-            adsToUpdate.add(ad);
-        }
-
-        adRepository.saveAll(adsToUpdate);
-    }
 
 }

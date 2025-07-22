@@ -13,11 +13,7 @@ import com.playdata.adminservice.admin.service.AdvertisementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,46 +58,5 @@ public class AdminController {
         return ResponseEntity.ok(userInfo);
     }
 
-    // 광고 등록 API
-    @PostMapping("/ads")
-    public ResponseEntity<?> createAd(@RequestBody @Valid AdRegisterReqDto dto) {
-        CommonResDto resDto = advertisementService.registerAd(dto);
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
 
-    // 광고 수정 API
-    @PutMapping("/ads/{id}")
-    public ResponseEntity<?> updateAd(@PathVariable Long id, @RequestBody @Valid AdUpdateReqDto dto) {
-        CommonResDto resDto = advertisementService.updateAd(id, dto);
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
-
-    // 광고 삭제(비활성화) API
-    @DeleteMapping("/ads/{id}")
-    public ResponseEntity<?> deleteAd(@PathVariable Long id) {
-        CommonResDto resDto = advertisementService.deleteAd(id);
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
-
-    // 광고 상세 조회 API
-    @GetMapping("/ads/{id}")
-    public ResponseEntity<?> getAd(@PathVariable Long id) {
-        CommonResDto resDto = advertisementService.getAd(id);
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
-    }
-
-    //광고 조회 API
-    @PostMapping("/ads/search")
-    public ResponseEntity<?> searchAds(AdSearchDto searchDto, Pageable pageable) {
-        Page<AdResDto> pageResult = advertisementService.searchAds(searchDto, pageable);
-        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "검색 완료", pageResult);
-        return ResponseEntity.ok(resDto);
-    }
-
-    // 광고 순서 변경 API
-    @PutMapping("/ads/order")
-    public ResponseEntity<?> updateAdOrder(@RequestBody @Valid  List<AdOrderReqDto> orderDtoList) {
-        advertisementService.updateAdOrder(orderDtoList);
-        return new ResponseEntity<>(new CommonResDto(HttpStatus.OK, "광고 순서 수정 완료", null), HttpStatus.OK);
-    }
 }
