@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Getter
@@ -39,10 +40,23 @@ public class Admin extends BaseTimeEntity {
     @Column(nullable = false)
     private String name; // 관리자 이름
 
+    @Column(nullable = false)
+    private Boolean isFirst;
+
     // 디폴트 값 설정
     @PrePersist
     protected void onCreate() {
         this.active = true;
+        this.isFirst = true;
+    }
+
+    public void modifyEmail(String newEmail){
+        this.email = newEmail;
+    }
+
+    public Admin modifyPassword(PasswordEncoder encoder, String newPassword){
+        this.password = encoder.encode(newPassword);
+        return this;
     }
 
 

@@ -16,4 +16,6 @@ public class AdminLoginResDto {
 
     private String token;
 
+    private Boolean isFirst;
+
 }

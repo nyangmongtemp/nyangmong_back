@@ -42,7 +42,7 @@ SecurityConfig {
             auth
 //
                     .requestMatchers(
-                            "/admin/login", "/admin/create", "/admin/verify-code"
+                            "/admin/login", "/admin/create", "/admin/admin-create", "/admin/verify-code"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });
