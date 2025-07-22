@@ -16,7 +16,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -155,6 +157,14 @@ public class BoardController {
         return ResponseEntity.ok().body(resDto);
     }
 
+    // 소개 게시판 메인 최근 게시물 조회
+    @GetMapping("/introduction/main")
+    public ResponseEntity<?> findIntroductionMainList() {
+        // 소개 게시판의 게시물 조회
+        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
+        return ResponseEntity.ok().body(resDto);
+    }
+
     // 정보 게시판 메인 인기 게시물 조회
     @GetMapping("/information/popular")
     public ResponseEntity<?> findPopularInformationBoard() {
@@ -178,23 +188,27 @@ public class BoardController {
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId,
                                      @PathVariable("nickname") String nickname) {
 
-        String encodedNickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
+        String decodedNickname = URLDecoder.decode(nickname, StandardCharsets.UTF_8);
 
-        boardService.modifyUserFindBoard(userId, encodedNickname);
+        // 디코딩된
+        boardService.modifyUserFindBoard(userId, decodedNickname);
         log.info(userId + ":" + nickname);
 
         // 요청 완료 응답
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    /**
-     * 소개 게시판 좋아요순 3개 목록 조회
-     * @return
-     */
-    @GetMapping("/introduction/main")
-    public ResponseEntity<?> introductionMainList() {
-        List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
-        return ResponseEntity.ok(resDto);
+    // 마이페이지에서 token을 통한, 내 게시물 조회
+    @GetMapping("/mypage/{category}")
+    public ResponseEntity<?> myPost(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                    @PathVariable(name = "category") String category,
+                                    @RequestParam(value = "page", defaultValue = "0") int page,
+                                    @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
+        CommonResDto resDto = boardService.findMyPost(userInfo.getUserId(), category, pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
 }

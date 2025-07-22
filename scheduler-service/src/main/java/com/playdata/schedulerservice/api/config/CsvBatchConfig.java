@@ -39,7 +39,8 @@ public class CsvBatchConfig {
         return new FlatFileItemReaderBuilder<AnimalHospital>()
                 .name("animalHospitalCsvReader") // 이름 지어주기
                 // 어떤 파일을 읽을것인가
-                .resource(new FileSystemResource("/Users/ubing/Desktop/nyangmong/csv/animalHospital.csv"))
+                // 현재 사용할 디렉토리의 위치는 본인에 맞게 수정해야함.
+                .resource(new FileSystemResource("C:\\nyangmong_image\\hospital\\animal_hospital.csv"))
                 .delimited() // 쉼표로 구분된 csv 파일입니다.
                 .names(
                         "id",                        // 번호

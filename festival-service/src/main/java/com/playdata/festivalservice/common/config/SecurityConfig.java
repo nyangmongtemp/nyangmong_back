@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth
-                            .requestMatchers("/api/festivals/**", "/festival-service/api/festivals/**").permitAll()
+                            .requestMatchers("/api/festivals/**", "/festival-service/api/festivals/**", "/api/all").permitAll()
                             .anyRequest().authenticated();
                 });
         return http.build();

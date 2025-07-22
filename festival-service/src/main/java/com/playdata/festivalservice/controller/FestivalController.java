@@ -11,6 +11,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController // REST API 컨트롤러
 @RequestMapping("/api") // 공통 URL prefix
 @RequiredArgsConstructor // final 필드 자동 생성자 주입
@@ -31,6 +33,12 @@ public class FestivalController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<FestivalResponseDto> resDto = festivalService.findFestivalList(festivalSearchDto, pageable);
         return ResponseEntity.ok(resDto); // 200 OK 응답
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllFestivalList() {
+        List<FestivalResponseDto> resDto = festivalService.findAllFestivals();
+        return ResponseEntity.ok(resDto);
     }
 
 

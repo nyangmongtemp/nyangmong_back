@@ -1,5 +1,6 @@
 package com.playdata.schedulerservice.api.controller;
 
+import com.playdata.schedulerservice.api.service.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -29,6 +30,10 @@ public class SchedulerController {
     private final Job syncMapJob;
 
     private final Job csvToDbJob;
+
+    // made By 이은혁
+    private final Job csvToDbJobCulture;
+    private final SchedulerService schedulerService;
 
 
     @GetMapping("/scheduler/api/animal")
@@ -82,5 +87,36 @@ public class SchedulerController {
             log.error("배치 실행 중 오류 발생!", e);
             return "배치 실행 실패!: " + e.getMessage();
         }
+    }
+
+    @PostMapping("/scheduler/pet")
+    public String runPetCultureJob() {
+        try {
+            // Spring Batch는 같은 파라미터로는 한 번만 실행되는 규칙이 있음.
+            // 매번 다른 파라미터를 만들면 같은 배치를 여러 번 실행할 수 있습니다.
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis()) // 현재 시간 추가
+                    .toJobParameters();
+
+            log.info(" ========== CSV To Database 배치 작업 시작! =========");
+            JobExecution jobExecution = jobLauncher.run(csvToDbJobCulture, jobParameters);
+            log.info(" ========== 배치 완료! 상태: {} =========", jobExecution.getStatus());
+
+            return String.format("배치 실행 완료! 상태: %s, 처리된 아이템 수: %d",
+                    jobExecution.getStatus(),
+                    jobExecution.getStepExecutions().iterator().next().getWriteCount());
+
+        } catch (Exception e) {
+            log.error("배치 실행 중 오류 발생!", e);
+            return "배치 실행 실패!: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/scheduler/detail")
+    public String runPetCultureJobDetail() {
+
+        schedulerService.petCultureToDetailTable();
+        return "성공적으로 테이블로 매핑됨!";
+
     }
 }

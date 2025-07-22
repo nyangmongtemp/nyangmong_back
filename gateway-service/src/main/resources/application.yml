@@ -105,3 +105,12 @@ spring:
             - RemoveRequestHeader=Cookie
             - RewritePath=/admin-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
+
+        - id: map-service
+          uri: lb://MAP-SERVICE
+          predicates:
+            - Path=/map-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/map-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter

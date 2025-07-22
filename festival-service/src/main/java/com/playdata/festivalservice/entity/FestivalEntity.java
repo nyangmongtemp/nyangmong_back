@@ -53,6 +53,8 @@ public class FestivalEntity {
     @Column(length = 50)
     private String reservationDate;            // 예약 가능 기간
 
+    private String addr;                       // 상세 주소
+    
     @Column(nullable = false, unique = true, length = 64)
     private String hash;                       // 중복 방지용 해시 값 (예: 축제 제목+날짜 해시)
 

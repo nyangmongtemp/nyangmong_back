@@ -570,6 +570,7 @@ public class UserService {
         Optional<User> foundUser = userRepository.findByEmail(email);
         // 토큰 발급을 요청한 회원이 유효하지 않은 회원인 경우
         if(!foundUser.isPresent() || !foundUser.get().isActive()) {
+            log.error("없는 회원입니다.");
             throw new CommonException(ErrorCode.UNKNOWN_HOST, "토큰 발급을 진행할 회원이 존재하지 않습니다.");
         }
         User user = foundUser.get();
@@ -578,13 +579,14 @@ public class UserService {
 
         // refresh 토큰이 만료된 경우
         if(obj == null){
+            log.error("리프레시 토큰이 없습니다.");
             throw new CommonException(ErrorCode.SESSION_EXPIRED, "다시 로그인을 진행해주세요.");
         }
         // refresh 토큰이 유효한 경우
         // 새로운 Access Token 재발급
         String token
                 = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
-
+        log.error("토큰이 재발급 되었습니다!");
         return new CommonResDto(HttpStatus.OK, "토큰 재발급이 이루어졌습니다."
                 , new UserLoginResDto(user.getEmail(), user.getNickname(), user.getProfileImage(), token));
     }

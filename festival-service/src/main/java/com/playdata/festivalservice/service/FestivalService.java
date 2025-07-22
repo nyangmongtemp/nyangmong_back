@@ -11,6 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -23,5 +26,16 @@ public class FestivalService {
         Page<FestivalEntity> festivalList = festivalRepository.findList(festivalSearchDto, pageable);
         return festivalList.map(e -> FestivalResponseDto.fromEntityBuilder().festivalEntity(e).build());
     }
+    
+    // 지도에서 사용할 모든 행사 정보를 화면단으로 넘기는 메소드
+    // 추후에는
+    public List<FestivalResponseDto> findAllFestivals() {
 
+        List<FestivalEntity> all = festivalRepository.findAll();
+        if(all.isEmpty()) {
+            return null;
+        }
+        return all.stream().map(e -> FestivalResponseDto
+                .fromEntityBuilder().festivalEntity(e).build()).collect(Collectors.toList());
+    }
 }

@@ -416,6 +416,75 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
+    public CommonResDto findMyPost(Long userId, String category, Pageable pageable) {
+
+        List<String> cate = List.of("review", "question", "free", "introduction");
+        if(!cate.contains(category)) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "옳지 않은 카테고리값입니다.");
+        }
+        Category targetCategory = Category.valueOf(category.toUpperCase());
+        if(targetCategory.equals(Category.INTRODUCTION)) {
+
+            Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findMyPost(userId, pageable);
+
+            List<LikeComCountReqDto> likeCom = introductionBoardList.stream().map(introductionBoard -> {
+                // ReqDto 에서 category(INTRODUCTION), postId 를 뽑아서 List로 만들겠다.
+                return new LikeComCountReqDto(Category.INTRODUCTION.name(), introductionBoard.getPostId());
+            }).collect(Collectors.toList());
+
+            List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
+            List<LikeComIntroResDto> result = introductionBoardList.stream().map(introductionBoard -> {
+                        for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
+                            if (introductionBoard.getPostId().equals(likeComCountResDto.getContentId())) {
+                                return LikeComIntroResDto.fromEntity(introductionBoard, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
+                            }
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            Page<LikeComIntroResDto> dtoPage = new PageImpl<>(
+                    result,
+                    introductionBoardList.getPageable(),
+                    introductionBoardList.getTotalElements()
+            );
+            return new CommonResDto(HttpStatus.OK, "모든 게시물 찾음", dtoPage);
+        }
+        else {
+            Page<InformationBoard> informationBoardList
+                    = informationBoardRepository.findMyPost(userId, targetCategory, pageable);
+
+            List<LikeComCountReqDto> likeCom = informationBoardList.stream().map(informationBoard -> {
+                // ReqDto 에서 category, postId 를 뽑아서 List로 만들겠다. (category는 string 변환)
+                return new LikeComCountReqDto(String.valueOf(informationBoard.getCategory()), informationBoard.getPostId());
+            }).collect(Collectors.toList());
+
+            List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
+            List<LikeComResDto> result = informationBoardList.stream().map(inform -> {
+                        for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
+                            if (inform.getCategory().equals(Category.valueOf(likeComCountResDto.getCategory())) &&
+                                    inform.getPostId().equals(likeComCountResDto.getContentId())) {
+                                return LikeComResDto.fromEntity(inform, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
+                            }
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            Page<LikeComResDto> pages = new PageImpl<>(
+                    result,
+                    informationBoardList.getPageable(),
+                    informationBoardList.getTotalElements()
+            );
+            // Entity → DTO 변환
+//        return informationBoardList.map(InformationBoardListResDto::new);
+
+            return new CommonResDto(HttpStatus.OK, "내 정보 게시물 모두 찾음", pages);
+        }
+    }
+
 
     // 입력받은 카테고리가 유효하냐 (contains)
     private boolean isValidCategory(Category input) {
@@ -561,6 +630,7 @@ public class BoardService {
                             .toInstant()));
         }
     }
+
 }
 
 
