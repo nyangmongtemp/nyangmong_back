@@ -243,6 +243,9 @@ public class AdminService {
 
         // entity 에서 수정 생성자 호출
         admin.modifyEmail(authResDto.getEmail());
+        
+        // isFirst = false로 변경
+        admin.changeIsFirst();
 
         // DB 저장
         adminRepository.save(admin);
