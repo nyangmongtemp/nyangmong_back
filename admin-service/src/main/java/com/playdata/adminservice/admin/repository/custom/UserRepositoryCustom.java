@@ -7,5 +7,11 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserRepositoryCustom {
 
+    /**
+     * [관리자] - 사용자 목록 조회 (검색, 페이징)
+     * @param userSearchDto
+     * @param pageable
+     * @return
+     */
     Page<User> findList(UserSearchDto userSearchDto, Pageable pageable);
 }

@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-// 임의로 지정한 테이블 이름 -> 추후에 모든 서비스의 테이블 이름을 통일할 것!
 @Table(name = "tbl_user")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,39 +24,38 @@ public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long userId; // 사용자 고유 ID (기본키, 자동 증가)
 
-    private String userName;
+    private String userName; // 사용자 실명
 
     @Column(unique = true, nullable = false)
     @Email
-    private String email;
+    private String email; // 이메일 주소 (로그인 시 사용, 유일함)
 
     @Column(nullable = false)
-    private String password;
+    private String password; // 로그인 비밀번호 (암호화 저장)
 
-    private String profileImage;
+    private String profileImage; // 프로필 이미지 경로 또는 URL
 
-    private String nickname;
+    private String nickname; // 닉네임 (커뮤니티 활동 시 사용)
 
-    private String address;
+    private String address; // 주소 (예: 서울시 강남구)
 
-    private String phone;
+    private String phone; // 전화번호 (예: 010-1234-5678)
 
-    private String socialId;
+    private String socialId; // 소셜 로그인 ID (소셜 제공자에서 받은 고유값)
 
-    private Long grade;   // 회원의 커뮤니티 활동을 기반으로 점수를 매길 것임.
+    private Long grade; // 활동 등급/점수 (커뮤니티 기여도 기반)
 
-    private String socialProvider;
+    private String socialProvider; // 소셜 로그인 제공자
 
-    private boolean active;
+    private boolean active; // 계정 활성화 여부 (true = 정상, false = 정지/탈퇴)
 
-    private int reportCount;
+    private int reportCount; // 누적 신고 횟수 (욕설, 스팸 등으로 신고당한 횟수)
 
-    private LocalDateTime passwordUpdatedAt;
+    private LocalDateTime passwordUpdatedAt; // 마지막 비밀번호 변경 일시
 
-    private int passwordFaultCount;
+    private int passwordFaultCount; // 로그인 실패 횟수
 
-    private int pauseCount;
-
+    private int pauseCount; // 계정이 일시 정지된 횟수 (운영자 판단으로 정지된 기록)
 }
