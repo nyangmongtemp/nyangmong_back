@@ -53,8 +53,6 @@ public class AdminController {
     @PostMapping("/login")
     public ResponseEntity<?> adminLogin(@RequestBody @Valid AdminLoginReqDto adminLoginReqDto) {
 
-        log.error(adminLoginReqDto.toString());
-
         CommonResDto resDto = adminService.login(adminLoginReqDto);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
