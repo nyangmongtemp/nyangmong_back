@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -344,17 +345,6 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
-    // 소개 게시판 메인 최근 게시물 조회
-    public List<IntroductionBoardListResDto> findIntroductionMainList() {
-        List<IntroductionBoard> introductionBoardList = introductionBoardRepository.findMainList();
-
-        return introductionBoardList.stream()
-                .map(introductionBoard -> IntroductionBoardListResDto.builder()
-                        .introductionBoard(introductionBoard) // 엔티티 -> DTO 변환
-                        .build())
-                .collect(Collectors.toList());
-    }
-
     // 정보 게시판 메인 인기 게시물 조회
     public List<InformationBoardListResDto> findPopularInformationBoard() {
         List<InformationBoard> board = informationBoardRepository.findPopularList(10, 7); // 최근 7일 상위 10개
@@ -389,6 +379,41 @@ public class BoardService {
 
 
 
+    }
+
+    /**
+     * 소개 게시판 좋아요순 3개 목록 조회
+     */
+    public List<IntroductionMainListResDto> findIntroductionMainList() {
+        // 1. Feign으로 좋아요 많은 게시글 리스트 가져오기
+        List<LikeComCountResDto> introductionLikeCountList = mainServiceClient.getMainIntroduction();
+
+        // 2. postId만 추출
+        List<Long> postIds = introductionLikeCountList.stream()
+                .map(LikeComCountResDto::getContentId)
+                .collect(Collectors.toList());
+
+        // 3. postId → likeCount/ commentCount 맵핑
+        Map<Long, LikeComCountResDto> likeCountMap = introductionLikeCountList.stream()
+                .collect(Collectors.toMap(
+                        LikeComCountResDto::getContentId,
+                        dto -> dto
+                ));
+
+        // 4. DB에서 postId로 게시글 조회
+        List<IntroductionBoard> introductionBoards = introductionBoardRepository.findAllById(postIds);
+
+        // 5. 게시글 + 좋아요/댓글 정보 조합 후 DTO 변환
+        return introductionBoards.stream()
+                .map(introduction -> {
+                    LikeComCountResDto likeDto = likeCountMap.get(introduction.getPostId());
+                    return IntroductionMainListResDto.builder()
+                            .introductionBoard(introduction)
+                            .likeCount(likeDto.getLikeCount())
+                            .commentCount(likeDto.getCommentCount())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
 

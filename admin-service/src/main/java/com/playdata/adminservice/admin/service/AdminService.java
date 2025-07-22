@@ -68,11 +68,11 @@ public class AdminService {
 
         // 부가적인 정보를 담아서 Admin을 던짐
         Admin createdAdmin = adminSaveReqDto.toEntity(passwordEncoder);
+      
         // DB에 저장
         adminRepository.save(createdAdmin);
 
-        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
-        return resDto;
+        return new CommonResDto(HttpStatus.CREATED, "회원가입에 성공하였습니다", true);
 
     }
 
@@ -130,8 +130,17 @@ public class AdminService {
                 return sendVerifyEmailCode(adminLoginReqDto.getEmail());
             }
         }
-    }
 
+        // 비밀번호가 일치 하지 않는 경우
+        // password = 날 것의 비밀번호, foundAdmin.getPassword() = 인코딩된 비밀번호
+        if (!passwordEncoder.matches(adminLoginReqDto.getPassword(), findAdmin.getPassword())) {
+            throw new CommonException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        return sendVerifyEmailCode(adminLoginReqDto.getEmail());
+
+    }
+  
     /**
      *
      * @param email

@@ -1,20 +1,29 @@
 package com.playdata.adminservice.admin.controller;
 
-import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminPasswordAuthReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminPasswordModifyReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
+import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.service.AdminService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
+
+// 광고 관리 관련 import 추가
+import com.playdata.adminservice.admin.dto.res.AdResDto;
+import com.playdata.adminservice.admin.service.AdvertisementService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
@@ -23,12 +32,12 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AdvertisementService advertisementService;
 
     // 회원가입 (총 관리자 회원가입)
     @PostMapping("/create")
     public ResponseEntity<?> adminCreate(@RequestBody AdminSaveReqDto adminSaveReqDto){
         CommonResDto resDto = adminService.create(adminSaveReqDto);
-
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
@@ -47,11 +56,10 @@ public class AdminController {
         log.error(adminLoginReqDto.toString());
 
         CommonResDto resDto = adminService.login(adminLoginReqDto);
-
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 로그인 인증번호 검증
+    // 인증 코드 확인
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyAdminEmailCode(@RequestBody @Valid AdminEmailAuthResDto authResDto){
         CommonResDto resDto = adminService.loginVerifyCode(authResDto);
@@ -118,18 +126,53 @@ public class AdminController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    /**
-     *
-     *
-     *
-     * @param userInfo
-     * @return
-     */
-    // 토큰 검증용 메소드 --> 추후 삭제 예정
+    // 임시 토큰 검증
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
         log.info(userInfo.toString());
         return ResponseEntity.ok(userInfo);
     }
 
+    // 광고 등록 API
+    @PostMapping("/ads")
+    public ResponseEntity<?> createAd(@RequestBody @Valid AdRegisterReqDto dto) {
+        CommonResDto resDto = advertisementService.registerAd(dto);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 광고 수정 API
+    @PutMapping("/ads/{id}")
+    public ResponseEntity<?> updateAd(@PathVariable Long id, @RequestBody @Valid AdUpdateReqDto dto) {
+        CommonResDto resDto = advertisementService.updateAd(id, dto);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 광고 삭제(비활성화) API
+    @DeleteMapping("/ads/{id}")
+    public ResponseEntity<?> deleteAd(@PathVariable Long id) {
+        CommonResDto resDto = advertisementService.deleteAd(id);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 광고 상세 조회 API
+    @GetMapping("/ads/{id}")
+    public ResponseEntity<?> getAd(@PathVariable Long id) {
+        CommonResDto resDto = advertisementService.getAd(id);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    //광고 조회 API
+    @PostMapping("/ads/search")
+    public ResponseEntity<?> searchAds(AdSearchDto searchDto, Pageable pageable) {
+        Page<AdResDto> pageResult = advertisementService.searchAds(searchDto, pageable);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "검색 완료", pageResult);
+        return ResponseEntity.ok(resDto);
+    }
+
+    // 광고 순서 변경 API
+    @PutMapping("/ads/order")
+    public ResponseEntity<?> updateAdOrder(@RequestBody @Valid  List<AdOrderReqDto> orderDtoList) {
+        advertisementService.updateAdOrder(orderDtoList);
+        return new ResponseEntity<>(new CommonResDto(HttpStatus.OK, "광고 순서 수정 완료", null), HttpStatus.OK);
+    }
 }

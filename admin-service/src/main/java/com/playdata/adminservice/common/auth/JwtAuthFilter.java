@@ -51,9 +51,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     authorityList // 인가 정보 (권한)
             );
 
+            // 위에 만든 토큰 정보를 던져준다.
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         }
+        // 필터 정리
         filterChain.doFilter(request, response);
 
     }

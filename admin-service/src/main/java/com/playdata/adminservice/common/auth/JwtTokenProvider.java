@@ -32,6 +32,7 @@ public class JwtTokenProvider {
         claims.put("role", String.valueOf(role));
         claims.put("adminId", adminId.toString());
 
+        // 토큰 만료기간 생성을 위해 선언
         Date now = new Date();
 
         return Jwts.builder()
