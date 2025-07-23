@@ -5,11 +5,11 @@ import static com.playdata.adminservice.admin.entity.QTerms.terms;
 
 import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
+import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.custom.TermsRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,7 +29,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
      * @return
      */
     @Override
-    public Page<TermsListResDto> findByTermsList(TermsSearchDto searchDto, Pageable pageable) {
+    public Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable) {
         List<TermsListResDto> list = jpaQueryFactory.select(
                 Projections.constructor(TermsListResDto.class,
                         terms.termsId,
@@ -41,7 +41,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
                 ))
                 .from(terms)
                 .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
-                .where(builderCondition(searchDto), terms.active.eq(true))
+                .where(builderCondition(searchDto), terms.active.eq(true), terms.category.eq(termsCategory))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

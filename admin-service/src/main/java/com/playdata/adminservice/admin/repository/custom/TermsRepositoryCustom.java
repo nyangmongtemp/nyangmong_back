@@ -2,6 +2,7 @@ package com.playdata.adminservice.admin.repository.custom;
 
 import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
+import com.playdata.adminservice.admin.entity.TermsCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,5 +15,5 @@ public interface TermsRepositoryCustom {
      * @param pageable
      * @return
      */
-    Page<TermsListResDto> findByTermsList(TermsSearchDto searchDto, Pageable pageable);
+    Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable);
 }

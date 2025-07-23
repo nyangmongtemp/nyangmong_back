@@ -6,10 +6,14 @@ import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
+import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.service.TermsService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
+import com.playdata.adminservice.common.enumeration.ErrorCode;
+import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.validation.Valid;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,8 +49,9 @@ public class TermsController {
      * @return
      */
     @GetMapping("/list")
-    public ResponseEntity<CommonResDto> getList(@PathVariable String category, TermsSearchDto searchDto, Pageable pageable) {
-        Page<TermsListResDto> result = termsService.findTermsList(category, searchDto, pageable);
+    public ResponseEntity<CommonResDto> getTermsList(@PathVariable String category, TermsSearchDto searchDto, Pageable pageable) {
+        TermsCategory termsCategory = parseCategory(category);
+        Page<TermsListResDto> result = termsService.findTermsList(termsCategory, searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -60,7 +65,8 @@ public class TermsController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<CommonResDto> getTerms(@PathVariable String category, @PathVariable Long id) {
-        TermsDetailResDto result = termsService.termsDetail(category, id);
+        TermsCategory termsCategory = parseCategory(category);
+        TermsDetailResDto result = termsService.termsDetail(id, termsCategory);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -77,7 +83,8 @@ public class TermsController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @PathVariable String category,
             @RequestBody @Valid TermsInsertReqDto termsInsertReqDto) {
-        Terms result = termsService.insertTerms(userInfo, category, termsInsertReqDto);
+        TermsCategory termsCategory = parseCategory(category);
+        Terms result = termsService.insertTerms(userInfo, termsCategory, termsInsertReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "등록 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -94,7 +101,8 @@ public class TermsController {
             @PathVariable Long id,
             @PathVariable String category,
             @RequestBody @Valid TermsUpdateReqDto termsUpdateReqDto) {
-        Terms result = termsService.updateTerms(id, category, termsUpdateReqDto);
+        TermsCategory termsCategory = parseCategory(category);
+        Terms result = termsService.updateTerms(id, termsCategory, termsUpdateReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "수정 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -107,9 +115,39 @@ public class TermsController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<CommonResDto> deleteTerms(@PathVariable Long id, @PathVariable String category) {
-        Terms result = termsService.deleteTerms(id, category);
+        TermsCategory termsCategory = parseCategory(category);
+        Terms result = termsService.deleteTerms(id, termsCategory);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "삭제 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     * 약관 마지막 게시글 조회
+     *
+     * @param category
+     * @return
+     */
+    @GetMapping("/lastPost")
+    public ResponseEntity<CommonResDto> getLastPostTerms(@PathVariable String category) {
+        TermsCategory termsCategory = parseCategory(category);
+        if (termsCategory != TermsCategory.TERMS) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+        Optional<TermsDetailResDto> result = termsService.getLastPostTerms(termsCategory);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "약관 마지막게시글 조회", result.orElse(null));
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    /**
+     * 주소로 들어온 값 Eunm 비교
+     * @param category
+     * @return
+     */
+    private TermsCategory parseCategory(String category) {
+        try {
+            return TermsCategory.valueOf(category.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
+    }
 }
