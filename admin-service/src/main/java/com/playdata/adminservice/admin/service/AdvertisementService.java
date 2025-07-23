@@ -37,6 +37,7 @@ public class AdvertisementService {
     private final AdvertisementRepository adRepository;
 
     private final AdvertisementSettingRepository adSettingRepository;
+
     /**
      * 광고 등록
      *
@@ -105,8 +106,8 @@ public class AdvertisementService {
      * @param pageable  페이징 정보
      * @return 페이징된 광고 목록
      */
-    public Page<AdResDto> searchAds(AdSearchDto searchDto, Pageable pageable) {
-        return adRepository.searchAds(searchDto, pageable)
+    public Page<AdResDto> getAdsList(AdSearchDto searchDto, Pageable pageable) {
+        return adRepository.getAdsList(searchDto, pageable)
                 .map(AdResDto::from);
     }
 
