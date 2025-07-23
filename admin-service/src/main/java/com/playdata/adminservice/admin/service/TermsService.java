@@ -2,8 +2,8 @@ package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
-import com.playdata.adminservice.admin.entity.Role;
 import com.playdata.adminservice.admin.entity.Terms;
+import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.TermsRepository;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
@@ -29,9 +29,10 @@ public class TermsService {
      * @param termsInsertReqDto
      * @return
      */
-    public Terms insertTerms(TokenUserInfo userInfo, @Valid TermsInsertReqDto termsInsertReqDto) {
+    public Terms insertTerms(TokenUserInfo userInfo, @PathVariable String category, @Valid TermsInsertReqDto termsInsertReqDto) {
+        TermsCategory termsCategory = parseCategory(category);
         Long adminId = userInfo.getAdminId();
-        return termsRepository.save(termsInsertReqDto.toEntity(adminId));
+        return termsRepository.save(termsInsertReqDto.toEntity(adminId, termsCategory));
     }
 
     /**
@@ -42,7 +43,8 @@ public class TermsService {
      * @return
      */
     @Transactional
-    public Terms updateTerms(@PathVariable Long id, @Valid TermsUpdateReqDto termsUpdateReqDto) {
+    public Terms updateTerms(@PathVariable Long id, @PathVariable String category, @Valid TermsUpdateReqDto termsUpdateReqDto) {
+        parseCategory(category);
         Terms terms = termsRepository.findById(id).orElseThrow(
                 () -> new CommonException(ErrorCode.DATA_NOT_FOUND)
         );
@@ -57,11 +59,25 @@ public class TermsService {
      * @return
      */
     @Transactional
-    public Terms deleteTerms(Long id) {
+    public Terms deleteTerms(Long id, @PathVariable String category) {
+        parseCategory(category);
         Terms terms = termsRepository.findById(id).orElseThrow(
                 ()  -> new CommonException(ErrorCode.DATA_NOT_FOUND)
         );
         terms.deleteTerms();
         return terms;
+    }
+
+    /**
+     * 주소로 들어온 값 Eunm 비교
+     * @param category
+     * @return
+     */
+    private TermsCategory parseCategory(String category) {
+        try {
+            return TermsCategory.valueOf(category.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
     }
 }

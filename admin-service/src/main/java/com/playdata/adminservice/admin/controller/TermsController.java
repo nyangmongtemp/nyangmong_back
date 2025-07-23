@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/terms/{category}")
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
@@ -38,11 +37,12 @@ public class TermsController {
      * @param termsInsertReqDto
      * @return
      */
-    @PostMapping("/terms")
+    @PostMapping()
     public ResponseEntity<CommonResDto> createTerms(
             @AuthenticationPrincipal TokenUserInfo userInfo,
+            @PathVariable String category,
             @RequestBody @Valid TermsInsertReqDto termsInsertReqDto) {
-        Terms result = termsService.insertTerms(userInfo, termsInsertReqDto);
+        Terms result = termsService.insertTerms(userInfo, category, termsInsertReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "등록 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -54,11 +54,12 @@ public class TermsController {
      * @param termsUpdateReqDto
      * @return
      */
-    @PutMapping("/terms/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<CommonResDto> updateTerms(
             @PathVariable Long id,
+            @PathVariable String category,
             @RequestBody @Valid TermsUpdateReqDto termsUpdateReqDto) {
-        Terms result = termsService.updateTerms(id, termsUpdateReqDto);
+        Terms result = termsService.updateTerms(id, category, termsUpdateReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "수정 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -69,9 +70,9 @@ public class TermsController {
      * @param id
      * @return
      */
-    @DeleteMapping("/terms/{id}")
-    public ResponseEntity<CommonResDto> deleteTerms(@PathVariable Long id) {
-        Terms result = termsService.deleteTerms(id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<CommonResDto> deleteTerms(@PathVariable Long id, @PathVariable String category) {
+        Terms result = termsService.deleteTerms(id, category);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "삭제 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
