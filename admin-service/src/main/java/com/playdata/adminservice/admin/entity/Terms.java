@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,6 +43,9 @@ public class Terms extends BaseTimeEntity {
     private TermsCategory category; // 카테고리
 
     private Boolean active; // 활성화여부
+
+    @Transient
+    private String adminName; // 관리자 이름
 
     @PrePersist
     public void prePersist() {

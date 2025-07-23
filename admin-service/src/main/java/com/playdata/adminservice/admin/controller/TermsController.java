@@ -1,8 +1,10 @@
 package com.playdata.adminservice.admin.controller;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
+import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.service.TermsService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
@@ -10,6 +12,8 @@ import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,13 +28,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/admin/terms/{category}")
+@RequestMapping("/admin/{category}")
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
 public class TermsController {
 
     private final TermsService termsService;
+
+    /**
+     * 약관/개인정보처리방침/QNA 목록조회(검색,페이징)
+     *
+     * @param category
+     * @param searchDto
+     * @param pageable
+     * @return
+     */
+    @GetMapping("/list")
+    public ResponseEntity<CommonResDto> getList(@PathVariable String category, TermsSearchDto searchDto, Pageable pageable) {
+        Page<TermsListResDto> result = termsService.findTermsList(category, searchDto, pageable);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
     /**
      * 약관/개인정보처리방침/QNA 상세조회

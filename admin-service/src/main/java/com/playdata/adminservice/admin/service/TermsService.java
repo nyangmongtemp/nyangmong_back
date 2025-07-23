@@ -1,8 +1,10 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
+import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.TermsRepository;
@@ -12,6 +14,8 @@ import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +26,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class TermsService {
 
     private final TermsRepository termsRepository;
+
+    /**
+     * 약관/개인정보처리방침/QNA 목록조회(검색, 페이징)
+     *
+     * @param category
+     * @param searchDto
+     * @param pageable
+     * @return
+     */
+    public Page<TermsListResDto> findTermsList(String category, TermsSearchDto searchDto, Pageable pageable) {
+        parseCategory(category);
+        return termsRepository.findByTermsList(searchDto, pageable);
+    }
 
     /**
      * 약관/개인정보처리방침/QNA 상세조회
