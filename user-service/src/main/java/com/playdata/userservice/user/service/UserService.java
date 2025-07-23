@@ -24,9 +24,11 @@ import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.dto.res.UserLoginResDto;
 import com.playdata.userservice.user.dto.res.UserMyPageResDto;
 import com.playdata.userservice.user.entity.Chat;
+import com.playdata.userservice.user.entity.Inform;
 import com.playdata.userservice.user.entity.Message;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.repository.ChatRepository;
+import com.playdata.userservice.user.repository.InformRepository;
 import com.playdata.userservice.user.repository.MessageRepository;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
@@ -72,6 +74,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
+    private final InformRepository informRepository;
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
@@ -457,6 +460,7 @@ public class UserService {
      * @return
      */
     // 회원 탈퇴를 담당하는 로직
+    @Transactional
     public CommonResDto resignUser(Long userId) {
 
         Optional<User> targetUser = userRepository.findById(userId);
@@ -487,8 +491,13 @@ public class UserService {
         // 사용자의 활성화된 채팅방이 있을때만, 비활성화 처리
         myActiveChat.ifPresent(chats -> chats.stream().forEach(Chat::deleteChat));
 
+        informRepository.getMyActiveInform(userId).ifPresent(informs -> {
+            informs.forEach(Inform::deleteInform);
+        });
+
         // 회원의 비활성화 처리 DB로 저장
         userRepository.save(user);
+
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
     }
 
