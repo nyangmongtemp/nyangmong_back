@@ -2,6 +2,7 @@ package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
+import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.TermsRepository;
@@ -23,12 +24,25 @@ public class TermsService {
     private final TermsRepository termsRepository;
 
     /**
+     * 약관/개인정보처리방침/QNA 상세조회
+     *
+     * @param category
+     * @param id
+     * @return
+     */
+    public TermsDetailResDto termsDetail(String category, Long id) {
+        parseCategory(category);
+        return new TermsDetailResDto(findTermsOrThrow(id));
+    }
+
+    /**
      * 약관/개인정보처리방침/QNA 등록
      *
      * @param userInfo
      * @param termsInsertReqDto
      * @return
      */
+    @Transactional
     public Terms insertTerms(TokenUserInfo userInfo, @PathVariable String category, @Valid TermsInsertReqDto termsInsertReqDto) {
         TermsCategory termsCategory = parseCategory(category);
         Long adminId = userInfo.getAdminId();
@@ -45,9 +59,7 @@ public class TermsService {
     @Transactional
     public Terms updateTerms(@PathVariable Long id, @PathVariable String category, @Valid TermsUpdateReqDto termsUpdateReqDto) {
         parseCategory(category);
-        Terms terms = termsRepository.findById(id).orElseThrow(
-                () -> new CommonException(ErrorCode.DATA_NOT_FOUND)
-        );
+        Terms terms = findTermsOrThrow(id);
         terms.updateTerms(termsUpdateReqDto);
         return terms;
     }
@@ -61,11 +73,20 @@ public class TermsService {
     @Transactional
     public Terms deleteTerms(Long id, @PathVariable String category) {
         parseCategory(category);
-        Terms terms = termsRepository.findById(id).orElseThrow(
-                ()  -> new CommonException(ErrorCode.DATA_NOT_FOUND)
-        );
+        Terms terms = findTermsOrThrow(id);
         terms.deleteTerms();
         return terms;
+    }
+
+    /**
+     * 게시물이 실제로 존재하는지 확인
+     *
+     * @param id
+     * @return
+     */
+    private Terms findTermsOrThrow(Long id) {
+        return termsRepository.findByTermsIdAndActiveIsTrue(id)
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
     }
 
     /**
