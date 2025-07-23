@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
+import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,5 +39,10 @@ public class Terms extends BaseTimeEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TermsCategory category;
+
+    public void updateTerms(TermsUpdateReqDto reqDto) {
+        this.title = reqDto.getTitle();
+        this.content = reqDto.getContent();
+    }
 
 }
