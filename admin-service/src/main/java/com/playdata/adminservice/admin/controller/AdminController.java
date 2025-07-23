@@ -170,6 +170,13 @@ public class AdminController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param userInfo
+     * @param modifyReqDto
+     * @return
+     */
+    // 비밀번호, 이메일 외 정보 수정
     @PatchMapping("/modify")
     public ResponseEntity<?> modify(@AuthenticationPrincipal TokenUserInfo userInfo,
                                     @RequestBody AdminModifyReqDto modifyReqDto) {

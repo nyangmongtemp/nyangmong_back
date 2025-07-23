@@ -352,7 +352,7 @@ public class AdminService {
      * @param modifyReqDto
      * @return
      */
-    // 비밀번호, 이메일 외의 정보 수정\
+    // 비밀번호, 이메일 외의 정보 수정
     public CommonResDto myPageModify(TokenUserInfo userInfo, AdminModifyReqDto modifyReqDto) {
 
         Optional<Admin> findAdmin = adminRepository.findById(userInfo.getAdminId());
@@ -402,11 +402,21 @@ public class AdminService {
     // 총 관리자가 타 관리자 권한, 활성화 여부 수정
     public CommonResDto roleModify(AdminRoleModifyReqDto adminRoleModifyReqDto) {
 
-        Optional<Admin> findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId());
+        Admin findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId())
+                .orElseThrow(() -> new CommonException(ErrorCode.UNKNOWN_HOST, "변경할 관리자를 찾을 수 없습니다."));
+
+        // 권한 변경
+        findAdmin.changeRole(adminRoleModifyReqDto.getRole());
+
+        // 활성화 상태 변경
+        findAdmin.changeActive(adminRoleModifyReqDto.getActive());
+
+        adminRepository.save(findAdmin);
 
 
-        return null;
 
+
+        return new CommonResDto(HttpStatus.OK, "권한/활성화 상태가 수정되었습니다.", true);
     }
 
     /**
