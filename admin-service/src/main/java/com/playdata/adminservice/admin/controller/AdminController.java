@@ -22,10 +22,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.security.authorization.AuthorityReactiveAuthorizationManager.hasRole;
 
 @RestController
 @RequestMapping("/admin")
@@ -167,6 +170,15 @@ public class AdminController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    @PatchMapping("/modify")
+    public ResponseEntity<?> modify(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                    @RequestBody AdminModifyReqDto modifyReqDto) {
+
+        CommonResDto resDto = adminService.myPageModify(userInfo, modifyReqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
     /**
      *
      * @param adminSearchDto
@@ -175,11 +187,11 @@ public class AdminController {
      */
     // 관리자 목록 조회
     @GetMapping("/list")
+    @PreAuthorize("hasRole('BOSS')")
     public ResponseEntity<Page<AdminListResDto>> adminList(AdminSearchDto adminSearchDto,
-                                                           TokenUserInfo userInfo,
                                                            Pageable pageable) {
 
-        Page<AdminListResDto> resDto = adminService.adminList(adminSearchDto, userInfo, pageable);
+        Page<AdminListResDto> resDto = adminService.adminList(adminSearchDto, pageable);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -191,6 +203,7 @@ public class AdminController {
      */
     // 관리자 권한, 활성화 상태 변경
     @PatchMapping("/role-modify")
+    @PreAuthorize("hasRole('BOSS')")
     public ResponseEntity<?> roleModify(@RequestBody AdminRoleModifyReqDto adminRoleModifyReqDto){
         CommonResDto resDto = adminService.roleModify(adminRoleModifyReqDto);
 

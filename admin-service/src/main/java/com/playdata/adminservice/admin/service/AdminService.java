@@ -348,21 +348,43 @@ public class AdminService {
 
     /**
      *
+     * @param userInfo
+     * @param modifyReqDto
+     * @return
+     */
+    // 비밀번호, 이메일 외의 정보 수정\
+    public CommonResDto myPageModify(TokenUserInfo userInfo, AdminModifyReqDto modifyReqDto) {
+
+        Optional<Admin> findAdmin = adminRepository.findById(userInfo.getAdminId());
+
+        // 관리자가 존재하는지, 활성화 상태인지 검증
+        if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원정보가 없습니다.");
+        }
+
+        Admin admin = findAdmin.get();
+
+        // 마이페이지에 등록 되어 있는 데이터와 동일한 데이터로 변경 시도 시 예외
+        if (modifyReqDto.getName().equals(findAdmin.get().getName()) ||
+                modifyReqDto.getPhone().equals(findAdmin.get().getPhone())) {
+            throw new CommonException(ErrorCode.DUPLICATED_DATA);
+        }
+
+        admin.modifyMyPage(modifyReqDto);
+        adminRepository.save(admin);
+        return new CommonResDto(HttpStatus.OK, "수정에 성공하였습니다.", true);
+    }
+
+    /**
+     *
      * @param adminSearchDto
      * @param pageable
      * @return
      */
     // 관리자 목록 조회
-    public Page<AdminListResDto> adminList(AdminSearchDto adminSearchDto, TokenUserInfo userInfo, Pageable pageable) {
+    public Page<AdminListResDto> adminList(AdminSearchDto adminSearchDto, Pageable pageable) {
 
         Page<Admin> adminList = adminRepository.findList(adminSearchDto, pageable);
-
-        Role role =  userInfo.getRole();
-
-        // 총 관리자가 아니면 예외
-        if (role != null && role != Role.BOSS) {
-            throw new CommonException(ErrorCode.FORBIDDEN);
-        }
 
         // Entity → DTO 변환
         return adminList.map(admin ->
@@ -381,11 +403,6 @@ public class AdminService {
     public CommonResDto roleModify(AdminRoleModifyReqDto adminRoleModifyReqDto) {
 
         Optional<Admin> findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId());
-
-        // 총 관리자 여부 검증
-        if (findAdmin.get().getRole() != Role.BOSS) {
-            throw new CommonException(ErrorCode.NO_INSERT_PERMISSION, "총 관리자만 수정할 수 있습니다.");
-        }
 
 
         return null;

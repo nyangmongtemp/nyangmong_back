@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
+import com.playdata.adminservice.admin.dto.req.AdminModifyReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -57,6 +58,11 @@ public class Admin extends BaseTimeEntity {
     public Admin modifyPassword(PasswordEncoder encoder, String newPassword){
         this.password = encoder.encode(newPassword);
         return this;
+    }
+
+    public void modifyMyPage(AdminModifyReqDto modifyReqDto){
+        this.phone = modifyReqDto.getPhone();
+        this.name = modifyReqDto.getName();
     }
 
     public void changeIsFirst(){
