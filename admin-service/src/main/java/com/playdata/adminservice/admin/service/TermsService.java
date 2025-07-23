@@ -47,7 +47,7 @@ public class TermsService {
      * @throws CommonException 약관이 존재하지 않으면 DATA_NOT_FOUND 예외 발생
      */
     public TermsDetailResDto termsDetail(Long id, TermsCategory termsCategory) {
-        return new TermsDetailResDto(findTermsOrThrow(id, termsCategory));
+        return termsRepository.findByTerms(id, termsCategory);
     }
 
     /**

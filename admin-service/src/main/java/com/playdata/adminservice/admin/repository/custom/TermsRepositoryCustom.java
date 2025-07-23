@@ -1,8 +1,10 @@
 package com.playdata.adminservice.admin.repository.custom;
 
 import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
+import com.playdata.adminservice.common.exception.CommonException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,4 +19,14 @@ public interface TermsRepositoryCustom {
      * @return 검색 및 페이징 조건에 맞는 약관 목록을 Page 형태로 반환
      */
     Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable);
+
+    /**
+     * 약관/개인정보처리방침/QNA 상세조회
+     *
+     * @param id 조회할 약관의 고유 ID
+     * @param termsCategory 해당 약관의 카테고리 (TERMS, POLICY, QNA 등)
+     * @return 조회된 약관 정보를 담은 TermsDetailResDto 반환
+     * @throws CommonException 약관이 존재하지 않으면 DATA_NOT_FOUND 예외 발생
+     */
+    TermsDetailResDto findByTerms(Long id, TermsCategory termsCategory);
 }

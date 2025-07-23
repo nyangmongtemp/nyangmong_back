@@ -4,9 +4,11 @@ import static com.playdata.adminservice.admin.entity.QAdmin.admin;
 import static com.playdata.adminservice.admin.entity.QTerms.terms;
 
 import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.custom.TermsRepositoryCustom;
+import com.playdata.adminservice.common.exception.CommonException;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -65,6 +67,30 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
 
         // PageImpl 객체로 페이징된 결과와 전체 개수 반환
         return new PageImpl<>(list, pageable, count == null ? 0L : count);
+    }
+
+    /**
+     * 약관/개인정보처리방침/QNA 상세조회
+     *
+     * @param id 조회할 약관의 고유 ID
+     * @param termsCategory 해당 약관의 카테고리 (TERMS, POLICY, QNA 등)
+     * @return 조회된 약관 정보를 담은 TermsDetailResDto 반환
+     * @throws CommonException 약관이 존재하지 않으면 DATA_NOT_FOUND 예외 발생
+     */
+    @Override
+    public TermsDetailResDto findByTerms(Long id, TermsCategory termsCategory) {
+        return jpaQueryFactory
+                .select(Projections.constructor(TermsDetailResDto.class,
+                        terms.title,
+                        terms.content,
+                        admin.name,
+                        terms.createAt,
+                        terms.updateAt
+                ))
+                .from(terms)
+                .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
+                .where(terms.termsId.eq(id), terms.category.eq(termsCategory), terms.active.isTrue())
+                .fetchOne();
     }
 
     /**
