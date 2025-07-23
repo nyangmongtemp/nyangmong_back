@@ -7,8 +7,6 @@ import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.UserRepository;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
