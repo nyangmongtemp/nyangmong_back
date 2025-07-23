@@ -388,7 +388,7 @@ public class UserController {
     public ResponseEntity<?> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "answered") String answered,
                                               @RequestParam(value = "page", defaultValue = "0") int page,
-                                              @RequestParam(value = "size", defaultValue = "10") int size,
+                                              @RequestParam(value = "size", defaultValue = "5") int size,
                                               @RequestParam(value = "sort", defaultValue = "desc") String sort){
         Sort.Direction direction = sort.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, "createAt"));

@@ -89,6 +89,7 @@ public class Inform extends BaseTimeEntity {
                 .adminId(adminId)
                 .answered(answered)
                 .nickname(nickname)
+                .updateAt(this.getUpdateAt())
                 .build();
     }
 

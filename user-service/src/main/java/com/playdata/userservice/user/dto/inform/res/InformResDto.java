@@ -4,6 +4,8 @@ import com.playdata.userservice.user.entity.Inform;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class InformResDto {
@@ -16,5 +18,6 @@ public class InformResDto {
     private String reply;
     private boolean answered;
     private String nickname;
+    private LocalDateTime updateAt;
 
 }
