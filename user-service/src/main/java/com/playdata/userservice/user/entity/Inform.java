@@ -3,6 +3,8 @@ package com.playdata.userservice.user.entity;
 import com.playdata.userservice.common.entity.BaseTimeEntity;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
+import com.playdata.userservice.user.dto.inform.res.InformListResDto;
+import com.playdata.userservice.user.dto.inform.res.InformResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,13 +58,16 @@ public class Inform extends BaseTimeEntity {
 
     // 문의 수정용 메소드
     public void modifyInform(String title, String content) {
-        // 수정할 데이터가 오지 않은 경우
-        if(title != null && content != null) {
-            throw new CommonException(ErrorCode.BAD_REQUEST);
+        // 수정할 데이터가 없는 경우
+        if(title == null && content == null) {
+            // 에러 처리
+            throw new CommonException(ErrorCode.BAD_REQUEST, "문의를 수정할 데이터가 없습니다.");
         }
+        // 제목 수정
         if (title != null) {
             this.title = title;
         }
+        // 내용 수정
         if (content != null) {
             this.content = content;
         }
@@ -71,6 +76,33 @@ public class Inform extends BaseTimeEntity {
     // 문의 삭제용 메소드
     public void deleteInform() {
         this.active = false;
+    }
+
+    // 문의 상세 정보 dto 변환 메소드
+    public InformResDto toDetailDto(String nickname) {
+        return InformResDto.builder()
+                .informId(informId)
+                .userId(userId)
+                .title(title)
+                .content(content)
+                .reply(reply)
+                .adminId(adminId)
+                .answered(answered)
+                .nickname(nickname)
+                .build();
+    }
+
+    // 문의 목록 조회 dto 변환 메소드
+    public InformListResDto toListDto(String nickname) {
+        return InformListResDto.builder()
+                .informId(informId)
+                .userId(userId)
+                .title(title)
+                .answered(answered)
+                .nickname(nickname)
+                .createAt(this.getCreateAt())
+                .updateAt(this.getUpdateAt())
+                .build();
     }
 
 /////////////////  관리자용 메소드

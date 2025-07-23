@@ -10,6 +10,10 @@ import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.common.util.ImageValidation;
 import com.playdata.userservice.user.dto.chat.res.UserChatInfoResDto;
+import com.playdata.userservice.user.dto.inform.req.InformModiReqDto;
+import com.playdata.userservice.user.dto.inform.req.InformReqDto;
+import com.playdata.userservice.user.dto.inform.res.InformListResDto;
+import com.playdata.userservice.user.dto.inform.res.InformResDto;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
 import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
@@ -33,10 +37,13 @@ import com.playdata.userservice.user.repository.MessageRepository;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,10 +60,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -810,6 +814,78 @@ public class UserService {
         }
         return byEmail.get().getUserId();
     }
+    
+    // 고객 문의 생성 메소드
+    public CommonResDto createInform(Long userId, String nickname, @Valid InformReqDto reqDto) {
+        // 유저의 유효성 확인
+        findValidUser(userId);
+        // 고객 문의 생성
+        Inform inform = new Inform(userId, reqDto.getTitle(), reqDto.getContent());
+        // DB저장 및 화면단 전달용 고객 문의 세부 정보 dto 변환
+        InformResDto resDto = informRepository.save(inform).toDetailDto(nickname);
+
+        return new CommonResDto(HttpStatus.CREATED, "고객문의 생성됨", resDto);
+    }
+
+    // 고객 문의 수정 메소드
+    public CommonResDto modifyInform(Long userId, String nickname, @Valid InformModiReqDto reqDto) {
+        // 유저의 유효성 확인
+        findValidUser(userId);
+        // 문의글의 유효성 확인
+        Inform foundInform = findValidInform(reqDto.getInformId());
+        // 요청자가 수정 권한이 없는 경우
+        if(!Objects.equals(foundInform.getUserId(), userId)) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "수정 권한이 없음");
+        }
+        // 제목, 내용 수정
+        foundInform.modifyInform(reqDto.getTitle(), reqDto.getContent());
+        // DB에 저장 및 화면 전달용 dto로 변환
+        InformResDto resDto = informRepository.save(foundInform).toDetailDto(nickname);
+
+        return new CommonResDto(HttpStatus.OK, "문의 수정됨", resDto);
+    }
+
+    // 고객 문의 삭제 메소드
+    public CommonResDto deleteInform(Long userId, Long informId) {
+        // 유저의 유효성 확인
+        findValidUser(userId);
+        // 문의글의 유효성 확인
+        Inform foundInform = findValidInform(informId);
+        // 요청자가 삭제 권한이 없는 경우
+        if(foundInform.getUserId() != userId) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "삭제 권한이 없음");
+        }
+        // active = false 처리 및 DB 저장
+        foundInform.deleteInform();
+        informRepository.save(foundInform);
+
+        return new CommonResDto(HttpStatus.OK, "문의 삭제됨.", true);
+    }
+
+    // 고객 문의 목록 조회 메소드
+    public CommonResDto findMyInform(Long userId, String nickname, String answered ,Pageable pageable) {
+        // 사용자 유효성 확인
+        findValidUser(userId);
+
+        boolean flag = isAnswered(answered);
+
+        // 찾은 문의글들 (페이징 됨) -> 목록 조회용 dto로 변환
+        Page<InformListResDto> resDto = informRepository.findMyInform(userId, pageable, flag).map(inform -> {
+            return inform.toListDto(nickname);
+        });
+
+        return new CommonResDto(HttpStatus.OK, "문의글들 조회됨", resDto);
+    }
+
+    // 고객 문의 상세 조회 메소드
+    public CommonResDto findMyInformDetail(Long userId, String nickname, Long informId) {
+        // 사용자 유효성 확인
+        findValidUser(userId);
+        // 문의글의 유효성 확인
+        InformResDto resDto = findValidInform(informId).toDetailDto(nickname);
+
+        return new CommonResDto(HttpStatus.OK, "해당 문의 글 상세 정보 조회됨", resDto);
+    }
 
 ///////////  공통적으로 사용하는 공통 로직들입니다.
 
@@ -940,6 +1016,52 @@ public class UserService {
             throw new CommonException(ErrorCode.NOT_FOUND);
         }
         return byId.get().getNickname();
+    }
+
+    // 사용자의 id를 통해 해당 사용자의 유효성을 확인하는 메소드
+    private User findValidUser(Long userId) {
+        // 아이디를 통해 찾음
+        Optional<User> byId = userRepository.findById(userId);
+        // 유효성 확인
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "유효하지 않은 회원임");
+        }
+        return byId.get();
+    }
+
+    // 사용자의 이메일을 통해 해당 사용자의 유효성을 확인하는 메소드
+    private User findValidUserByEmail(String email) {
+        // 이메일을 통해 찾음
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        // 유효성 확인
+        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "유효하지 않은 회원임");
+        }
+        return byEmail.get();
+    }
+
+    // Inform의 유효성 확인
+    private Inform findValidInform(Long informId) {
+        // informId를 통해 찾음
+        Optional<Inform> byId = informRepository.findById(informId);
+        // 유효성 확인
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "유효하지 않은 문의임");
+        }
+        return byId.get();
+    }
+
+    // answered값을 통한 boolean 변환
+    private boolean isAnswered(String answered) {
+        if(answered.equals("Y") || answered.equals("y") || answered.equals("T") || answered.equals("t")) {
+            return true;
+        }
+        else if (answered.equals("N") || answered.equals("n") || answered.equals("F") || answered.equals("f")) {
+            return false;
+        }
+        else {
+            throw new CommonException(ErrorCode.BAD_REQUEST, "잘못된 요청값입니다.");
+        }
     }
 
 }
