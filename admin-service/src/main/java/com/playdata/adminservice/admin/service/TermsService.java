@@ -49,4 +49,19 @@ public class TermsService {
         terms.updateTerms(termsUpdateReqDto);
         return terms;
     }
+
+    /**
+     * 약관/개인정보처리방침/QNA 삭제
+     *
+     * @param id
+     * @return
+     */
+    @Transactional
+    public Terms deleteTerms(Long id) {
+        Terms terms = termsRepository.findById(id).orElseThrow(
+                ()  -> new CommonException(ErrorCode.DATA_NOT_FOUND)
+        );
+        terms.deleteTerms();
+        return terms;
+    }
 }

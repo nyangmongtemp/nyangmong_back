@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -62,5 +63,17 @@ public class TermsController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     * 약관/개인정보처리방침/QNA 삭제
+     *
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/terms/{id}")
+    public ResponseEntity<CommonResDto> deleteTerms(@PathVariable Long id) {
+        Terms result = termsService.deleteTerms(id);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "삭제 완료", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
 }

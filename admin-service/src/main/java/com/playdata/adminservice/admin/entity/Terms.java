@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,21 +29,39 @@ public class Terms extends BaseTimeEntity {
     private Long termsId; // Terms 고유 ID (기본키, 자동 증가)
 
     @Column(nullable = false)
-    private Long adminId;
+    private Long adminId; // 관리자id
 
     @Column(nullable = false)
-    private String title;
+    private String title; // 제목
 
     @Column(nullable = false)
-    private String content;
+    private String content; // 내용
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private TermsCategory category;
+    private TermsCategory category; // 카테고리
 
+    private Boolean active; // 활성화여부
+
+    @PrePersist
+    public void prePersist() {
+        active = true;
+    }
+
+    /**
+     * 수정
+     * @param reqDto
+     */
     public void updateTerms(TermsUpdateReqDto reqDto) {
         this.title = reqDto.getTitle();
         this.content = reqDto.getContent();
+    }
+
+    /**
+     * 삭제
+     */
+    public void deleteTerms() {
+        this.active = false;
     }
 
 }
