@@ -63,6 +63,14 @@ public class Admin extends BaseTimeEntity {
         this.isFirst = false;
     }
 
+    public void changeActive(boolean active){
+        this.active = active;
+    }
+
+    public void changeRole(Role newRole) {
+        this.role = newRole;
+    }
+
 
 
 
