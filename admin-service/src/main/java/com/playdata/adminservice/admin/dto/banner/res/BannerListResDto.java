@@ -11,5 +11,7 @@ public class BannerListResDto {
     private Integer order;
     private String title;
     private Long adminId;
+    private boolean basic;
+    private String image;
 
 }

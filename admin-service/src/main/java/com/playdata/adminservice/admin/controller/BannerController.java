@@ -118,11 +118,15 @@ public class BannerController {
 
     // 노출할 배너 개수 수정 -> 노출 배너는 3개 이상 -> 기본 배너 + 추가 가능하게
     @PatchMapping("/count/{count}")
-    public ResponseEntity<?> getLimit(@PathVariable(name = "count") @Min(3) Integer count) {
+    public ResponseEntity<?> updateLimit(@PathVariable(name = "count") @Min(3) Integer count) {
         CommonResDto resDto = bannerService.updateLimit(count);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<?> getLimit() {
+        return new ResponseEntity<>(bannerService.getLimit(), HttpStatus.OK);
+    }
 
 }

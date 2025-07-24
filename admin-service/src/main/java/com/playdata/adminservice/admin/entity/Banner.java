@@ -111,6 +111,8 @@ public class Banner extends BaseTimeEntity {
                 .title(title)
                 .adminId(adminId)
                 .order(orderNum)
+                .basic(basic)
+                .image(thumbnailImage)
                 .build();
     }
 
