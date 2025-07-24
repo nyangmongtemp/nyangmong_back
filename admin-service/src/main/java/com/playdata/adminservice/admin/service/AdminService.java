@@ -1,12 +1,12 @@
 package com.playdata.adminservice.admin.service;
 
-import com.playdata.adminservice.admin.dto.req.AdminLoginReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminPasswordAuthReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminPasswordModifyReqDto;
-import com.playdata.adminservice.admin.dto.req.AdminSaveReqDto;
+import com.playdata.adminservice.admin.dto.AdminSearchDto;
+import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
+import com.playdata.adminservice.admin.dto.res.AdminListResDto;
 import com.playdata.adminservice.admin.dto.res.AdminLoginResDto;
 import com.playdata.adminservice.admin.entity.Admin;
+import com.playdata.adminservice.admin.entity.Role;
 import com.playdata.adminservice.admin.repository.AdminRepository;
 import com.playdata.adminservice.common.auth.JwtTokenProvider;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
@@ -18,6 +18,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,12 +58,18 @@ public class AdminService {
     private static final String VERIFICATION_BLOCK_KEY = "admin_email_verify:block:";
 
 
-    // 회원가입 (총 관리자 DB 넣기용)
+    /**
+     *
+     * @param adminSaveReqDto
+     * @return
+     */
+    // 총 관리자 회원가입
     public CommonResDto create(AdminSaveReqDto adminSaveReqDto) {
 
         String email = adminSaveReqDto.getEmail();
         Optional<Admin> findAdmin = adminRepository.findByEmail(email);
 
+        // 이메일 중복 검증 로직
         if (findAdmin.isPresent()) {
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
@@ -76,6 +84,11 @@ public class AdminService {
 
     }
 
+    /**
+     *
+     * @param adminSaveReqDto
+     * @return
+     */
     // 관리자 생성
     public CommonResDto plus(AdminSaveReqDto adminSaveReqDto) {
 
@@ -96,6 +109,11 @@ public class AdminService {
         return resDto;
     }
 
+    /**
+     *
+     * @param adminLoginReqDto
+     * @return
+     */
     // 로그인
     public CommonResDto login(AdminLoginReqDto adminLoginReqDto) {
 
@@ -172,7 +190,12 @@ public class AdminService {
 
     }
 
-    // 로그인 시 이메일 인증번호 검증 로직
+    /**
+     *
+     * @param authResDto
+     * @return
+     */
+    // 로그인 이메일 2차 인증 검증
     public CommonResDto loginVerifyCode(@Valid AdminEmailAuthResDto authResDto) {
 
         // 이메일 검증 로직 호출
@@ -194,20 +217,13 @@ public class AdminService {
                 new AdminLoginResDto(admin.getEmail(),admin.getName(), admin.getRole(), token, admin.getIsFirst()));
     }
 
-
-
-//    // 총 관리자가 타 관리자 권한, 활성화 여부 수정
-//    public CommonResDto roleModify(AdminRoleModifyReqDto adminRoleModifyReqDto) {
-//
-//        Optional<Admin> findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId());
-//
-//        // 총 관리자 여부 검증
-//        if (findAdmin.get().getRole() != Role.BOSS) {
-//            throw new CommonException(ErrorCode.NO_INSERT_PERMISSION, "총 관리자만 수정할 수 있습니다.");
-//        }
-//    }
-
-    // 관리자 이메일 변경 요청
+    /**
+     *
+     * @param tokenUserInfo
+     * @param newEmail
+     * @return
+     */
+    // 이메일 변경 요청
     public CommonResDto modifyEmail(TokenUserInfo tokenUserInfo, String newEmail) {
 
         Optional<Admin> findAdmin = adminRepository.findByEmail(newEmail);
@@ -223,7 +239,13 @@ public class AdminService {
         return new CommonResDto(HttpStatus.OK, "인증코드가 새로운 이메일로 발송되었습니다.", authCode);
     }
 
-    // 관리자 이메일 변경 요청 검증
+    /**
+     *
+     * @param authResDto
+     * @param userInfo
+     * @return
+     */
+    // 이메일 변경 요청 검증
     public CommonResDto verifyAdminNewEmail(@Valid AdminEmailAuthResDto authResDto, TokenUserInfo userInfo) {
 
         // 이메일 검증 로직 호출
@@ -253,7 +275,12 @@ public class AdminService {
         return resDto;
     }
 
-    // 관리자 비밀번호 변경 요청
+    /**
+     *
+     * @param email
+     * @return
+     */
+    // 비밀번호 변경 요청
     public CommonResDto modifyPasswordReq(String email) {
 
         Optional<Admin> findAdmin = adminRepository.findByEmail(email);
@@ -269,7 +296,13 @@ public class AdminService {
         return new CommonResDto(HttpStatus.OK, "인증 코드가 이메일로 전송되었습니다.", authCode);
     }
 
-    // 관리자 비밀번호 변경 요청 검증
+    /**
+     *
+     * @param userInfo
+     * @param authReqDto
+     * @return
+     */
+    // 비밀번호 변경 요청 검증
     public CommonResDto verifyNewPassword(TokenUserInfo userInfo, AdminPasswordAuthReqDto authReqDto) {
 
         // 기존 이메일 값과, 인증번호 값 받기
@@ -286,7 +319,13 @@ public class AdminService {
         return resDto;
     }
 
-    // 관리자 비밀번호 변경
+    /**
+     *
+     * @param userInfo
+     * @param modifyReqDto
+     * @return
+     */
+    // 비밀번호 변경
     public CommonResDto modifyPassword(TokenUserInfo userInfo, AdminPasswordModifyReqDto modifyReqDto) {
 
         Optional<Admin> findAdmin = adminRepository.findByEmail(userInfo.getEmail());
@@ -305,6 +344,79 @@ public class AdminService {
         adminRepository.save(encoder);
 
         return new CommonResDto(HttpStatus.OK, "비밀번호를 변경 하였습니다. 다시 로그인 해주세요", true);
+    }
+
+    /**
+     *
+     * @param userInfo
+     * @param modifyReqDto
+     * @return
+     */
+    // 비밀번호, 이메일 외의 정보 수정
+    public CommonResDto myPageModify(TokenUserInfo userInfo, AdminModifyReqDto modifyReqDto) {
+
+        Optional<Admin> findAdmin = adminRepository.findById(userInfo.getAdminId());
+
+        // 관리자가 존재하는지, 활성화 상태인지 검증
+        if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
+            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원정보가 없습니다.");
+        }
+
+        Admin admin = findAdmin.get();
+
+        // 마이페이지에 등록 되어 있는 데이터와 동일한 데이터로 변경 시도 시 예외
+        if (modifyReqDto.getName().equals(findAdmin.get().getName()) ||
+                modifyReqDto.getPhone().equals(findAdmin.get().getPhone())) {
+            throw new CommonException(ErrorCode.DUPLICATED_DATA);
+        }
+
+        admin.modifyMyPage(modifyReqDto);
+        adminRepository.save(admin);
+        return new CommonResDto(HttpStatus.OK, "수정에 성공하였습니다.", true);
+    }
+
+    /**
+     *
+     * @param adminSearchDto
+     * @param pageable
+     * @return
+     */
+    // 관리자 목록 조회
+    public Page<AdminListResDto> adminList(AdminSearchDto adminSearchDto, Pageable pageable) {
+
+        Page<Admin> adminList = adminRepository.findList(adminSearchDto, pageable);
+
+        // Entity → DTO 변환
+        return adminList.map(admin ->
+                AdminListResDto.builder()
+                        .admin(admin)
+                        .build()
+        );
+    }
+
+    /**
+     *
+     * @param adminRoleModifyReqDto
+     * @return
+     */
+    // 총 관리자가 타 관리자 권한, 활성화 여부 수정
+    public CommonResDto roleModify(AdminRoleModifyReqDto adminRoleModifyReqDto) {
+
+        Admin findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId())
+                .orElseThrow(() -> new CommonException(ErrorCode.UNKNOWN_HOST, "변경할 관리자를 찾을 수 없습니다."));
+
+        // 권한 변경
+        findAdmin.changeRole(adminRoleModifyReqDto.getRole());
+
+        // 활성화 상태 변경
+        findAdmin.changeActive(adminRoleModifyReqDto.getActive());
+
+        adminRepository.save(findAdmin);
+
+
+
+
+        return new CommonResDto(HttpStatus.OK, "권한/활성화 상태가 수정되었습니다.", true);
     }
 
     /**

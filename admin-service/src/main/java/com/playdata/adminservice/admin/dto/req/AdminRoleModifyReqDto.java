@@ -16,6 +16,7 @@ public class AdminRoleModifyReqDto {
     @NotNull
     private Role role;
 
-    private Boolean Active;
+    @NotNull
+    private Boolean active;
 
 }
