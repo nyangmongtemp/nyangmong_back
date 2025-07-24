@@ -24,4 +24,6 @@ public class AdUpdateReqDto {
     private LocalDate endDate;
 
     private String linkUrl;
+
+    public Boolean Confirmed;
 }

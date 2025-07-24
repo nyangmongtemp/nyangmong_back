@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.user.dto.inform.req.InformModiReqDto;
+import com.playdata.userservice.user.dto.inform.req.InformReqDto;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
 import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
@@ -15,6 +17,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -345,7 +350,66 @@ public class UserController {
         return ResponseEntity.ok(foundUserId);
     }
 
+    /////////////////////// 고객 문의 관련 메소드입니다.
 
+    // 고객문의 생성
+    @PostMapping("/inform/create")
+    public ResponseEntity<?> createInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                        @RequestBody @Valid InformReqDto reqDto) {
+        CommonResDto resDto
+                = userService.createInform(userInfo.getUserId(), userInfo.getNickname(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
+    // 고객 문의 수정
+    @PatchMapping("/inform/modify")
+    public ResponseEntity<?> modifyInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                          @RequestBody @Valid InformModiReqDto reqDto) {
+        CommonResDto resDto
+                = userService.modifyInform(userInfo.getUserId(), userInfo.getNickname(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 고객 문의 삭제
+    @DeleteMapping("/inform/{id}")
+    public ResponseEntity<?> deleteInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                          @PathVariable(name = "id") Long informId) {
+        CommonResDto resDto = userService.deleteInform(userInfo.getUserId(), informId);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 고객 문의 목록 조회
+    // answered를 통해서 응답여부에 따른 정렬 조건을 정함
+    // 화면단에서는 y, n으로 주면 될듯.
+    @GetMapping("/inform/list/{answered}")
+    public ResponseEntity<?> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
+                                              @PathVariable(name = "answered") String answered,
+                                              @RequestParam(value = "page", defaultValue = "0") int page,
+                                              @RequestParam(value = "size", defaultValue = "5") int size,
+                                              @RequestParam(value = "sort", defaultValue = "desc") String sort){
+        Sort.Direction direction = sort.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, "createAt"));
+
+        CommonResDto resDto
+                = userService.findMyInform(userInfo.getUserId(), userInfo.getNickname(), answered ,pageable);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 고객 문의 상세 조회
+    @GetMapping("/inform/detail/{id}")
+    public ResponseEntity<?> getMyInformDetail(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                               @PathVariable(name = "id") Long informId) {
+        CommonResDto resDto
+                = userService.findMyInformDetail(userInfo.getUserId(), userInfo.getNickname(), informId);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+
+///////////////////////  refresh 관련 메소드 입니다.
     /**
      *
      * @param userEmail
@@ -380,6 +444,8 @@ public class UserController {
 
         return new ResponseEntity<>(profileImage, HttpStatus.OK);
     }
+
+///////////////////  검증용 임시 메소드들입니다.
 
     /**
      *

@@ -121,7 +121,7 @@ public class AdminService {
         Optional<Admin> findAdmin = adminRepository.findByEmail(adminLoginReqDto.getEmail());
 
         if (!findAdmin.isPresent()) { // email 정보가 없다면 회원가입 x
-            throw new EntityNotFoundException("회원가입이 되지 않은 이메일입니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
         } else  {
             // 위 findAdmin 에서 조회를 하고 꺼내서 아래 인코딩된 비밀번호를 찾아야함
             Admin foundAdmin = findAdmin.get();

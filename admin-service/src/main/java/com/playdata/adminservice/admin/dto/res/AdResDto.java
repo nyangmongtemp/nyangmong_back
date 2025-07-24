@@ -16,7 +16,7 @@ public class AdResDto {
     private String title;
     private String description;
     private Boolean active;
-    private Integer orderNum;
+    private Boolean confirmed;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime createdAt;
@@ -30,7 +30,7 @@ public class AdResDto {
                 ad.getTitle(),
                 ad.getDescription(),
                 ad.getActive(),
-                ad.getOrderNum(),
+                ad.getConfirmed(),
                 ad.getStartDate(),
                 ad.getEndDate(),
                 ad.getCreateAt(),

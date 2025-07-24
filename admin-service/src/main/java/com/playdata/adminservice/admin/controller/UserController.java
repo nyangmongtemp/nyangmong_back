@@ -3,7 +3,6 @@ package com.playdata.adminservice.admin.controller;
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
-import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.service.UserService;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import lombok.RequiredArgsConstructor;
