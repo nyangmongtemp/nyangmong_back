@@ -3,7 +3,7 @@ package com.playdata.adminservice.admin.repository.custom.Impl;
 import static com.playdata.adminservice.admin.entity.QAdmin.admin;
 import static com.playdata.adminservice.admin.entity.QTerms.terms;
 
-import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
@@ -32,7 +32,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
      * @return 조건에 맞는 약관 목록 Page 객체로 반환
      */
     @Override
-    public Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable) {
+    public Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, SearchDto searchDto, Pageable pageable) {
         // 검색 조건 및 페이징에 따라 약관 목록 조회 (작성자 이름과 조인하여 출력)
         List<TermsListResDto> list = jpaQueryFactory.select(
                         Projections.constructor(TermsListResDto.class,
@@ -58,10 +58,11 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
         Long count = jpaQueryFactory
                 .select(terms.count())
                 .from(terms)
-                .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
+                .leftJoin(admin).on(terms.adminId.eq(admin.adminId)) // 작성자와 조인
                 .where(
-                        builderCondition(searchDto),  // 동일한 검색 조건
-                        terms.active.eq(true)         // 활성화 여부 필터링
+                        builderCondition(searchDto),        // 동일한 검색 조건
+                        terms.active.eq(true),        // 활성화 여부 필터링
+                        terms.category.eq(termsCategory)    // 지정된 카테고리만 조회
                 )
                 .fetchOne();
 
@@ -99,7 +100,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
      * @param searchDto 검색 DTO
      * @return BooleanBuilder 조건
      */
-    private BooleanBuilder builderCondition(TermsSearchDto searchDto) {
+    private BooleanBuilder builderCondition(SearchDto searchDto) {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (searchDto.getSearchWord() != null && !searchDto.getSearchWord().isBlank()) {

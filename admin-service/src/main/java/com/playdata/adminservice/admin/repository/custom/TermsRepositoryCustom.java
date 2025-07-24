@@ -1,6 +1,6 @@
 package com.playdata.adminservice.admin.repository.custom;
 
-import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
@@ -18,7 +18,7 @@ public interface TermsRepositoryCustom {
      * @param pageable 페이징 및 정렬 정보 (페이지 번호, 크기, 정렬 기준 등)
      * @return 검색 및 페이징 조건에 맞는 약관 목록을 Page 형태로 반환
      */
-    Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable);
+    Page<TermsListResDto> findByTermsList(TermsCategory termsCategory, SearchDto searchDto, Pageable pageable);
 
     /**
      * 약관/개인정보처리방침/QNA 상세조회

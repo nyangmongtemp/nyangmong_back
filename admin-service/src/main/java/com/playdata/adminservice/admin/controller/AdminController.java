@@ -193,8 +193,7 @@ public class AdminController {
     // 관리자 목록 조회
     @GetMapping("/list")
     @PreAuthorize("hasRole('BOSS')")
-    public ResponseEntity<Page<AdminListResDto>> adminList(AdminSearchDto adminSearchDto,
-                                                           Pageable pageable) {
+    public ResponseEntity<Page<AdminListResDto>> adminList(AdminSearchDto adminSearchDto, Pageable pageable) {
 
         Page<AdminListResDto> resDto = adminService.adminList(adminSearchDto, pageable);
 
