@@ -1,11 +1,15 @@
 package com.playdata.adminservice.admin.controller;
 
+import com.playdata.adminservice.admin.dto.req.InformReplyReqDto;
 import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
+import com.playdata.adminservice.admin.entity.Inform;
 import com.playdata.adminservice.admin.service.InformService;
+import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,8 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,5 +61,15 @@ public class InformController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CommonResDto> replyInform(
+            @PathVariable Long id,
+            @RequestBody @Valid InformReplyReqDto informReplyReqDto,
+            @AuthenticationPrincipal TokenUserInfo adminInfo
+    ) {
+        Inform result = informService.replyInform(id, informReplyReqDto, adminInfo);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "답변 등록", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
 }

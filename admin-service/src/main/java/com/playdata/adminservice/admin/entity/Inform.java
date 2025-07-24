@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
+import com.playdata.adminservice.admin.dto.req.InformReplyReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -54,8 +55,8 @@ public class Inform extends BaseTimeEntity {
     private String userEmail;
 
     // 답변
-    public void makeReply(String reply, Long adminId) {
-        this.reply = reply;
+    public void replyInform(InformReplyReqDto informReplyReqDto, Long adminId) {
+        this.reply = informReplyReqDto.getReply();
         this.adminId = adminId;
         this.answered = true;
     }
