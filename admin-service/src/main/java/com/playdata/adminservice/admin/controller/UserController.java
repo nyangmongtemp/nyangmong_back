@@ -4,7 +4,9 @@ import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
 import com.playdata.adminservice.admin.service.UserService;
+import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,13 +31,13 @@ public class UserController {
 
     /**
      * [관리자] - 사용자 목록 조회 (검색, 페이징)
-     * @param userSearchDto 검색조건
+     * @param searchDto 검색조건
      * @param pageable 페이지
      * @return
      */
     @GetMapping("/user/list")
-    public ResponseEntity<CommonResDto> userList(UserSearchDto userSearchDto, Pageable pageable) {
-        Page<UserListResDto> pageResult = userService.findUserList(userSearchDto, pageable);
+    public ResponseEntity<CommonResDto> userList(UserSearchDto searchDto, Pageable pageable) {
+        Page<UserListResDto> pageResult = userService.findUserList(searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", pageResult);
         return ResponseEntity.ok(resDto);
     }
@@ -45,8 +48,12 @@ public class UserController {
      * @return
      */
     @GetMapping("/user/detail/{id}")
-    public ResponseEntity<CommonResDto> userDetail(@PathVariable long id) {
-        UserDetailResDto result = userService.findUser(id);
+    public ResponseEntity<CommonResDto> userDetail(
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @PathVariable long id,
+            HttpServletRequest request
+    ) {
+        UserDetailResDto result = userService.findUser(adminInfo, id, request);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
         return ResponseEntity.ok(resDto);
     }
