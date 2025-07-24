@@ -22,6 +22,13 @@ public class AdminLogRepositoryImpl implements AdminLogRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    /**
+     * 관리자 로그 목록 조회 구현체
+     *
+     * @param searchDto - 검색 조건 DTO
+     * @param pageable - 페이징 정보
+     * @return 페이징된 관리자 로그 목록
+     */
     @Override
     public Page<AdminLogListResDto> findByAdminLogList(AdminLogSearchDto searchDto, Pageable pageable) {
 
@@ -56,6 +63,12 @@ public class AdminLogRepositoryImpl implements AdminLogRepositoryCustom {
         return new PageImpl<>(list, pageable, count == null ? 0L : count);
     }
 
+    /**
+     * 검색 조건을 빌드하는 헬퍼 메서드
+     *
+     * @param searchDto - 검색어가 포함된 DTO
+     * @return BooleanBuilder 형태의 동적 쿼리 조건
+     */
     private BooleanBuilder builderCondition(AdminLogSearchDto searchDto) {
         BooleanBuilder builder = new BooleanBuilder();
 

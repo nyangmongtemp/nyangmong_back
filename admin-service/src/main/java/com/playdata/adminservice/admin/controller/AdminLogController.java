@@ -25,8 +25,11 @@ public class AdminLogController {
     private final AdminLogService adminLogService;
 
     /**
-     * 사용자 상세를 열람한 관리자들 목록
-     * @return
+     * 사용자 상세를 열람한 관리자들 로그 목록 조회 API
+     *
+     * @param searchDto - 검색 조건 DTO (검색어 등)
+     * @param pageable - 페이징 및 정렬 정보
+     * @return 검색된 관리자 로그 페이지 결과를 포함한 CommonResDto 반환
      */
     @GetMapping("/list")
     public ResponseEntity<?> getAdminLogList(AdminLogSearchDto searchDto, Pageable pageable) {
