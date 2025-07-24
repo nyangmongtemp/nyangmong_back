@@ -11,7 +11,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TermsSearchDto {
+public class SearchDto {
 
     private String searchWord;
 

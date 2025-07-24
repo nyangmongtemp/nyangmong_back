@@ -1,7 +1,7 @@
 package com.playdata.adminservice.admin.controller;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
-import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
@@ -49,7 +49,7 @@ public class TermsController {
      * @return 페이징된 약관 목록을 담은 CommonResDto를 ResponseEntity로 반환
      */
     @GetMapping("/list")
-    public ResponseEntity<CommonResDto> getTermsList(@PathVariable String category, TermsSearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<CommonResDto> getTermsList(@PathVariable String category, SearchDto searchDto, Pageable pageable) {
         TermsCategory termsCategory = parseCategory(category);
         Page<TermsListResDto> result = termsService.findTermsList(termsCategory, searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);

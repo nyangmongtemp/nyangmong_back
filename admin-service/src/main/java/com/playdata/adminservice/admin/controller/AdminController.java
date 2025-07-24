@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -191,8 +193,7 @@ public class AdminController {
     // 관리자 목록 조회
     @GetMapping("/list")
     @PreAuthorize("hasRole('BOSS')")
-    public ResponseEntity<Page<AdminListResDto>> adminList(AdminSearchDto adminSearchDto,
-                                                           Pageable pageable) {
+    public ResponseEntity<Page<AdminListResDto>> adminList(AdminSearchDto adminSearchDto, Pageable pageable) {
 
         Page<AdminListResDto> resDto = adminService.adminList(adminSearchDto, pageable);
 

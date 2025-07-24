@@ -1,7 +1,7 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
-import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
@@ -34,7 +34,7 @@ public class TermsService {
      * @param pageable 페이징 정보 (페이지 번호, 사이즈, 정렬 등)
      * @return 조건에 맞는 약관 목록을 페이징 처리한 결과(Page)로 반환
      */
-    public Page<TermsListResDto> findTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable) {
+    public Page<TermsListResDto> findTermsList(TermsCategory termsCategory, SearchDto searchDto, Pageable pageable) {
         return termsRepository.findByTermsList(termsCategory, searchDto, pageable);
     }
 
