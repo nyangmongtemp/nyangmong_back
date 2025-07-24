@@ -1,6 +1,5 @@
 package com.playdata.adminservice.admin.entity;
 
-import com.playdata.adminservice.admin.dto.req.AdminLogReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,5 +33,17 @@ public class AdminLog extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String adminIp; // 접속한 관리자의 IP
+
+    @Transient
+    private String userName; // 사용자 이름
+
+    @Transient
+    private String userEmail; // 사용자 이메일
+
+    @Transient
+    private String userNickName; // 사용자 닉네임
+
+    @Transient
+    private String adminName; // 관리자 이름
 
 }
