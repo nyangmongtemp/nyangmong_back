@@ -4,6 +4,7 @@ import static com.playdata.adminservice.admin.entity.QUser.user;
 import static com.playdata.adminservice.admin.entity.QInform.inform;
 
 import com.playdata.adminservice.admin.dto.req.SearchDto;
+import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.repository.custom.InformRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
@@ -20,6 +21,9 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    /**
+     * 검색조건과 페이징 처리된 문의 리스트를 조회
+     */
     @Override
     public Page<InformListResDto> findByInformList(SearchDto searchDto, Pageable pageable) {
         // 검색 조건 및 페이징에 따라 약관 목록 조회 (작성자 이름과 조인하여 출력)
@@ -51,6 +55,26 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
         return new PageImpl<>(list, pageable, count == null ? 0L : count);
     }
 
+    /**
+     * 문의 상세 조회
+     */
+    @Override
+    public InformDetailResDto findByInform(Long id) {
+        return jpaQueryFactory
+                .select(Projections.constructor(InformDetailResDto.class,
+                        inform.title,       // 제목
+                        inform.content,     // 내용
+                        inform.reply,       // 답변
+                        inform.answered,    // 답변여부
+                        inform.createAt,    // 등록날짜
+                        user.userName,      // 사용자 이름
+                        user.email          // 사용자 이메일
+                ))
+                .from(inform)
+                .leftJoin(user).on(inform.userId.eq(user.userId))
+                .where(inform.informId.eq(id))
+                .fetchOne();
+    }
 
     /**
      * 검색어가 포함된 검색 조건을 생성하는 헬퍼 메서드
