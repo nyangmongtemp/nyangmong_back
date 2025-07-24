@@ -5,4 +5,5 @@ spring:
   application:
     name: admin-service
 
-
+imagePath:
+  url: C:/playdata2025/images

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.List;
 @RequestMapping("/admin")
 @Slf4j
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('BOSS', ' CONTENT')")
 public class AdvertisementController {
 
     private final AdvertisementService advertisementService;
@@ -33,10 +35,11 @@ public class AdvertisementController {
      * @return 등록 결과 응답 DTO
      */
     @PostMapping("/ads")
-    public ResponseEntity<?> createAd(@RequestBody @Valid AdRegisterReqDto dto) {
+    public ResponseEntity<CommonResDto> registerAd(@ModelAttribute AdRegisterReqDto dto) {
         CommonResDto resDto = advertisementService.registerAd(dto);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
+
 
     /**
      * 광고 수정 API
@@ -45,7 +48,7 @@ public class AdvertisementController {
      * @return 수정 결과 응답 DTO
      */
     @PutMapping("/ads/{id}")
-    public ResponseEntity<?> updateAd(@PathVariable Long id, @RequestBody @Valid AdUpdateReqDto dto) {
+    public ResponseEntity<?> updateAd(@PathVariable Long id, @ModelAttribute @Valid AdUpdateReqDto dto) {
         CommonResDto resDto = advertisementService.updateAd(id, dto);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

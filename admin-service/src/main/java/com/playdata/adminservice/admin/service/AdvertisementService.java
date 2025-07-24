@@ -6,21 +6,25 @@ import com.playdata.adminservice.admin.entity.Advertisement;
 import com.playdata.adminservice.admin.repository.AdvertisementRepository;
 import com.playdata.adminservice.admin.repository.AdvertisementSettingRepository;
 import com.playdata.adminservice.common.dto.CommonResDto;
+import com.playdata.adminservice.common.enumeration.ErrorCode;
+import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.playdata.adminservice.admin.entity.AdvertisementCount;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,32 +42,34 @@ public class AdvertisementService {
 
     private final AdvertisementSettingRepository adSettingRepository;
 
+    // application.yml에서 설정한 이미지 저장 경로를 주입받음
+    @Value("C:/playdata2025/images")
+    private String imageSaveUrl;
+
     /**
      * 광고 등록
      *
      * @param dto 광고 등록 요청 DTO
      * @return 등록된 광고 정보를 담은 응답 DTO
+     *
      */
     @Transactional
     public CommonResDto registerAd(AdRegisterReqDto dto) {
+        MultipartFile imageFile = dto.getThumbnailImage();
+        String savedFileName = saveImage(imageFile);
 
-
-        // 광고 엔티티 생성 및 저장
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .active(dto.getActive())
                 .confirmed(dto.getConfirmed())
-                .thumbnailImage(dto.getThumbnailImage())
+                .thumbnailImage(savedFileName) // 파일명 또는 접근 가능한 경로
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .linkUrl(dto.getLinkUrl())
                 .build();
 
-
         Advertisement saved = adRepository.save(ad);
-
-        //  결과 반환
         return new CommonResDto(HttpStatus.CREATED, "광고 등록 성공", saved);
     }
 
@@ -77,12 +83,56 @@ public class AdvertisementService {
     @Transactional
     public CommonResDto updateAd(Long id, @Valid AdUpdateReqDto dto) {
         Advertisement ad = adRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("광고가 존재하지 않습니다."));
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-        ad.update(dto.getTitle(), dto.getDescription(), dto.getActive(), dto.getConfirmed(),
-                dto.getThumbnailImage(), dto.getStartDate(), dto.getEndDate(), dto.getLinkUrl());
+        String updatedThumbnail = ad.getThumbnailImage(); // 기존 이미지 유지
+
+        MultipartFile newFile = dto.getThumbnailImage();
+        if (newFile != null && !newFile.isEmpty()) {
+            updatedThumbnail = saveImage(newFile); // 새 이미지가 있으면 교체
+        }
+
+        ad.update(
+                dto.getTitle(),
+                dto.getDescription(),
+                dto.getActive(),
+                dto.getConfirmed(),
+                updatedThumbnail,
+                dto.getStartDate(),
+                dto.getEndDate(),
+                dto.getLinkUrl()
+        );
 
         return new CommonResDto(HttpStatus.OK, "광고 수정 완료", ad);
+    }
+
+
+    private String saveImage(MultipartFile imageFile) {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new CommonException(ErrorCode.EMPTY_FILE);
+        }
+
+        String originalFilename = imageFile.getOriginalFilename();
+        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String uniqueFilename = System.currentTimeMillis() + "_" + UUID.randomUUID() + extension;
+
+        File saveDir = new File(imageSaveUrl);
+        if (!saveDir.exists()) {
+            boolean created = saveDir.mkdirs();
+            if (!created) {
+                throw new CommonException(ErrorCode.FILE_UPLOAD_FAIL, "이미지 저장 경로 생성 실패: " + imageSaveUrl);
+            }
+        }
+
+        File savePath = new File(saveDir, uniqueFilename);
+
+        try {
+            imageFile.transferTo(savePath);
+        } catch (IOException e) {
+            throw new CommonException(ErrorCode.FILE_UPLOAD_FAIL, "이미지 저장 실패: " + e.getMessage());
+        }
+
+        return uniqueFilename;
     }
 
 
@@ -95,7 +145,7 @@ public class AdvertisementService {
      */
     public CommonResDto getAd(Long id) {
         Advertisement ad = adRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("광고가 존재하지 않습니다."));
+         .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND)); //광고가 존재하지 않을경우 에러 메세지 출력
         return new CommonResDto(HttpStatus.OK, "광고 상세 조회 성공", ad);
     }
 
@@ -121,7 +171,6 @@ public class AdvertisementService {
         // 최근 설정된 광고 노출 개수를 조회 (없으면 새로 생성)
         AdvertisementCount setting = adSettingRepository.findTopByOrderByAdNumIdDesc()
                 .orElse(AdvertisementCount.builder().build());
-        log.info("광고 노출 개수 조회 결과: {}", setting);
         // 새로운 광고 노출 개수로 설정값 업데이트
         setting.setAdNum(dto.getAdNum()); // 필드명 일치 확인
         adSettingRepository.save(setting); // DB에 저장
