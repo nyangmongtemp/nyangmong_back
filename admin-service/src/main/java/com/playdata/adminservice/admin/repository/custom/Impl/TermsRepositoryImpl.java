@@ -58,10 +58,11 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
         Long count = jpaQueryFactory
                 .select(terms.count())
                 .from(terms)
-                .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
+                .leftJoin(admin).on(terms.adminId.eq(admin.adminId)) // 작성자와 조인
                 .where(
-                        builderCondition(searchDto),  // 동일한 검색 조건
-                        terms.active.eq(true)         // 활성화 여부 필터링
+                        builderCondition(searchDto),        // 동일한 검색 조건
+                        terms.active.eq(true),        // 활성화 여부 필터링
+                        terms.category.eq(termsCategory)    // 지정된 카테고리만 조회
                 )
                 .fetchOne();
 
