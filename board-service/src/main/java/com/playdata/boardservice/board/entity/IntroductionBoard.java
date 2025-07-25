@@ -3,6 +3,7 @@ package com.playdata.boardservice.board.entity;
 import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.res.IntroductionBoardResDto;
 import com.playdata.boardservice.common.entity.BaseTimeEntity;
+import com.playdata.boardservice.common.util.HtmlSanitizer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -55,8 +56,8 @@ public class IntroductionBoard extends BaseTimeEntity {
     }
 
     // 수정
-    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage) {
-        this.content = boardModiDto.getContent();
+    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlSanitizer) {
+        this.content = htmlSanitizer.sanitize(boardModiDto.getContent());
         this.thumbnailImage = newThumbnailImage;
         this.title = boardModiDto.getTitle();
     }

@@ -1,6 +1,7 @@
 package com.playdata.boardservice.board.dto.req;
 
 import com.playdata.boardservice.board.entity.IntroductionBoard;
+import com.playdata.boardservice.common.util.HtmlSanitizer;
 import lombok.*;
 
 @Getter
@@ -16,13 +17,13 @@ public class IntroductionBoardSaveReqDto {
 
     private String title;
 
-    public IntroductionBoard toEntity(Long userId, String nickname, String imageUrl) {
+    public IntroductionBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlSanitizer) {
         return IntroductionBoard.builder()
                 .thumbnailImage(imageUrl)
                 .userId(userId)
                 .nickname(nickname)
                 .viewCount(0)
-                .content(content)
+                .content(htmlSanitizer.sanitize(content))
                 .active(true)
                 .title(title)
                 .build();
