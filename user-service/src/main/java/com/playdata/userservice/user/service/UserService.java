@@ -546,10 +546,10 @@ public class UserService {
     // 비밀번호 분실 시 임시비밀번호 발급을 위한 인증코드 발급 로직
     public CommonResDto forgetPasswordReq(String email) {
 
-        Optional<User> byEmail = userRepository.findByEmail(email);
-        // 임시 비밀번호 발급을 요청한 사용자의 이메일이 유효하지 않은 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND);
+        User foundUser = findValidUserByEmail(email);
+
+        if(foundUser.getSocialProvider() != null) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
         }
 
         String authCode = sendEmailAuthCode(email, "FORGET");
