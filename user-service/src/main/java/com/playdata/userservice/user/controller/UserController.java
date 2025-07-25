@@ -9,6 +9,7 @@ import com.playdata.userservice.user.dto.inform.req.InformReqDto;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
 import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.report.req.ReportSaveReqDto;
 import com.playdata.userservice.user.dto.req.*;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
@@ -406,6 +407,16 @@ public class UserController {
         CommonResDto resDto
                 = userService.findMyInformDetail(userInfo.getUserId(), userInfo.getNickname(), informId);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    // 사용자 신고 생성
+    @PostMapping("/report")
+    public ResponseEntity<?> createReport(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                          @RequestBody @Valid ReportSaveReqDto reqDto) {
+        CommonResDto resDto
+                = userService.createReport(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
 

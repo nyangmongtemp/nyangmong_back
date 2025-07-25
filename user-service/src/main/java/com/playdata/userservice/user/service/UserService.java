@@ -20,6 +20,7 @@ import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
 import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
 import com.playdata.userservice.user.dto.noti.MessageNotiDto;
+import com.playdata.userservice.user.dto.report.req.ReportSaveReqDto;
 import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
 import com.playdata.userservice.user.dto.req.UserLoginReqDto;
 import com.playdata.userservice.user.dto.req.UserPasswordModiReqDto;
@@ -27,14 +28,8 @@ import com.playdata.userservice.user.dto.req.UserSaveReqDto;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.dto.res.UserLoginResDto;
 import com.playdata.userservice.user.dto.res.UserMyPageResDto;
-import com.playdata.userservice.user.entity.Chat;
-import com.playdata.userservice.user.entity.Inform;
-import com.playdata.userservice.user.entity.Message;
-import com.playdata.userservice.user.entity.User;
-import com.playdata.userservice.user.repository.ChatRepository;
-import com.playdata.userservice.user.repository.InformRepository;
-import com.playdata.userservice.user.repository.MessageRepository;
-import com.playdata.userservice.user.repository.UserRepository;
+import com.playdata.userservice.user.entity.*;
+import com.playdata.userservice.user.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -79,6 +74,7 @@ public class UserService {
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final InformRepository informRepository;
+    private final ReportRepository reportRepository;
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
@@ -175,7 +171,7 @@ public class UserService {
         }
         else {
             String pw = foundUser.get().getPassword();
-            
+
             // 탈퇴한 회원인 경우 로그인 실패 처리
             if(!foundUser.get().isActive()) {
                 throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
@@ -200,6 +196,16 @@ public class UserService {
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
                 User user = foundUser.get();
+
+                Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
+
+                // 정지 기한이 끝났다면
+                if(between.isNegative()) {
+                    user.updateReleaseAt(null);
+                }
+                else {
+                    throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
+                }
 
                 // redis에 해당 유저의 블락 정보 조회
                 if(redisTemplate.opsForValue()
@@ -328,12 +334,9 @@ public class UserService {
      */
     // 프사, 닉네임, 주소, 전화번호를 변경하는 로직
     public boolean modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto, MultipartFile profileImage) {
-
-        Optional<User> byId = userRepository.findById(userInfo.getUserId());
-        if(!byId.isPresent() || !byId.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
-        }
-        User foundUser = byId.get();
+        
+        // 회원의 유효성 확인
+        User foundUser = findValidUser(userInfo.getUserId());
         String newProfileImage = null;
         // 변경할 프로필 이미지가 왔다면, 새로 저장
         if(profileImage != null) {
@@ -915,6 +918,25 @@ public class UserService {
 
         return new CommonResDto(HttpStatus.OK, "해당 문의 글 상세 정보 조회됨", resDto);
     }
+    
+    // 사용자 신고 메소드
+    public CommonResDto createReport(Long userId, @Valid ReportSaveReqDto reqDto) {
+        
+        // 신고자, 피신고자 유저 유효성 확인
+        User reporter = findValidUser(userId);
+        User accused = findValidUser(reqDto.getUserId());
+        
+        // 신고 카테고리 입력값 유효성 확인
+        ReportCategory category = ReportCategory.fromString(reqDto.getCategory());
+        
+        // 새로운 신고 객체 생성
+        Report newReport 
+                = new Report(accused.getUserId(), reqDto.getContent(), reporter.getUserId(), category);
+
+        reportRepository.save(newReport);
+
+        return new CommonResDto(HttpStatus.CREATED, "신고 생성됨", true);
+    }
 
 ///////////  공통적으로 사용하는 공통 로직들입니다.
 
@@ -1092,5 +1114,5 @@ public class UserService {
             throw new CommonException(ErrorCode.BAD_REQUEST, "잘못된 요청값입니다.");
         }
     }
-
+    
 }

@@ -61,6 +61,9 @@ public class User extends BaseTimeEntity {
 
     private int pauseCount;
 
+    // 정지 풀리는 날짜
+    private LocalDateTime releaseAt;
+
     // 인증이 필요하지 않은 사용자 정보를 수정하는 메소드
     public void modifyCommonUserInfo(UserInfoModiReqDto modiDto, String newProfileImage){
         // 프로필 사진을 변경한 경우에만 업데이트
@@ -131,6 +134,10 @@ public class User extends BaseTimeEntity {
 
     public void updatePasswordFaultCount(int count) {
         this.passwordFaultCount = count;
+    }
+
+    public void updateReleaseAt(LocalDateTime releaseAt) {
+        this.releaseAt = releaseAt;
     }
 
 }
