@@ -1,9 +1,10 @@
 package com.playdata.adminservice.admin.repository.custom.Impl;
 
 import static com.playdata.adminservice.admin.entity.QUser.user;
+import static com.playdata.adminservice.admin.entity.QAdmin.admin;
 import static com.playdata.adminservice.admin.entity.QInform.inform;
 
-import com.playdata.adminservice.admin.dto.req.SearchDto;
+import com.playdata.adminservice.admin.dto.req.InformSearchDto;
 import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.repository.custom.InformRepositoryCustom;
@@ -25,7 +26,7 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
      * 검색조건과 페이징 처리된 문의 리스트를 조회
      */
     @Override
-    public Page<InformListResDto> findByInformList(SearchDto searchDto, Pageable pageable) {
+    public Page<InformListResDto> findByInformList(InformSearchDto searchDto, Pageable pageable) {
         // 검색 조건 및 페이징에 따라 약관 목록 조회 (작성자 이름과 조인하여 출력)
         List<InformListResDto> list = jpaQueryFactory.select(
                         Projections.constructor(InformListResDto.class,
@@ -68,10 +69,13 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
                         inform.answered,    // 답변여부
                         inform.createAt,    // 등록날짜
                         user.userName,      // 사용자 이름
-                        user.email          // 사용자 이메일
+                        user.email,         // 사용자 이메일
+                        inform.updateAt,    // 답변날짜
+                        admin.name          // 관지라 이름
                 ))
                 .from(inform)
                 .leftJoin(user).on(inform.userId.eq(user.userId))
+                .leftJoin(admin).on(inform.adminId.eq(admin.adminId))
                 .where(inform.informId.eq(id))
                 .fetchOne();
     }
@@ -82,7 +86,7 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
      * @param searchDto 검색 DTO
      * @return BooleanBuilder 조건
      */
-    private BooleanBuilder builderCondition(SearchDto searchDto) {
+    private BooleanBuilder builderCondition(InformSearchDto searchDto) {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (searchDto.getSearchWord() != null && !searchDto.getSearchWord().isBlank()) {
@@ -92,8 +96,13 @@ public class InformRepositoryImpl implements InformRepositoryCustom {
             // 제목 또는 작성자 이름에 검색어가 포함된 경우
             searchBuilder.or(user.email.containsIgnoreCase(keyword));
             searchBuilder.or(user.userName.containsIgnoreCase(keyword));
+            searchBuilder.or(inform.title.containsIgnoreCase(keyword));
 
             builder.and(searchBuilder);
+        }
+
+        if (searchDto.getAnswered() != null) {
+            builder.and(inform.answered.eq(searchDto.getAnswered()));
         }
 
         return builder;

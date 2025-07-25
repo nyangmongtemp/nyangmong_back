@@ -15,5 +15,7 @@ public class InformDetailResDto {
     private LocalDateTime createAt; // 등록날짜
     private String userName; // 사용자 이름
     private String userEmail; // 사용자 이메일
+    private LocalDateTime updateAt; // 답변 시간
+    private String adminName; // 답변자 이름
 
 }

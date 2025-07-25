@@ -54,6 +54,10 @@ public class Inform extends BaseTimeEntity {
     @Transient
     private String userEmail;
 
+    // 관리자 이름
+    @Transient
+    private String adminName;
+
     // 답변
     public void replyInform(InformReplyReqDto informReplyReqDto, Long adminId) {
         this.reply = informReplyReqDto.getReply();
