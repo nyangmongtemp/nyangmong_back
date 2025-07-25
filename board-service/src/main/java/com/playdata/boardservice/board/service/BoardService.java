@@ -15,6 +15,7 @@ import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
 import com.playdata.boardservice.common.enumeration.ErrorCode;
 import com.playdata.boardservice.common.exception.CommonException;
+import com.playdata.boardservice.common.util.HtmlSanitizer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,8 @@ public class BoardService {
 
     private final MainServiceClient mainServiceClient;
 
+    private final HtmlSanitizer htmlSanitizer;
+
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
@@ -77,7 +80,7 @@ public class BoardService {
         String savedPath = setThumbnailImage(thumbnailImage);
 
         // DTO → toEntity() 로 변환 -> DB
-        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlSanitizer);
         
         // DB에 저장
         informationBoardRepository.save(entity);
@@ -102,7 +105,7 @@ public class BoardService {
 
 
         // DTO → Entity 변환 후 저장
-        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath);
+        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlSanitizer);
         
         // DB에 저장
         introductionBoardRepository.save(entity);
@@ -140,7 +143,7 @@ public class BoardService {
             }
 
             // 본문 및 썸네일 수정
-            board.boardModify(modiDto, savedPath);
+            board.boardModify(modiDto, savedPath, htmlSanitizer);
 
             // 정보 게시판의 카테고리를 설정
         } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
@@ -155,11 +158,11 @@ public class BoardService {
             }
 
             // content 수정
-            board.boardModify(modiDto, savedPath);
+            board.boardModify(modiDto, savedPath, htmlSanitizer);
 
             if (savedPath != null) {
                 // 새 이미지가 있으면 교체
-                board.boardModify(modiDto, savedPath);
+                board.boardModify(modiDto, savedPath, htmlSanitizer);
                 // DB에 썸네일 이미지가 있는 게시글인데 수정 후 썸네일 이미지를 삭제했다.
             } else if (board.getThumbnailImage() != null && (thumbnailImage == null || thumbnailImage.isEmpty())) {
 
@@ -168,7 +171,7 @@ public class BoardService {
                 File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
                 if (oldFile.exists()) oldFile.delete();
                 // 변경사항 저장
-                board.boardModify(modiDto, savedPath);
+                board.boardModify(modiDto, savedPath, htmlSanitizer);
             }
         } else {
             // 그 외 잘못된 카테고리는 예외
