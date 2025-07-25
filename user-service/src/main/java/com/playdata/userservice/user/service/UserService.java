@@ -196,15 +196,21 @@ public class UserService {
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
                 User user = foundUser.get();
+                
+                // 만약 출소 날짜값이 있다면?
+                if(user.getReleaseAt() != null) {
+                    // 현재 시각과 비교
+                    Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
 
-                Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
-
-                // 정지 기한이 끝났다면
-                if(between.isNegative()) {
-                    user.updateReleaseAt(null);
-                }
-                else {
-                    throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
+                    // 정지 기한이 끝났다면
+                    if(between.isNegative()) {
+                        // null로 없애줌
+                        user.updateReleaseAt(null);
+                    }
+                    // 아직 정지중이라면?
+                    else {
+                        throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
+                    }
                 }
 
                 // redis에 해당 유저의 블락 정보 조회
