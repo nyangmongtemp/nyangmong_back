@@ -103,6 +103,9 @@ public class UserService {
 
     // 인증 코드 발송 금지 상태
     private static final String VERIFICATION_BLOCK_KEY = "email_verify:block:";
+
+    // 비밀번호 3회이상 틀리면 30분간 정지
+    private static final String LOGIN_BLOCK_KEY = "login:block:";
     
     // 이미지 저장 경로 --> 추후에 yml에 있는 주소를 s3 주소로 바꿀 것
     @Value("${imagePath.url}")
@@ -177,13 +180,39 @@ public class UserService {
             if(!foundUser.get().isActive()) {
                 throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
             }
+
             // 비밀번호가 일치 하지 않는 경우
             if(!passwordEncoder.matches(userLoginReqDto.getPassword(), pw)) {
+                User user = foundUser.get();
+                int passwordFaultCount = user.getPasswordFaultCount();
+                // 비밀번호 5회 이상 틀리면 블락 처리
+                if(passwordFaultCount >= 4) {
+                    String key = LOGIN_BLOCK_KEY + user.getUserId();
+                    redisTemplate.opsForValue().set(key, "blocked", 30, TimeUnit.MINUTES);
+                }
+                else {
+                    // 정보 갱신
+                    user.updatePasswordFaultCount(++passwordFaultCount);
+                    userRepository.save(user);
+                }
                 throw new CommonException(ErrorCode.INVALID_PASSWORD);
             }
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
                 User user = foundUser.get();
+
+                // redis에 해당 유저의 블락 정보 조회
+                if(redisTemplate.opsForValue()
+                        .get(LOGIN_BLOCK_KEY + foundUser.get().getUserId())
+                        != null) {
+                    // 로그인 실패 처리
+                    throw new CommonException(ErrorCode.ACCOUNT_LOCKED);
+                }
+                
+                // 정보 갱신
+                user.updatePasswordFaultCount(0);
+                userRepository.save(user);
+
                 // Access Token 발급
                 String token = jwtTokenProvider.createToken(user.getEmail(),
                         "USER", user.getNickname(), user.getUserId());

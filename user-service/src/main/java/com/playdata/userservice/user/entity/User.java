@@ -129,4 +129,8 @@ public class User extends BaseTimeEntity {
                 .build();
     }
 
+    public void updatePasswordFaultCount(int count) {
+        this.passwordFaultCount = count;
+    }
+
 }
