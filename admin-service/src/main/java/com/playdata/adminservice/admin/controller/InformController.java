@@ -60,6 +60,14 @@ public class InformController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     * 문의 답변
+     *
+     * @param id
+     * @param informReplyReqDto
+     * @param adminInfo
+     * @return
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<CommonResDto> replyInform(
             @PathVariable Long id,
