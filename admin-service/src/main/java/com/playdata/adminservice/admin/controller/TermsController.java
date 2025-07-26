@@ -74,7 +74,7 @@ public class TermsController {
     /**
      * 약관/개인정보처리방침/QNA 등록
      *
-     * @param userInfo 인증된 관리자 정보 (Spring Security AuthenticationPrincipal)
+     * @param adminInfo 인증된 관리자 정보 (Spring Security AuthenticationPrincipal)
      * @param category URL 경로 변수로 전달되는 카테고리명
      * @param termsInsertReqDto 등록할 약관 정보가 담긴 요청 DTO
      * @return 등록된 약관 엔티티를 담은 CommonResDto를 ResponseEntity로 반환

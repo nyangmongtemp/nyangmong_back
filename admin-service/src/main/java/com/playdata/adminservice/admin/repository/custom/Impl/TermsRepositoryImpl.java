@@ -51,6 +51,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
                         terms.active.eq(true),                // 활성화된 데이터만 조회
                         terms.category.eq(termsCategory)      // 지정된 카테고리만 조회
                 )
+                .orderBy(terms.createAt.desc())
                 .offset(pageable.getOffset())      // 시작 위치 (페이징)
                 .limit(pageable.getPageSize())     // 한 페이지에 조회할 수
                 .fetch();                          // 결과 조회
