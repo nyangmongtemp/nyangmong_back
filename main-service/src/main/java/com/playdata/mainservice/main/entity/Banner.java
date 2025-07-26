@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.main.dto.res.BannerListResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,15 +27,29 @@ public class Banner extends BaseTimeEntity {
     @Column(nullable = false)
     private Long adminId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String thumbnailImage;
 
-    @Column(nullable = false)
-    private Integer order;
+    // order는 작을 수록 먼저 노출됨
+    @Column
+    private Integer orderNum;
 
     @Column(nullable = false)
     private boolean active;
 
+    @Column(nullable = false)
+    private boolean basic;
 
 
+    // 목록 조회 dto 변환
+    public BannerListResDto toListDto() {
+        return BannerListResDto.builder()
+                .bannerId(bannerId)
+                .title(title)
+                .adminId(adminId)
+                .order(orderNum)
+                .basic(basic)
+                .image(thumbnailImage)
+                .build();
+    }
 }
