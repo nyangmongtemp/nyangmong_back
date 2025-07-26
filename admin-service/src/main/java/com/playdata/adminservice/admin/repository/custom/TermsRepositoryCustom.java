@@ -2,6 +2,7 @@ package com.playdata.adminservice.admin.repository.custom;
 
 import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsLastPostResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.common.exception.CommonException;
@@ -29,4 +30,13 @@ public interface TermsRepositoryCustom {
      * @throws CommonException 약관이 존재하지 않으면 DATA_NOT_FOUND 예외 발생
      */
     TermsDetailResDto findByTerms(Long id, TermsCategory termsCategory);
+
+    /**
+     * 최신 약관 게시글을 조회한다.
+     * 결과가 없을 경우 null을 반환한다.
+     *
+     * @param termsCategory 조회할 카테고리
+     * @return TermsDetailResDto 또는 null
+     */
+    TermsLastPostResDto findByTermsLastPost(TermsCategory termsCategory);
 }

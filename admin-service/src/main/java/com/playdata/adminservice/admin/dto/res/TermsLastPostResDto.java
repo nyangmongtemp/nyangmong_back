@@ -6,8 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class TermsDetailResDto {
+public class TermsLastPostResDto {
 
+    private Long id;
     private String title; // 제목
     private String content; // 내용
     private String adminName; // 관리자 이름

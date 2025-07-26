@@ -4,6 +4,7 @@ import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
 import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsLastPostResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
@@ -96,15 +97,17 @@ public class TermsService {
     }
 
     /**
-     * 특정 카테고리에 해당하며 활성 상태가 true인 약관 중
-     * 가장 최근에 등록된 약관 한 건을 조회한다.
+     * 가장 최근 약관 게시글을 반환한다.
      *
-     * @param category 조회할 TermsCategory (TERMS, POLICY, QNA)
-     * @return 조건에 맞는 최신 약관을 Optional로 감싸 반환, 없으면 Optional.empty()
+     * 조건:
+     * - 비활성화된 약관은 제외 (active = true)
+     * - 게시글이 존재하지 않을 경우 null 반환
+     *
+     * @param category 조회할 약관 카테고리
+     * @return 가장 최근의 TermsDetailResDto 또는 null
      */
-    public Optional<TermsDetailResDto> getLastPostTerms(TermsCategory category) {
-        Optional<Terms> terms = termsRepository.findTopByCategoryAndActiveIsTrueOrderByTermsIdDesc(category);
-        return terms.map(TermsDetailResDto::new);
+    public TermsLastPostResDto getLastPostTerms(TermsCategory category) {
+        return termsRepository.findByTermsLastPost(category);
     }
 
     /**
