@@ -81,11 +81,11 @@ public class TermsController {
      */
     @PostMapping()
     public ResponseEntity<CommonResDto> createTerms(
-            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
             @PathVariable String category,
             @RequestBody @Valid TermsInsertReqDto termsInsertReqDto) {
         TermsCategory termsCategory = parseCategory(category);
-        Terms result = termsService.insertTerms(userInfo, termsCategory, termsInsertReqDto);
+        Terms result = termsService.insertTerms(adminInfo, termsCategory, termsInsertReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "등록 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -100,11 +100,12 @@ public class TermsController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<CommonResDto> updateTerms(
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
             @PathVariable Long id,
             @PathVariable String category,
             @RequestBody @Valid TermsUpdateReqDto termsUpdateReqDto) {
         TermsCategory termsCategory = parseCategory(category);
-        Terms result = termsService.updateTerms(id, termsCategory, termsUpdateReqDto);
+        Terms result = termsService.updateTerms(adminInfo, id, termsCategory, termsUpdateReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "수정 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

@@ -54,14 +54,14 @@ public class TermsService {
     /**
      * 약관/개인정보처리방침/QNA 등록
      *
-     * @param userInfo 현재 인증된 관리자 정보 (adminId 포함)
+     * @param adminInfo 현재 인증된 관리자 정보 (adminId 포함)
      * @param category 등록할 약관 카테고리 (TERMS, POLICY, QNA 등)
      * @param termsInsertReqDto 약관 등록을 위한 요청 DTO
      * @return 저장된 Terms 엔티티 반환
      */
     @Transactional
-    public Terms insertTerms(TokenUserInfo userInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
-        Long adminId = userInfo.getAdminId();
+    public Terms insertTerms(TokenUserInfo adminInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
+        Long adminId = adminInfo.getAdminId();
         return termsRepository.save(termsInsertReqDto.toEntity(adminId, category));
     }
 
@@ -75,9 +75,9 @@ public class TermsService {
      * @throws CommonException 해당 약관이 없으면 DATA_NOT_FOUND 예외 발생
      */
     @Transactional
-    public Terms updateTerms(Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
+    public Terms updateTerms(TokenUserInfo adminInfo, Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
         Terms terms = findTermsOrThrow(id, termsCategory);
-        terms.updateTerms(termsUpdateReqDto);
+        terms.updateTerms(adminInfo.getAdminId(), termsUpdateReqDto);
         return terms;
     }
 
