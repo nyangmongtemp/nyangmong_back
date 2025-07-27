@@ -111,7 +111,8 @@ public class MainService {
 
         // user-service로 부터 사용자의 프로필 이미지 수신
         ResponseEntity<String> responseEntity = userClient.getUserProfileImage(userId);
-
+        
+        // user-service로부터 프로필 이미지 수신 중 오류가 발생한 경우
         if(responseEntity.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR, "댓글 생성 중에 에러가 발생하였습니다.");
         }
@@ -136,7 +137,8 @@ public class MainService {
      * @return
      */
     public CommonResDto deleteComment(Long commentId, Long userId) {
-
+        
+        // 댓글의 유효성 확인
         Comment foundComment = isValidComment(commentId, userId);
         foundComment.deleteComment();
         commentRepository.save(foundComment);
@@ -151,8 +153,10 @@ public class MainService {
      * @return
      */
     public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
-
+        
+        // 댓글의 유효성 확인
         Comment comment = isValidComment(reqDto.getCommentId(), userId);
+        // 댓글 내용 수정 및 저장
         comment.mofifyComment(reqDto.getContent());
         Comment saved = commentRepository.save(comment);
 
@@ -294,23 +298,17 @@ public class MainService {
             List<Comment> comments = foundComment.get();
             // 활성화가 된 댓글들만 닉네임 변경시키기
             comments.stream().filter(Comment::isActive).forEach(comment -> {
+                // 댓글과 대댓글의 닉네임값도 변환
                 comment.modifyNickname(nickname);
+                // 댓글에 대댓글이 존재한다면
+                if(comment.isReplyExist()){
+                    // 수정된 대댓글의 정보 저장
+                    replyRepository.saveAll(comment.getReplyList());
+                }
             });
             commentRepository.saveAll(comments);
         }
-
-        // 사용자가 작성한 모든 대댓글 조회
-        Optional<List<Reply>> foundReply = replyRepository.findByUserId(userId);
-        // 사용자가 작성한 대댓글이 있는 경우에만, 닉네임 변경 작업 수행
-        if(foundReply.isPresent()) {
-            List<Reply> replies = foundReply.get();
-            // 활성화된 대댓글들만 닉네임 변경
-            replies.stream().filter(Reply::isActive).forEach(reply -> {
-                reply.modifyNickname(nickname);
-            });
-            replyRepository.saveAll(replies);
-        }
-
+        
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 닉네임이 변경되었습니다.", true);
     }
 
@@ -329,18 +327,15 @@ public class MainService {
             List<Comment> comments = foundComment.get();
             comments.stream().filter(Comment::isActive).forEach(comment -> {
                 comment.modifyProfileImage(profileImage);
+                // 대댓글이 존재하는 경우
+                if(comment.isReplyExist()){
+                    // 대댓글도 프로필 이미지 변경 후 저장
+                    replyRepository.saveAll(comment.getReplyList());
+                }
             });
             commentRepository.saveAll(comments);
         }
-        // 사용자가 작성한 활성화된 대댓글이 있는 경우에만 변경 수행
-        Optional<List<Reply>> foundReply = replyRepository.findByUserId(userId);
-        if(foundReply.isPresent()) {
-            List<Reply> replies = foundReply.get();
-            replies.stream().filter(Reply::isActive).forEach(reply -> {
-                reply.modifyProfileImage(profileImage);
-            });
-            replyRepository.saveAll(replies);
-        }
+
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글, 대댓글의 프로필 이미지가 변경되었습니다.", true);
     }
 

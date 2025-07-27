@@ -78,10 +78,21 @@ public class Comment extends BaseTimeEntity {
     // 사용자의 닉네임 변경 시 사용하는 메소드
     public void modifyNickname(String nickname) {
         this.nickname = nickname;
+
+        // 댓글의 대댓글이 있는 경우
+        if(replyList != null) {
+            replyList.forEach(reply -> reply.modifyNickname(nickname));
+        }
     }
 
     // 사용자의 프로필 이미지 변경 시 사용하는 메소드
-    public void modifyProfileImage(String profileImage) {this.profileImage = profileImage;}
+    public void modifyProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+        // 대댓글이 존재하는 경우
+        if(replyList != null) {
+            replyList.forEach(reply -> reply.modifyProfileImage(profileImage));
+        }
+    }
 
     // 대댓글 존재 여부 리턴 메소드
     public boolean isReplyExist() {
