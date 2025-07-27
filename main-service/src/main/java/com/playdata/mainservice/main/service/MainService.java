@@ -52,12 +52,12 @@ public class MainService {
     private List<String> typeList = List.of("post", "comment", "reply");
 
     /**
+     * 좋아요를 통합적으로 생성하고 삭제하는 서비스 메소드
      *
      * @param userId
      * @param reqDto  --> contentType, contentId, category
      * @return
      */
-    // 좋아요를 통합적으로 생성하는 서비스 메소드
     public CommonResDto createLike(Long userId, MainLikeReqDto reqDto) {
         
         // 요청 Dto 값의 유효성을 확인
@@ -92,13 +92,13 @@ public class MainService {
     }
 
     /**
+     * 댓글 생성 메소드
      *
      * @param reqDto  --> categoru, contentType, hidden, content
      * @param userId
      * @param nickname
      * @return
      */
-    // 댓글 생성 메소드
     public CommonResDto createComment(MainComReqDto reqDto, Long userId, String nickname) {
 
         // 요청 Dto 값의 유효성을 확인
@@ -128,9 +128,9 @@ public class MainService {
                 getDetailResDto(newComment));
     }
     
-    // 댓글 삭제 메소드
     /**
      * 댓글 삭제 메소드
+     * 
      * @param commentId
      * @param userId
      * @return
@@ -150,7 +150,6 @@ public class MainService {
      * @param reqDto  --> commentId, content
      * @return
      */
-    // 댓글 수정 메소드
     public CommonResDto modifyComment(Long userId, ComModiReqDto reqDto) {
 
         Comment comment = isValidComment(reqDto.getCommentId(), userId);
@@ -162,12 +161,12 @@ public class MainService {
     }
 
     /**
+     * 대댓글 생성 메소드
      *
      * @param userInfo
      * @param reqDto  --> commentId, content
      * @return
      */
-    // 대댓글 생성 메소드
     public CommonResDto createReply(TokenUserInfo userInfo, ReplySaveReqDto reqDto) {
         
         // 대댓글을 작성할 댓글이 유효한 지 확인
@@ -190,12 +189,12 @@ public class MainService {
     }
 
     /**
+     * 대댓글 삭제 로직
      *
      * @param userId
      * @param replyId
      * @return
      */
-    // 대댓글 삭제 로직
     public CommonResDto deleteReply(Long userId, Long replyId) {
         
         // 대댓글의 유효성 확인
@@ -208,12 +207,12 @@ public class MainService {
     }
 
     /**
+     * 대댓글 수정 메소드
      *
      * @param userInfo
      * @param reqDto  --> commentId, content
      * @return
      */
-    // 대댓글 수정 메소드
     public CommonResDto modifyReply(TokenUserInfo userInfo, ReplyModiReqDto reqDto) {
 
         // 대댓글 존재 여부 및 활성화 여부, 수정, 삭제 권한 여부 확인
@@ -235,11 +234,11 @@ public class MainService {
     }
 
     /**
+     * 탈퇴한 회원의 모든 좋아요, 댓글, 대댓글의 active 값을 false 처리 하는 로직
      *
      * @param userId
      * @return
      */
-    // 탈퇴한 회원의 모든 좋아요, 댓글, 대댓글의 active 값을 false 처리 하는 로직
     public CommonResDto deleteUserAll(Long userId) {
 /*
         // 좋아요  --> 회원이 탈퇴를 진행해도, 좋아요 개수에는 영향이 없기로 서비스를 설계함.
@@ -278,12 +277,12 @@ public class MainService {
     }
 
     /**
+     * 회원의 닉네임 변경 시, 저장된 모든 댓글, 대댓글의 닉네임 값 변경
      * 
      * @param userId
      * @param encodedNickname  --> feign 요청을 위해 인코딩된 닉네임(한글)
      * @return
      */
-    // 회원의 닉네임 변경 시, 저장된 모든 댓글, 대댓글의 닉네임 값 변경
     public CommonResDto changeUserNickname(Long userId, String encodedNickname) {
         
         // 전송된 nickname 디코딩
@@ -316,12 +315,12 @@ public class MainService {
     }
 
     /**
+     * 회원의 프로필 이미지가 변경되었을 때, 해당 사용자가 작성한 댓글, 대댓글의 profileImage 값을 변경시키는 로직
      * 
      * @param userId
      * @param profileImage
      * @return
      */
-    // 회원의 프로필 이미지가 변경되었을 때, 해당 사용자가 작성한 댓글, 대댓글의 profileImage 값을 변경시키는 로직
     public CommonResDto changeUserProfile(Long userId, String profileImage) {
 
         Optional<List<Comment>> foundComment = commentRepository.findByUserId(userId);
@@ -346,10 +345,11 @@ public class MainService {
     }
 
     /**
+     * 게시물 목록 조회 시 사용할 댓글, 좋아요 개수 조회
+     *
      * @param contentList --> <category, contentId> 를 리스트로 받음
      * @return
      */
-    // 게시물 목록 조회 시 사용할 댓글, 좋아요 개수 조회
     public List<LikeComCountResDto> getLikeCommentCount(List<LikeComCountReqDto> contentList) {
 
         List<LikeComCountResDto> result = contentList.stream()
@@ -385,11 +385,11 @@ public class MainService {
     }
 
     /**
+     * 게시물 상세 조회 시, 좋아요, 댓글 개수를 리턴해주는 로직
      *
      * @param req  --> category, contentId
      * @return
      */
-    // 게시물 상세 조회 시, 좋아요, 댓글 개수를 리턴해주는 로직
     public CommonResDto getDetail(LikeComCountReqDto req) {
 
         // 입력된 contentType과 category의 유효성 확인
@@ -423,12 +423,12 @@ public class MainService {
     }
 
     /**
+     * 게시물 상세 조회 시, 댓글의 정보들을 화면단으로 리턴해주는 메소드
      *
      * @param reqDto  --> category, contentId
      * @param pageable
      * @return
      */
-    // 게시물 상세 조회 시, 댓글의 정보들을 화면단으로 리턴해주는 메소드
     public CommonResDto getCommentDetail(LikeComCountReqDto reqDto, Pageable pageable) {
         
         // 입력된 category의 유효성 확인
@@ -448,12 +448,12 @@ public class MainService {
     }
 
     /**
+     * 마이페이지에서 사용자의 댓글 조회 --> 활성화된 모든 댓글을 페이징 처리해서 조회
      *
      * @param userId
      * @param pageable
      * @return
      */
-    // 마이페이지에서 사용자의 댓글 조회 --> 활성화된 모든 댓글을 페이징 처리해서 조회
     public CommonResDto getMyComment(Long userId, Pageable pageable) {
 
         // 해당 userId로 작성된 모든 활성화 댓글을 페이징 조건에 맞게 조회
@@ -468,12 +468,12 @@ public class MainService {
     }
 
     /**
+     * 마이페이지에서 사용자의 대댓글 조회 --> 활성화된 모든 대댓글을 페이징 처리해서 조회
      *
      * @param userId
      * @param pageable
      * @return
      */
-    // 마이페이지에서 사용자의 대댓글 조회 --> 활성화된 모든 대댓글을 페이징 처리해서 조회
     public CommonResDto getMyReply(Long userId, Pageable pageable) {
 
         // 사용자가 작성한 활성화된 모든 대댓글을 페이징 조건에 맞게 조회
@@ -493,12 +493,12 @@ public class MainService {
     }
 
     /**
+     * 비공개 댓글 열람 권한을  확인하는 메소드
      *
      * @param userId  --> 작성자 userId
      * @param reqDto  --> commentId, 열람을 요청한 사용자 userId
      * @return
      */
-    // 비공개 댓글 열람 권한을  확인하는 메소드
     public boolean canSeeHideComment(Long userId, SeeHideComReqDto reqDto) {
 
         // 열람 요청자와 게시물 작성자가 동일한 경우
@@ -517,8 +517,12 @@ public class MainService {
         }
         return true;
     }
-    
-    // 메인 화면에 드러날 소개 게시판의 인기 게시물을 찾아서, 좋아요, 댓글 개수를 같이 리턴해주는 로직
+
+    /**
+     * 메인 화면에 드러날 소개 게시판의 인기 게시물을 찾아서, 좋아요, 댓글 개수를 같이 리턴해주는 로직
+     *
+     * @return
+     */
     public List<LikeComCountResDto> getMainIntroduction() {
         
         // 소개 게시물 중 한 달동안 생성된 좋아요 개수가 가장 많은 3개의 게시물을 조회
@@ -542,6 +546,13 @@ public class MainService {
         return resDtoList;
     }
 
+    /**
+     * 사용자가 좋아요를 눌렀는 지 리턴
+     * 
+     * @param userId
+     * @param reqDto
+     * @return
+     */
     public CommonResDto getUserLiked(Long userId, MainLikeReqDto reqDto) {
 
         if(!isValidCategory(reqDto.getCategory())) {
@@ -551,6 +562,12 @@ public class MainService {
         return new CommonResDto(HttpStatus.OK, "사용자의 좋아요 찾음", liked.isPresent());
     }
 
+    /**
+     * 특정 댓글의, 대댓글 조회
+     * 
+     * @param commentId
+     * @return
+     */
     public CommonResDto getCommentReplies(Long commentId) {
 
         List<Reply> replies = replyRepository.findActiveByCommentId(commentId);
@@ -574,7 +591,13 @@ public class MainService {
         return categoryList.contains(category);
     }
 
-    // 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
+    /**
+     * 댓글이 존재하고 삭제되지 않았는 지 판별해서 리턴해주는 메소드
+     *
+     * @param commentId
+     * @param userId
+     * @return
+     */
     private Comment isValidComment(Long commentId, Long userId) {
         Optional<Comment> foundComment = commentRepository.findById(commentId);
         // 삭제하려는 댓글이 존재하지 않는 경우
@@ -588,7 +611,12 @@ public class MainService {
         return foundComment.get();
     }
 
-    // 대댓글을 작성할 댓글이 유효한지 판별해주는 메소드
+    /**
+     * 대댓글을 작성할 댓글이 유효한지 판별해주는 메소드
+     *
+     * @param reqDto
+     * @return
+     */
     private Comment isPresentComment(ReplySaveReqDto reqDto) {
         Optional<Comment> foundComment = commentRepository.findById(reqDto.getCommentId());
         // 대댓글을 작성하려는 댓글이 존재하지 않거나 삭제된 경우
@@ -598,7 +626,13 @@ public class MainService {
         return foundComment.get();
     }
 
-    // 대댓글을 수정 및 삭제할 권한이 있는지 판별해주는 메소드
+    /**
+     * 대댓글을 수정 및 삭제할 권한이 있는지 판별해주는 메소드
+     *
+     * @param userId
+     * @param replyId
+     * @return
+     */
     private Reply isValidReply(Long userId, Long replyId) {
         Optional<Reply> foundReply = replyRepository.findById(replyId);
         // 삭제할 대댓글이 존재하지 않는 경우
