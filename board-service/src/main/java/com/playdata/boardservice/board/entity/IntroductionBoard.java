@@ -56,10 +56,10 @@ public class IntroductionBoard extends BaseTimeEntity {
     }
 
     // 수정
-    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlSanitizer) {
-        this.content = htmlSanitizer.sanitize(boardModiDto.getContent());
+    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
+        this.content = htmlPolicy.sanitizeHtml(boardModiDto.getContent());
         this.thumbnailImage = newThumbnailImage;
-        this.title = boardModiDto.getTitle();
+        this.title = plainTextSanitizer.sanitizeText(boardModiDto.getTitle());
     }
 
     // 사용자가 nickname을 변경하면 그 작성자의 게시물들의 nickname을 변경
