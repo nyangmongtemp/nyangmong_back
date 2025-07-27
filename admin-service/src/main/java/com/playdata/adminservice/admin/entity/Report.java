@@ -1,7 +1,7 @@
 package com.playdata.adminservice.admin.entity;
 
-import com.playdata.userservice.common.entity.BaseTimeEntity;
-import com.playdata.userservice.user.entity.ReportCategory;
+import com.playdata.adminservice.common.entity.BaseTimeEntity;
+import com.playdata.adminservice.admin.entity.ReportCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
