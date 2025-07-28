@@ -33,6 +33,10 @@ public class Report extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private ReportCategory category;
+    
+    // 정지 사유
+    @Enumerated(EnumType.STRING)
+    private PauseCategory PauseCategory;
 
     // 정지를 한다면 언제까지 정지인지
     private Integer duration;
