@@ -2,6 +2,7 @@ package com.playdata.adminservice.admin.dto.req;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -17,7 +18,7 @@ public class AdUpdateReqDto {
 
     private Integer orderNum;
 
-    private String thumbnailImage;
+    private MultipartFile thumbnailImage;
 
     private LocalDate startDate;
 

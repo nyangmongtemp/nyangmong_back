@@ -2,6 +2,7 @@ package com.playdata.adminservice.admin.dto.req;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -13,7 +14,7 @@ public class AdRegisterReqDto {
 
     // 광고 썸네일 이미지 URL (필수)
     @NotBlank(message = "썸네일 이미지는 필수입니다.")
-    private String thumbnailImage;
+    private MultipartFile thumbnailImage;
 
     // 광고 제목 (필수)
     @NotBlank(message = "광고 제목은 필수입니다.")

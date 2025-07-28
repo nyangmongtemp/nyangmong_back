@@ -146,16 +146,16 @@ public enum ErrorCode {
     UNSUPPORTED_FILE_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE-007", "업로드 할 수 없는 파일 형식입니다."),
     MIME_FILE_TYPE(HttpStatus.BAD_REQUEST, "FILE-008", "업로드한 파일은 이미지가 아닙니다. (contentType 검사 실패)."),
     MATCHES_FILE_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE-009", "허용되지 않는 이미지 확장자입니다."),
-
+    FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR,"FILE-0010" , "이미지 저장 실패"),
     /*******************************************************************************************************************
      *                                                      메일 관련 에러
      ******************************************************************************************************************/
     MAIL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL-001", "메일 서버에 오류가 발생했습니다."),
 
-    MISSING_MAIL_RECIPIENT(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL-002", "메일 수신자 정보가 누락되었습니다."),
+    MISSING_MAIL_RECIPIENT(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL-002", "메일 수신자 정보가 누락되었습니다.");
 
 
-    ;
+
 
     private final HttpStatus status;
     private final String code;

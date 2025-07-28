@@ -52,7 +52,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                 .select(ad)
                 .from(ad)
                 .where(
-                        idEq(searchDto.getId()),
+
                         titleContains(searchDto.getTitle()),
                         isActive(searchDto.getActive()),
                         betweenStartDate(searchDto.getStartDate()),
@@ -68,7 +68,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                 .select(ad.count())
                 .from(ad)
                 .where(
-                        idEq(searchDto.getId()),
+
                         titleContains(searchDto.getTitle()),
                         isActive(searchDto.getActive()),
                         betweenStartDate(searchDto.getStartDate()),
@@ -107,12 +107,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
         return date != null ? QAdvertisement.advertisement.endDate.loe(date) : null;
     }
 
-    /**
-     * 특정 ID로 광고를 조회하는 조건
-     */
-    private BooleanExpression idEq(Long id) {
-        return id != null ? QAdvertisement.advertisement.id.eq(id) : null;
-    }
+
 
     /**
      * 승인되지 않았고 활성화된 광고를 무작위로 limit개 조회 (Native SQL 사용)
