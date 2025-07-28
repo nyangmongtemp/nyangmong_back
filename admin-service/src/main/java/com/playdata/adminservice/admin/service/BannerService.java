@@ -253,8 +253,10 @@ public class BannerService {
         validateBannerCount();
         BannerCount found = bannerCountRepository.findById(1L).get();
         Integer exLimit = found.getCount();
-        // 만약에 배너 노출 개수가 줄어들었다면 기존 배너의 orderNum값 갱신
-        if(exLimit > count) {
+        // 현재 노출되고 있는 배너의 개수
+        Integer nowExposedBannerCount = bannerRepository.countExposedBanners();
+        // 만약에 배너 노출 개수가 줄어들었는데, 현재 노출 배너 개수보다 작다면
+        if(exLimit > count && count < nowExposedBannerCount) {
             List<Banner> exposedBanners = bannerRepository.getExposedBanners();
             // order 기준 오름차순이라서 
             // 뒤에서부터 노출 비활성화 -> 노출순서가 낮으면 먼저 비노출됨

@@ -58,4 +58,7 @@ public class User extends BaseTimeEntity {
     private int passwordFaultCount; // 로그인 실패 횟수
 
     private int pauseCount; // 계정이 일시 정지된 횟수 (운영자 판단으로 정지된 기록)
+
+    // 정지 풀리는 날짜
+    private LocalDateTime releaseAt;
 }
