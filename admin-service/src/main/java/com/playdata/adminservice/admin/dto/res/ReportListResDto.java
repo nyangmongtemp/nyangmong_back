@@ -1,14 +1,8 @@
 package com.playdata.adminservice.admin.dto.res;
 
-import com.playdata.adminservice.admin.entity.PauseCategory;
-import com.playdata.adminservice.admin.entity.Report;
 import com.playdata.adminservice.admin.entity.ReportCategory;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter
