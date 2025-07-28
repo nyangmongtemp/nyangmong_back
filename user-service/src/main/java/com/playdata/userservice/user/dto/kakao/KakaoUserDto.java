@@ -62,7 +62,6 @@ public class KakaoUserDto {
                 .password("KAKAO")
                 .active(true)
                 .grade(0L)
-                .reportCount(0)
                 .passwordFaultCount(0)
                 .pauseCount(0)
                 .passwordUpdatedAt(LocalDateTime.now())

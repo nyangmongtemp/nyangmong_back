@@ -46,7 +46,6 @@ public class UserSaveReqDto {
                 .nickname(nickname)
                 .address(address)
                 .active(true)
-                .reportCount(0)
                 .passwordFaultCount(0)
                 .pauseCount(0)
                 .passwordUpdatedAt(LocalDateTime.now())
