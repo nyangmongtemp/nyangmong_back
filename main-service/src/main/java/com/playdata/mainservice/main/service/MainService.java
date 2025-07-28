@@ -126,7 +126,7 @@ public class MainService {
 
         return new CommonResDto(HttpStatus.CREATED, "댓글이 생성됨",
                 // Dto 변환 해서 화면단으로 리턴
-                getDetailResDto(newComment));
+                newComment.getDetailResDto());
     }
     
     /**
@@ -161,7 +161,7 @@ public class MainService {
         Comment saved = commentRepository.save(comment);
 
         return new CommonResDto(HttpStatus.OK,
-                "댓글 내용이 수정되었습니다.", getDetailResDto(saved));
+                "댓글 내용이 수정되었습니다.", saved.getDetailResDto());
     }
 
     /**
