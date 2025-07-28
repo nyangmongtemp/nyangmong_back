@@ -4,6 +4,7 @@ import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
+import com.playdata.adminservice.admin.entity.Report;
 import com.playdata.adminservice.admin.service.UserService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,8 +71,22 @@ public class UserController {
     @GetMapping("/user/report/{userId}")
     public ResponseEntity<CommonResDto> getReportList(@PathVariable long userId) {
         List<ReportListResDto> result = userService.findReposrtList(userId);
-        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "신고내역 목록 조회", result);
         return ResponseEntity.ok(resDto);
     }
+
+    /**
+     * 사용자의 신고내역 확인
+     * @param id
+     * @return
+     */
+    @PatchMapping("/user/report/{id}")
+    public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+        Report result = userService.updateReportTreat(id, adminInfo);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "신고내역 확인처리", result);
+        return ResponseEntity.ok(resDto);
+    }
+
+
 
 }

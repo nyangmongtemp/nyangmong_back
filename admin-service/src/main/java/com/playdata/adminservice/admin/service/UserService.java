@@ -10,17 +10,16 @@ import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.AdminLogRepository;
 import com.playdata.adminservice.admin.repository.ReportRepository;
 import com.playdata.adminservice.admin.repository.UserRepository;
-import com.playdata.adminservice.admin.repository.custom.AdminLogRepositoryCustom;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +68,19 @@ public class UserService {
      */
     public List<ReportListResDto> findReposrtList(long userId) {
         return reportRepository.findReportList(userId);
+    }
+
+    /**
+     * 사용자의 신고내역 확인처리
+     *
+     * @param id
+     * @return
+     */
+    @Transactional
+    public Report updateReportTreat(long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+        Report report = reportRepository.findByReportIdAndTreatIsFalse(id).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        report.updateTreat(adminInfo.getAdminId());
+        return report;
     }
 
     /**

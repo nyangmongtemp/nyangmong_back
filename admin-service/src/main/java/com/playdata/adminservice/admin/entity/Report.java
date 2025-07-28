@@ -55,4 +55,9 @@ public class Report extends BaseTimeEntity {
 
     @Transient
     private String accuseUserEmail; // 신고당한 사용자 이메일
+
+    public void updateTreat(Long adminId) {
+        this.adminId = adminId;
+        this.treat = true;
+    }
 }
