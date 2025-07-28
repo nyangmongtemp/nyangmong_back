@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.controller;
 
+import com.playdata.adminservice.admin.dto.req.ReportUpdateReqDto;
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
@@ -10,6 +11,7 @@ import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -80,13 +83,28 @@ public class UserController {
      * @param id
      * @return
      */
-    @PatchMapping("/user/report/{id}")
+    @PatchMapping("/report/{id}")
     public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
         Report result = userService.updateReportTreat(id, adminInfo);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "신고내역 확인처리", result);
         return ResponseEntity.ok(resDto);
     }
 
-
+    /**
+     * 사용자 정지
+     *
+     * @param userId
+     * @param adminInfo
+     * @return
+     */
+    @PatchMapping("/ban/{userId}")
+    public ResponseEntity<CommonResDto> updateReport(@PathVariable long userId,
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @RequestBody ReportUpdateReqDto reportUpdateReqDto
+            ) {
+        Map<String, Object> result = userService.updateReport(userId, adminInfo, reportUpdateReqDto);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "사용자 정지", result);
+        return ResponseEntity.ok(resDto);
+    }
 
 }

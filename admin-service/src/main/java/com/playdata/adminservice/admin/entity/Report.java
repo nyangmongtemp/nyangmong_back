@@ -1,7 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
-import com.playdata.adminservice.admin.entity.ReportCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,13 +32,6 @@ public class Report extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private ReportCategory category;
-
-    // 정지 사유
-    @Enumerated(EnumType.STRING)
-    private PauseCategory PauseCategory;
-
-    // 정지를 한다면 언제까지 정지인지
-    private Integer duration;
 
     // 신고 처리 여부
     private boolean treat;

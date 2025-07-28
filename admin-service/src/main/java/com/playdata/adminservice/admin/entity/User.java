@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
+import com.playdata.adminservice.admin.dto.req.ReportUpdateReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,4 +62,10 @@ public class User extends BaseTimeEntity {
 
     // 정지 풀리는 날짜
     private LocalDateTime releaseAt;
+
+    public void updateUserReport(ReportUpdateReqDto reportUpdateReqDto) {
+        this.pauseCount++;
+        this.active = false;
+        this.releaseAt = (reportUpdateReqDto.getReleaseAt() == 999) ? LocalDateTime.now().plusYears(999) : LocalDateTime.now().plusDays(reportUpdateReqDto.getReleaseAt());
+    }
 }

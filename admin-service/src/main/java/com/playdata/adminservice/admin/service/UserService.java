@@ -1,6 +1,7 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.AdminLogReqDto;
+import com.playdata.adminservice.admin.dto.req.ReportUpdateReqDto;
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
@@ -14,7 +15,10 @@ import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -74,6 +78,7 @@ public class UserService {
      * 사용자의 신고내역 확인처리
      *
      * @param id
+     * @param adminInfo
      * @return
      */
     @Transactional
@@ -81,6 +86,32 @@ public class UserService {
         Report report = reportRepository.findByReportIdAndTreatIsFalse(id).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
         report.updateTreat(adminInfo.getAdminId());
         return report;
+    }
+
+    /**
+     * 사용자 정지
+     *
+     * @param userId
+     * @param adminInfo
+     * @return
+     */
+    @Transactional
+    public Map<String, Object> updateReport(long userId, TokenUserInfo adminInfo, ReportUpdateReqDto reportUpdateReqDto) {
+        List<Report> reports = reportRepository.findAllByAccusedUserIdAndTreatIsFalse(userId);
+        if (reports.isEmpty()) {throw new CommonException(ErrorCode.DATA_NOT_FOUND, "신고 이력이 존재하지 않습니다.");}
+        User user = userRepository.findById(userId).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        for (Report report : reports) {
+            report.updateTreat(adminInfo.getAdminId());
+        }
+
+        user.updateUserReport(reportUpdateReqDto);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("reports", reports);
+        result.put("user", user);
+
+        return result;
     }
 
     /**
