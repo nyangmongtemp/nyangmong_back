@@ -26,6 +26,7 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
                                 report.content,
                                 report.category,
                                 report.createAt,
+                                report.accusedUserId,
                                 reporter.userName,
                                 reporter.email,
                                 accused.userName,
