@@ -17,14 +17,4 @@ public interface TermsRepository extends JpaRepository<Terms, Long>, TermsReposi
      */
     Optional<Terms> findByTermsIdAndCategoryAndActiveIsTrue(Long id, TermsCategory category);
 
-    /**
-     * 특정 카테고리에 해당하며 활성 상태가 true인 Terms 중
-     * 가장 최신(termsId 기준 내림차순) 엔티티 하나를 조회한다.
-     *
-     * @param termsCategory 조회할 TermsCategory (예: TERMS, POLICY, QNA)
-     * @return 조건에 맞는 최신 Terms 엔티티를 Optional로 감싸 반환, 없으면 Optional.empty()
-     */
-    Optional<Terms> findTopByCategoryAndActiveIsTrueOrderByTermsIdDesc(TermsCategory termsCategory);
-
-
 }

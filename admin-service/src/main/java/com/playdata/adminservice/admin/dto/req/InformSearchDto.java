@@ -11,10 +11,10 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserSearchDto {
+public class InformSearchDto {
 
-    private String keyword;
-    private Boolean report;
-    private Boolean active;
+    private String searchWord;
+
+    private Boolean answered;
 
 }

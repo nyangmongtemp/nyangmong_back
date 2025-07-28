@@ -1,7 +1,7 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.InformReplyReqDto;
-import com.playdata.adminservice.admin.dto.req.SearchDto;
+import com.playdata.adminservice.admin.dto.req.InformSearchDto;
 import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.entity.Inform;
@@ -9,7 +9,6 @@ import com.playdata.adminservice.admin.repository.InformRepository;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +30,7 @@ public class InformService {
      * @param pageable 페이징 정보
      * @return 페이지 결과
      */
-    public Page<InformListResDto> findInformList(SearchDto searchDto, Pageable pageable) {
+    public Page<InformListResDto> findInformList(InformSearchDto searchDto, Pageable pageable) {
         return informRepository.findByInformList(searchDto, pageable);
     }
 

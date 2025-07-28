@@ -5,6 +5,7 @@ import static com.playdata.adminservice.admin.entity.QTerms.terms;
 
 import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsLastPostResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.custom.TermsRepositoryCustom;
@@ -50,6 +51,7 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
                         terms.active.eq(true),                // 활성화된 데이터만 조회
                         terms.category.eq(termsCategory)      // 지정된 카테고리만 조회
                 )
+                .orderBy(terms.createAt.desc())
                 .offset(pageable.getOffset())      // 시작 위치 (페이징)
                 .limit(pageable.getPageSize())     // 한 페이지에 조회할 수
                 .fetch();                          // 결과 조회
@@ -91,6 +93,42 @@ public class TermsRepositoryImpl implements TermsRepositoryCustom {
                 .from(terms)
                 .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
                 .where(terms.termsId.eq(id), terms.category.eq(termsCategory), terms.active.isTrue())
+                .fetchOne();
+    }
+
+    /**
+     * 지정된 카테고리에 해당하며 활성화(active = true)된 약관 중
+     * 가장 최근에 등록된 약관 게시글을 조회한다.
+     *
+     * 조건:
+     * - TermsCategory 일치
+     * - active = true
+     * - 최신순 정렬 (termsId 기준 내림차순)
+     * - 결과가 없을 경우 null 반환 (fetchOne)
+     *
+     * 반환 형식:
+     * - Projections.constructor 방식으로 TermsDetailResDto 로 매핑
+     * - admin.name 은 연관관계가 없으므로 adminId 로 조인 수행
+     *
+     * @param termsCategory 조회할 약관 카테고리
+     * @return TermsDetailResDto 또는 null
+     */
+    @Override
+    public TermsLastPostResDto findByTermsLastPost(TermsCategory termsCategory) {
+        return jpaQueryFactory
+                .select(Projections.constructor(TermsLastPostResDto.class,
+                        terms.termsId,
+                        terms.title,
+                        terms.content,
+                        admin.name,
+                        terms.createAt,
+                        terms.updateAt
+                ))
+                .from(terms)
+                .leftJoin(admin).on(terms.adminId.eq(admin.adminId))
+                .where(terms.category.eq(termsCategory), terms.active.isTrue())
+                .orderBy(terms.termsId.desc())
+                .limit(1)
                 .fetchOne();
     }
 
