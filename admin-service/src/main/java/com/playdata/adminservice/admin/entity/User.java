@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.entity;
 
+import com.playdata.adminservice.admin.dto.req.ReportUpdateReqDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -63,4 +64,10 @@ public class User extends BaseTimeEntity {
 
     @Transient
     private int reportCount; // 누적 신고 횟수 (욕설, 스팸 등으로 신고당한 횟수)
+
+    public void updateUserReport(ReportUpdateReqDto reportUpdateReqDto) {
+        this.pauseCount++;
+        this.active = false;
+        this.releaseAt = (reportUpdateReqDto.getReleaseAt() == 999) ? LocalDateTime.now().plusYears(999) : LocalDateTime.now().plusDays(reportUpdateReqDto.getReleaseAt());
+    }
 }
