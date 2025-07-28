@@ -373,7 +373,7 @@ public class MainService {
                     totalCount += replyCount;
 
                     // dto로 리턴
-                    return getLikeComCountResDto(req, count, totalCount);
+                    return req.getLikeComCountResDto(count, totalCount);
                 })
                 .collect(Collectors.toList());
         return result;
@@ -412,7 +412,7 @@ public class MainService {
         totalCount += replyCount;
         
         // 화면단 전송용 dto로 변환
-        LikeComCountResDto result = getLikeComCountResDto(req, likeCount, totalCount);
+        LikeComCountResDto result = req.getLikeComCountResDto(likeCount, totalCount);
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 좋아요, 댓글 개수 리턴", result);
     }
@@ -436,7 +436,7 @@ public class MainService {
                 = commentRepository.findActiveByCategoryAndContentId(category, reqDto.getContentId(), pageable);
 
         // 해당 댓글들의 모든 좋아요 개수를 계산하는 로직
-        Page<CommentDetailResDto> commentList = foundComment.map(MainService::getDetailResDto);
+        Page<CommentDetailResDto> commentList = foundComment.map(Comment::getDetailResDto);
 
         return new CommonResDto(HttpStatus.OK, "해당 게시물의 모든 댓글 정보 조회", commentList);
 
@@ -457,7 +457,7 @@ public class MainService {
         // 조회된 댓글의 좋아요 개수를 계산하는 로직
         // 해당 댓글의 활성화된 모든 좋아요 개수를 계산하는 로직
         // 댓글의 정보 + 좋아요개수 + 대댓글 존재 여부
-        Page<CommentDetailResDto> myCommentList = foundUserComment.map(MainService::getDetailResDto);
+        Page<CommentDetailResDto> myCommentList = foundUserComment.map(Comment::getDetailResDto);
 
         return new CommonResDto(HttpStatus.OK, "사용자의 모든 댓글 정보 조회", myCommentList);
     }
@@ -639,34 +639,6 @@ public class MainService {
             throw new CommonException(ErrorCode.NO_UPDATE_PERMISSION);
         }
         return foundReply.get();
-    }
-
-    // 게시물 상세 조회 시, 댓글 개수와 좋아요 수를 담은 dto 변환 메소드
-    private static LikeComCountResDto getLikeComCountResDto(LikeComCountReqDto req, Long count, long totalCount) {
-        return LikeComCountResDto.builder()
-                .contentId(req.getContentId())
-                .category(req.getCategory())
-                .likeCount(count)
-                .commentCount(totalCount)
-                .build();
-    }
-
-    // 게시물 상세 조회 시, 댓글의 정보들 + 좋아요 수 + 대댓글 여부를 담은 dto 변환 메소드
-    private static CommentDetailResDto getDetailResDto(Comment comment) {
-        return CommentDetailResDto.builder()
-                .contentId(comment.getContentId())
-                .category(String.valueOf(comment.getCategory()))
-                .content(comment.getContent())
-                // 대댓글 존재 여부
-                .isReply(comment.isReplyExist())
-                .createAt(comment.getCreateAt())
-                .profileImage(comment.getProfileImage())
-                .nickname(comment.getNickname())
-                .userId(comment.getUserId())
-                // 비공개 여부
-                .hidden(comment.isHidden())
-                .commentId(comment.getCommentId())
-                .build();
     }
 
 }

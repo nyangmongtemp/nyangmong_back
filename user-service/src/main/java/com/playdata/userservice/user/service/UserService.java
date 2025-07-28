@@ -1237,7 +1237,8 @@ public class UserService {
 
     /**
      * answered값을 통한 boolean 변환
-     *
+     * 문의의 응답 여부 조회 값 유효성 검증
+     * 
      * @param answered
      * @return
      */

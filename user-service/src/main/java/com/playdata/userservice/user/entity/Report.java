@@ -33,13 +33,7 @@ public class Report extends BaseTimeEntity {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    private PauseCategory PauseCategory;
-
-    @Enumerated(EnumType.STRING)
     private ReportCategory category;
-
-    // 정지를 한다면 언제까지 정지인지
-    private Integer duration;
     
     // 신고 처리 여부
     private boolean treat;
@@ -49,9 +43,7 @@ public class Report extends BaseTimeEntity {
         this.content = content;
         this.reportUserId = reportUserId;
         this.category = category;
-        this.PauseCategory = null;
         this.treat = false;
-        this.duration = null;
         this.adminId = null;
 
     }
