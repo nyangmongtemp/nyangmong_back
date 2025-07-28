@@ -2,16 +2,21 @@ package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.AdminLogReqDto;
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
+import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
+import com.playdata.adminservice.admin.entity.Report;
 import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.AdminLogRepository;
+import com.playdata.adminservice.admin.repository.ReportRepository;
 import com.playdata.adminservice.admin.repository.UserRepository;
 import com.playdata.adminservice.admin.repository.custom.AdminLogRepositoryCustom;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +32,8 @@ public class UserService {
     private final UserRepository userRepository;
 
     private final AdminLogRepository adminLogRepository;
+
+    private final ReportRepository reportRepository;
 
     /**
      * [관리자] - 사용자 목록 조회 (검색, 페이징)
@@ -52,6 +59,16 @@ public class UserService {
         adminLogRepository.save(logDto.toEntity());
 
         return new UserDetailResDto(user);
+    }
+
+    /**
+     * [관리자] - 사용자의 신고내역 조회
+     *
+     * @param userId
+     * @return
+     */
+    public List<ReportListResDto> findReposrtList(long userId) {
+        return reportRepository.findReportList(userId);
     }
 
     /**

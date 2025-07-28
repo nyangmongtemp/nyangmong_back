@@ -1,12 +1,14 @@
 package com.playdata.adminservice.admin.controller;
 
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
+import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
 import com.playdata.adminservice.admin.service.UserService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -54,6 +56,19 @@ public class UserController {
             HttpServletRequest request
     ) {
         UserDetailResDto result = userService.findUser(adminInfo, id, request);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
+        return ResponseEntity.ok(resDto);
+    }
+
+    /**
+     * 사용자의 신고내역 조회
+     *
+     * @param userId
+     * @return
+     */
+    @GetMapping("/user/report/{userId}")
+    public ResponseEntity<CommonResDto> getReportList(@PathVariable long userId) {
+        List<ReportListResDto> result = userService.findReposrtList(userId);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
         return ResponseEntity.ok(resDto);
     }
