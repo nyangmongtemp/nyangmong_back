@@ -17,15 +17,15 @@ public class IntroductionBoardSaveReqDto {
 
     private String title;
 
-    public IntroductionBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlSanitizer) {
+    public IntroductionBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         return IntroductionBoard.builder()
                 .thumbnailImage(imageUrl)
                 .userId(userId)
                 .nickname(nickname)
                 .viewCount(0)
-                .content(htmlSanitizer.sanitize(content))
+                .content(htmlPolicy.sanitizeHtml(content))
                 .active(true)
-                .title(title)
+                .title(plainTextSanitizer.sanitizeText(title))
                 .build();
     }
 }

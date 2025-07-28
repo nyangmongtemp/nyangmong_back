@@ -60,9 +60,10 @@ public class InformationBoard extends BaseTimeEntity {
     }
 
     // 수정
-    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlSanitizer) {
+    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         this.thumbnailImage = newThumbnailImage;
-        this.content = htmlSanitizer.sanitize(boardModiDto.getContent());
+        this.content = htmlPolicy.sanitizeHtml(boardModiDto.getContent());
+        this.title = plainTextSanitizer.sanitizeHtml(boardModiDto.getTitle());
     }
 
     // 사용자가 nickname을 변경하면 그 작성자의 게시물들의 nickname을 변경

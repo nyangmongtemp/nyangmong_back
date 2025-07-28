@@ -50,7 +50,8 @@ public class BoardService {
 
     private final MainServiceClient mainServiceClient;
 
-    private final HtmlSanitizer htmlSanitizer;
+    private final HtmlSanitizer htmlPolicy;
+    private final HtmlSanitizer plainTextPolicy;
 
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
@@ -80,7 +81,7 @@ public class BoardService {
         String savedPath = setThumbnailImage(thumbnailImage);
 
         // DTO → toEntity() 로 변환 -> DB
-        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlSanitizer);
+        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlPolicy, plainTextPolicy);
         
         // DB에 저장
         informationBoardRepository.save(entity);
@@ -105,7 +106,7 @@ public class BoardService {
 
 
         // DTO → Entity 변환 후 저장
-        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlSanitizer);
+        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlPolicy, plainTextPolicy);
         
         // DB에 저장
         introductionBoardRepository.save(entity);
@@ -143,7 +144,7 @@ public class BoardService {
             }
 
             // 본문 및 썸네일 수정
-            board.boardModify(modiDto, savedPath, htmlSanitizer);
+            board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
 
             // 정보 게시판의 카테고리를 설정
         } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
@@ -158,11 +159,11 @@ public class BoardService {
             }
 
             // content 수정
-            board.boardModify(modiDto, savedPath, htmlSanitizer);
+            board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
 
             if (savedPath != null) {
                 // 새 이미지가 있으면 교체
-                board.boardModify(modiDto, savedPath, htmlSanitizer);
+                board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
                 // DB에 썸네일 이미지가 있는 게시글인데 수정 후 썸네일 이미지를 삭제했다.
             } else if (board.getThumbnailImage() != null && (thumbnailImage == null || thumbnailImage.isEmpty())) {
 
@@ -171,7 +172,7 @@ public class BoardService {
                 File oldFile = new File(thumbnailImagePath + File.separator + board.getThumbnailImage());
                 if (oldFile.exists()) oldFile.delete();
                 // 변경사항 저장
-                board.boardModify(modiDto, savedPath, htmlSanitizer);
+                board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
             }
         } else {
             // 그 외 잘못된 카테고리는 예외

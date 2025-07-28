@@ -21,16 +21,16 @@ public class InformationBoardSaveReqDto {
 
     private  String title;
 
-    public InformationBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlSanitizer) {
+    public InformationBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         return InformationBoard.builder()
                 .userId(userId)
                 .category(category)
                 .thumbnailImage(imageUrl)
-                .content(htmlSanitizer.sanitize(content))
+                .content(htmlPolicy.sanitizeHtml(content))
                 .nickname(nickname)
                 .viewCount(0)
                 .active(true)
-                .title(title)
+                .title(plainTextSanitizer.sanitizeText(title))
                 .build();
     }
 }
