@@ -1,0 +1,15 @@
+package com.playdata.adminservice.admin.dto.req;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+
+/**
+ * 약관/개인정보처리방침/QNA 수정 DTO
+ */
+@Getter
+public class InformReplyReqDto {
+
+    @NotBlank
+    private String reply;
+
+}

@@ -6,4 +6,8 @@ spring:
     name: admin-service
 
 imagePath:
-  url: C:/playdata2025/images
+  url: C:\nyangmong_image/admin
+  banner:
+    # 기본 배너 이미지
+    default1: https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNDEyMDFfNSAg%2FMDAxNzMzMDUxMTY4NjU1.R0TdUVj-G_liWOp4Yy4PHcvA-6V12FwnyEqeOd3uqrsg.pC0TAp2TaZpwoRD8o8qQfPrFocu3QdRxsCaRzcqoyisg.JPEG%2F3472591274724284756_20241119234300216.jpg&type=sc960_832
+    default2: https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMjA2MDNfMjc1%2FMDAxNjU0MjQyNTA0MzE2.TaFspZ6af2SA1XstBJmryx7ciliMNd6PkLbTGn4afDYg.o1lLzAMyBRYfqz-vMOVAiUyEQIF2fkKpll3olCty-84g.JPEG.wogus730%2F%25B5%25CE%25B8%25AE%252C%25BF%25CB%25C0%25CC_%25C6%25EA_%252873%2529.JPG&type=sc960_832

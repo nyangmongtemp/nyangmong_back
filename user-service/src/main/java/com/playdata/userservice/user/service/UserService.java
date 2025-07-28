@@ -20,6 +20,7 @@ import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
 import com.playdata.userservice.user.dto.message.res.UserMessageResDto;
 import com.playdata.userservice.user.dto.noti.MessageNotiDto;
+import com.playdata.userservice.user.dto.report.req.ReportSaveReqDto;
 import com.playdata.userservice.user.dto.req.UserInfoModiReqDto;
 import com.playdata.userservice.user.dto.req.UserLoginReqDto;
 import com.playdata.userservice.user.dto.req.UserPasswordModiReqDto;
@@ -27,14 +28,8 @@ import com.playdata.userservice.user.dto.req.UserSaveReqDto;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.dto.res.UserLoginResDto;
 import com.playdata.userservice.user.dto.res.UserMyPageResDto;
-import com.playdata.userservice.user.entity.Chat;
-import com.playdata.userservice.user.entity.Inform;
-import com.playdata.userservice.user.entity.Message;
-import com.playdata.userservice.user.entity.User;
-import com.playdata.userservice.user.repository.ChatRepository;
-import com.playdata.userservice.user.repository.InformRepository;
-import com.playdata.userservice.user.repository.MessageRepository;
-import com.playdata.userservice.user.repository.UserRepository;
+import com.playdata.userservice.user.entity.*;
+import com.playdata.userservice.user.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -79,6 +74,7 @@ public class UserService {
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final InformRepository informRepository;
+    private final ReportRepository reportRepository;
 
     // 별명이 변경되거나, 회원 탈퇴 시 모든 좋아요, 댓글, 대댓글의 정보 수정을 위한 페인 클라이언트
     private final MainServiceClient mainClient;
@@ -103,6 +99,9 @@ public class UserService {
 
     // 인증 코드 발송 금지 상태
     private static final String VERIFICATION_BLOCK_KEY = "email_verify:block:";
+
+    // 비밀번호 3회이상 틀리면 30분간 정지
+    private static final String LOGIN_BLOCK_KEY = "login:block:";
     
     // 이미지 저장 경로 --> 추후에 yml에 있는 주소를 s3 주소로 바꿀 것
     @Value("${imagePath.url}")
@@ -115,12 +114,12 @@ public class UserService {
     private String kakaoRedirectUri;
 
     /**
+     * 회원 가입
      *
      * @param userSaveReqDto  --> userName, nickname, password, email, address, phone
      * @param profileImage
      * @return
      */
-    // 회원 가입
     public CommonResDto userCreate(UserSaveReqDto userSaveReqDto, MultipartFile profileImage) {
 
         String email = userSaveReqDto.getEmail();
@@ -158,11 +157,11 @@ public class UserService {
     }
 
     /**
+     * 로그인 로직
      *
      * @param userLoginReqDto  --> email, password
      * @return
      */
-    // 로그인 로직
     public CommonResDto login(UserLoginReqDto userLoginReqDto) {
 
         Optional<User> foundUser = userRepository.findByEmail(userLoginReqDto.getEmail());
@@ -172,18 +171,61 @@ public class UserService {
         }
         else {
             String pw = foundUser.get().getPassword();
-            
+
             // 탈퇴한 회원인 경우 로그인 실패 처리
             if(!foundUser.get().isActive()) {
                 throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
             }
+
             // 비밀번호가 일치 하지 않는 경우
             if(!passwordEncoder.matches(userLoginReqDto.getPassword(), pw)) {
+                User user = foundUser.get();
+                int passwordFaultCount = user.getPasswordFaultCount();
+                // 비밀번호 5회 이상 틀리면 블락 처리
+                if(passwordFaultCount >= 4) {
+                    String key = LOGIN_BLOCK_KEY + user.getUserId();
+                    redisTemplate.opsForValue().set(key, "blocked", 30, TimeUnit.MINUTES);
+                }
+                else {
+                    // 정보 갱신
+                    user.updatePasswordFaultCount(++passwordFaultCount);
+                    userRepository.save(user);
+                }
                 throw new CommonException(ErrorCode.INVALID_PASSWORD);
             }
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
                 User user = foundUser.get();
+                
+                // 만약 출소 날짜값이 있다면?
+                if(user.getReleaseAt() != null) {
+                    // 현재 시각과 비교
+                    Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
+
+                    // 정지 기한이 끝났다면
+                    if(between.isNegative()) {
+                        // null로 없애줌
+                        user.updateReleaseAt(null);
+                    }
+                    // 아직 정지중이라면?
+                    else {
+                        // 로그인 실패
+                        throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
+                    }
+                }
+
+                // redis에 해당 유저의 블락 정보 조회
+                if(redisTemplate.opsForValue()
+                        .get(LOGIN_BLOCK_KEY + foundUser.get().getUserId())
+                        != null) {
+                    // 로그인 실패 처리
+                    throw new CommonException(ErrorCode.ACCOUNT_LOCKED);
+                }
+                
+                // 정보 갱신
+                user.updatePasswordFaultCount(0);
+                userRepository.save(user);
+
                 // Access Token 발급
                 String token = jwtTokenProvider.createToken(user.getEmail(),
                         "USER", user.getNickname(), user.getUserId());
@@ -213,12 +255,12 @@ public class UserService {
     }
 
     /**
+     * 회원가입 시 이메일의 유효성을 확인하기 위해 인증번호를 발송하는 로직
+     * 이메일 인증번호 발송 로직
      * 
      * @param email
      * @return
      */
-    // 회원가입 시 이메일의 유효성을 확인하기 위해 인증번호를 발송하는 로직
-    // 이메일 인증번호 발송 로직
     public CommonResDto sendVerifyEmailCode(String email) {
 
         // 차단 상태 확인
@@ -244,11 +286,11 @@ public class UserService {
     }
 
     /**
+     * 이메일로 발송된 인증코드 검증 로직
      * 
      * @param authResDto  --> email, authCode (인증번호)
      * @return
      */
-    // 이메일로 발송된 인증코드 검증 로직
     public CommonResDto verifyEmailCode(UserEmailAuthResDto authResDto) {
         
         String email = authResDto.getEmail();
@@ -291,20 +333,17 @@ public class UserService {
     }
 
     /**
+     * 프사, 닉네임, 주소, 전화번호를 변경하는 로직
      *
      * @param userInfo
      * @param modiDto  --> nickname, phone, address
      * @param profileImage
      * @return
      */
-    // 프사, 닉네임, 주소, 전화번호를 변경하는 로직
     public boolean modiUserCommonInfo(TokenUserInfo userInfo, UserInfoModiReqDto modiDto, MultipartFile profileImage) {
-
-        Optional<User> byId = userRepository.findById(userInfo.getUserId());
-        if(!byId.isPresent() || !byId.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
-        }
-        User foundUser = byId.get();
+        
+        // 회원의 유효성 확인
+        User foundUser = findValidUser(userInfo.getUserId());
         String newProfileImage = null;
         // 변경할 프로필 이미지가 왔다면, 새로 저장
         if(profileImage != null) {
@@ -344,13 +383,21 @@ public class UserService {
     }
 
     /**
+     * 이메일 변경을 요청하여 검사 후 인증 이메일 전송 로직
      * 
      * @param newEmail
      * @param userInfo
      * @return
      */
-    // 이메일 변경을 요청하여 검사 후 인증 이메일 전송 로직
     public CommonResDto modiUserEmail(String newEmail, TokenUserInfo userInfo) {
+
+        // 요청온 사용자의 유효성 확인
+        User validUser = findValidUser(userInfo.getUserId());
+        
+        // 소셜로그인 사용자인 경우 에러 처리
+        if(validUser.getSocialProvider() != null) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
+        }
 
         Optional<User> byEmail = userRepository.findByEmail(newEmail);
         // 이메일 변경 요청을 보낸 사용자가 DB에 이미 존재하는 경우
@@ -365,13 +412,13 @@ public class UserService {
     }
 
     /**
+     * 이메일 변경 요청의 인증 여부를 확인하는 메소드
+     * 완료되면 바로 이메일을 변경함.
      * 
      * @param authResDto  --> email, authCode (인증코드)
      * @param userInfo
      * @return
      */
-    // 이메일 변경 요청의 인증 여부를 확인하는 메소드
-    // 완료되면 바로 이메일을 변경함.
     public CommonResDto verifyUserNewEmail(UserEmailAuthResDto authResDto, TokenUserInfo userInfo) {
         
         // 이메일 인증 처리
@@ -392,16 +439,19 @@ public class UserService {
     }
 
     /**
+     * 비밀번호 변경 요청 인증 코드를 발송해주는 로직
      *
      * @param email
      * @return
      */
-    // 비밀번호 변경 요청 인증 코드를 발송해주는 로직
     public CommonResDto sendEmailAuthCodeNewPw(String email) {
 
         Optional<User> byEmail = userRepository.findByEmail(email);
         // 비밀번호 변경 요청을 보낸 유저가 DB에 없는 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
+        if(!byEmail.isPresent() || !byEmail.get().isActive() 
+                // 또는 소셜로그인 사용자인 경우
+                || byEmail.get().getSocialProvider() != null) {
+            // -> 비밀번호 변경 요청 에러 처리
             throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
         }
         // 이메일 전송
@@ -413,22 +463,18 @@ public class UserService {
     }
 
     /**
+     * 비밀번호 변경 요청이 인증된 경우
+     * 실제로 비밀번호를 변경해주는 로직
      *
      * @param userId
      * @param reqDto  --> password
      * @return
      */
-    // 비밀번호 변경 요청이 인증된 경우
-    // 실제로 비밀번호를 변경해주는 로직
     public CommonResDto modifyNewPassword(Long userId, UserPasswordModiReqDto reqDto) {
-
-        Optional<User> byEmail = userRepository.findById(userId);
-        // 비밀번호를 변경하려는 유저가 DB에 없는 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
-        }
         
-        User user = byEmail.get();
+        // 사용자의 유효성 확인
+        User user = findValidUser(userId);
+
         // 변경할 비밀번호를 인코딩
         String newEncodedPassword = passwordEncoder.encode(reqDto.getPassword());
         // DB에 변경된 비밀번호로 저장
@@ -439,19 +485,15 @@ public class UserService {
     }
 
     /**
+     * 마이페이지 요청 -> 회원의 이메일, 전화번호, 프로필 이미지, 닉네임, 주소를 리턴
      *
      * @param userId
      * @return
      */
-    // 마이페이지 요청 -> 회원의 이메일, 전화번호, 프로필 이미지, 닉네임, 주소를 리턴
     public CommonResDto getMyPage(Long userId) {
-
-        Optional<User> byEmail = userRepository.findById(userId);
-        // 정보를 조회할 회원이 존재하지 않거나, 탈퇴한 회원인 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원이 존재하지 않습니다.");
-        }
-        User foundUser = byEmail.get();
+        
+        // 사용자의 유효성 확인
+        User foundUser = findValidUser(userId);
         // 화면단으로 전송할 데이터를 담은 dto 변환
         UserMyPageResDto resDto = foundUser.toUserMyPageResDto();
 
@@ -459,20 +501,16 @@ public class UserService {
     }
 
     /**
+     * 회원 탈퇴를 담당하는 로직
      *
      * @param userId
      * @return
      */
-    // 회원 탈퇴를 담당하는 로직
     @Transactional
     public CommonResDto resignUser(Long userId) {
-
-        Optional<User> targetUser = userRepository.findById(userId);
-        // 탈퇴를 진행할 사용자가 없거나, 이미 사용자가 탈퇴를 진행한 경우
-        if(!targetUser.isPresent() || !targetUser.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "탈퇴를 진행할 회원이 존재하지 않습니다.");
-        }
-        User user = targetUser.get();
+        
+        // 사용자의 유효성 확인
+        User user = findValidUser(userId);
         // 회원의 비활성화 처리
         user.resignUser();
         // main-service로  회원이 작성한 댓글, 대댓글을 모두 비활성화 요청
@@ -494,7 +532,8 @@ public class UserService {
         Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
         // 사용자의 활성화된 채팅방이 있을때만, 비활성화 처리
         myActiveChat.ifPresent(chats -> chats.stream().forEach(Chat::deleteChat));
-
+        
+        // 사용자의 문의 전부 비활성화 처리
         informRepository.getMyActiveInform(userId).ifPresent(informs -> {
             informs.forEach(Inform::deleteInform);
         });
@@ -505,13 +544,20 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "회원 탈퇴가 정상적으로 진행되었습니다.", null);
     }
 
-    // 비밀번호 분실 시 임시비밀번호 발급을 위한 인증코드 발급 로직
+    /**
+     * 비밀번호 분실 시 임시비밀번호 발급을 위한 인증코드 발급 로직
+     *
+     * @param email
+     * @return
+     */
     public CommonResDto forgetPasswordReq(String email) {
-
-        Optional<User> byEmail = userRepository.findByEmail(email);
-        // 임시 비밀번호 발급을 요청한 사용자의 이메일이 유효하지 않은 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND);
+        
+        // 사용자의 유효성 확인
+        User foundUser = findValidUserByEmail(email);
+        
+        // 소셜 로그인 사용자인 경우 에러 처리
+        if(foundUser.getSocialProvider() != null) {
+            throw new CommonException(ErrorCode.BAD_REQUEST);
         }
 
         String authCode = sendEmailAuthCode(email, "FORGET");
@@ -519,14 +565,16 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "인증 이메일이 전송됨", authCode);
     }
 
-    // 임시 비밀번호를 발급 후 저장 및 이메일로 전송해주는 로직
+    /**
+     * 임시 비밀번호를 발급 후 저장 및 이메일로 전송해주는 로직
+     *
+     * @param reqDto
+     * @return
+     */
     public CommonResDto authCodeAndRePw(UserEmailAuthResDto reqDto) {
-
-        Optional<User> byEmail = userRepository.findByEmail(reqDto.getEmail());
-        // 인증코드를 받은 이메일이 유효한 이메일인지 확인하는 메소드
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.BAD_REQUEST);
-        }
+        
+        // 요청을 보낸 사용자의 유효성 확인
+        User byEmail = findValidUserByEmail(reqDto.getEmail());
         // 인증코드를 확인하는 메소드
         verifyEmailCode(reqDto);
         // 임시 비밀번호 발급
@@ -534,31 +582,32 @@ public class UserService {
         log.info("임시 비밀번호는: " + newPw);
         // 신규 비밀번호를 인코딩 후, DB에 저장
         String encodedNewPW = passwordEncoder.encode(newPw);
-        byEmail.get().modifyPassword(encodedNewPW);
-        userRepository.save(byEmail.get());
+        byEmail.modifyPassword(encodedNewPW);
+        userRepository.save(byEmail);
 
         return new CommonResDto(HttpStatus.OK, "임시 비밀번호 발급 완료", newPw);
     }
 
     /**
+     * 댓글, 대댓글 생성 시 main-service로 profileImage를 전송해주는 로직
      *
      * @param userId
      * @return
      */
-    // 댓글, 대댓글 생성 시 main-service로 profileImage를 전송해주는 로직
     public String getProfileImage(Long userId) {
-
-        Optional<User> foundUser = userRepository.findById(userId);
-        // 이미지를 요청한 회원이 존재하지 않거나, 탈퇴한 회원인 경우
-        if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원이 존재하지 않습니다.");
-        }
+        
+        // 사용자의 유효성 확인
+        User user = findValidUser(userId);
         // 유효한 회원인 경우, 이미지를 main-service로 전달
-        User user = foundUser.get();
         return user.getProfileImage();
     }
 
-    // 쪽지를 보내기 위한 사용자 검색에서 사용하는 서비스입니다.
+    /**
+     * 쪽지를 보내기 위한 사용자 검색에서 사용하는 서비스입니다.
+     *
+     * @param keyword
+     * @return
+     */
     public CommonResDto searchUser(String keyword) {
 
         // keyword를 통한 쪽지를 보낼 수 있는 사용자 조회
@@ -573,20 +622,14 @@ public class UserService {
     }
 
     /**
+     * refresh Token을 통한 Access Token을 재발급 하는 로직
      *
      * @param email
      * @return
      */
-    // refresh Token을 통한 Access Token을 재발급 하는 로직
     public CommonResDto reProvideToken(String email) {
 
-        Optional<User> foundUser = userRepository.findByEmail(email);
-        // 토큰 발급을 요청한 회원이 유효하지 않은 회원인 경우
-        if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            log.error("없는 회원입니다.");
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "토큰 발급을 진행할 회원이 존재하지 않습니다.");
-        }
-        User user = foundUser.get();
+        User user = findValidUserByEmail(email);
         // redis에 해당 유저의 refresh token 조회
         Object obj = redisTemplate.opsForValue().get("user:refresh:" + user.getUserId());
 
@@ -604,14 +647,23 @@ public class UserService {
                 , new UserLoginResDto(user.getEmail(), user.getNickname(), user.getProfileImage(), token));
     }
 
-    // 쪽지 발송 로직
+    /**
+     * 쪽지 발송 로직
+     *
+     * @param senderId
+     * @param requestNickname
+     * @param reqDto
+     * @return
+     */
     public CommonResDto sendMessage(Long senderId, String requestNickname, UserMessageReqDto reqDto) {
 
         // 자기 자신에게 채팅방 여는 것은 방지
         if(senderId == reqDto.getReceiverId()) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
+        // 수신자의 유효성 확인
         String receiverNickname = findNicknameByUserID(reqDto.getReceiverId());
+        // 수신자와 현재 사용자와의 기존 대화내역 검색
         Optional<Chat> foundChat = chatRepository.findByUserId(senderId, reqDto.getReceiverId());
         // 처음 채팅을 시작하는 거라면
         Chat chat = null;
@@ -631,7 +683,9 @@ public class UserService {
         MessageNotiDto notiDto = 
                 new MessageNotiDto(requestNickname, message.getCreateAt(), senderId, reqDto.getReceiverId());
         
+        // sse 알림용 키 생성
         String routingKey = "message.create." + reqDto.getReceiverId();
+        // 메시지 큐에 dto를 json 변환 및 저장
         rabbitTemplate.convertAndSend("message.exchange", routingKey, notiDto);
 
         // 화면단 리턴용 메소드
@@ -641,7 +695,13 @@ public class UserService {
         return new CommonResDto(HttpStatus.CREATED, "메시지 전송됨", resDto);
     }
 
-    // 채팅방 삭제
+    /**
+     * 채팅방 삭제
+     * 
+     * @param userId
+     * @param chatId
+     * @return
+     */
     public CommonResDto clearChat(Long userId, Long chatId) {
 
         Optional<Chat> byId = chatRepository.findById(chatId);
@@ -650,6 +710,7 @@ public class UserService {
             throw new CommonException(ErrorCode.NOT_FOUND);
         }
         Chat chat = byId.get();
+        // 채팅방 삭제 권한 여부 확인
         if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
             throw new CommonException(ErrorCode.NOT_FOUND);
         }
@@ -658,16 +719,26 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "해당 채팅방 삭제됨.", true);
     }
 
-    // 내 채팅방 목록 조회
+    /**
+     * 내 채팅방 목록 조회
+     * 
+     * @param userId
+     * @param requestNickname
+     * @return
+     */
     public CommonResDto findMyActiveChat(Long userId, String requestNickname) {
-
+        
+        // 사용자의 활성화된 모든 채팅 조회
         Optional<List<Chat>> myActiveChat = chatRepository.findMyActiveChat(userId);
+        // 채팅방이 없다면
         if(!myActiveChat.isPresent()) {
             return new CommonResDto(HttpStatus.OK, "생성된 채팅방이 없습니다.", null);
         }
         List<UserChatInfoResDto> resDtos = myActiveChat.get().stream().map(chat -> {
-                    String nickname1 = findNicknameByUserID(chat.getUserId1());
+            // 화면단에서의 채팅 형식 노출을 위한 송수신자의 닉네임 입력        
+            String nickname1 = findNicknameByUserID(chat.getUserId1());
                     String nickname2 = findNicknameByUserID(chat.getUserId2());
+                    // 채팅방 목록에서 마지막 채팅 내용 노출을 위한 조회 및 dto 변환
                     UserMessageResDto messageDto = messageRepository
                             .findLastByChatId(chat.getChatId()).fromEntity(nickname1, nickname2, requestNickname);
                     return chat.toUserChatInfoResDto(nickname1, nickname2, requestNickname, messageDto);
@@ -677,7 +748,14 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "사용자의 채팅방 모두 조회됨.", resDtos);
     }
 
-    // 특정 채팅방의 채팅 내용 조회  --> 7일 간 생성된 것만
+    /**
+     * 특정 채팅방의 채팅 내용 조회  --> 7일 간 생성된 것만
+     * 
+     * @param userId
+     * @param requestNickname
+     * @param chatId
+     * @return
+     */
     @Transactional
     public CommonResDto getMyChatMessages(Long userId, String requestNickname, Long chatId) {
 
@@ -694,6 +772,7 @@ public class UserService {
         // 채팅방의 사용자의 nickname 조회
         String n1 = findNicknameByUserID(chat.getUserId1());
         String n2 = findNicknameByUserID(chat.getUserId2());
+        // 7일간 생성된 메시지들만 조회하기 위한 기준 시각
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         Optional<List<Message>> messageList = messageRepository.findByChatId(chatId, sevenDaysAgo);
         if(!messageList.isPresent()) {
@@ -709,13 +788,22 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "채팅방의 7일간 메시지 조회됨.", resDto);
     }
 
+    /**
+     * 카카오 api로 부터 access token 발급을 위한 로직
+     * 
+     * @param code
+     * @return
+     */
     public String getKakaoAccessToken(String code) {
-
+        
+        // 카카오 api로 요청을 보내기 위한 header 설정
+        // 정해진 형식이 있음
         RestTemplate restTemplate = new RestTemplate();
         String requestUrl = "https://kauth.kakao.com/oauth/token";
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
-
+        
+        // 요청 body에 보낼 form-data 설정
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("code", code);
@@ -730,8 +818,14 @@ public class UserService {
 
     }
 
+    /**
+     * 카카오 access token을 통한 회원의 정보를 받아오는 메소드
+     * 
+     * @param kakaoAccessToken
+     * @return
+     */
     public KakaoUserDto getKakaoUser(String kakaoAccessToken) {
-
+        
         String requestUrl = "https://kapi.kakao.com/v2/user/me";
 
         HttpHeaders headers = new HttpHeaders();
@@ -746,11 +840,18 @@ public class UserService {
         return response.getBody();
     }
 
+    /**
+     * 카카오 로그인 요청 시, DB에 정보 유무에 따른 회원가입, 로그인 분기 수행 로직
+     * 
+     * @param kakaoUserDto
+     * @return
+     */
     public KakaoLoginResDto findOrCreateKakaoUser(KakaoUserDto kakaoUserDto) {
 
         Optional<User> kakao
                 = userRepository.findSocialUser("KAKAO", kakaoUserDto.getId().toString());
         // 가입 이력이 있는 회원인 경우
+        // 로그인 처리
         if(kakao.isPresent()) {
             // 소셜로그인 요청 유저가 이미 탈퇴한 회원인 경우
             if(!kakao.get().isActive()){
@@ -779,6 +880,7 @@ public class UserService {
         // 가입한 적이 없는 회원인 경우
         Optional<User> byEmail = userRepository.findByEmail(kakaoUserDto.getKakaoAccount().getEmail());
         // 해당 이메일에 가입 이력이 있는 경우
+        // 탈퇴한 회원도 가입 불가
         if(byEmail.isPresent()) {
             throw new CommonException(ErrorCode.BAD_REQUEST, "이미 회원가입된 이메일입니다.");
         }
@@ -806,16 +908,25 @@ public class UserService {
     }
 
 
-    // 이메일을 통해 userId를 리턴하는 메소드입니다.
+    /**
+     * 이메일을 통해 userId를 리턴하는 메소드입니다.
+     *
+     * @param email
+     * @return
+     */
     public Long findByEmail(String email) {
-        Optional<User> byEmail = userRepository.findByEmail(email);
-        if(!byEmail.isPresent() || !byEmail.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND);
-        }
-        return byEmail.get().getUserId();
+        User byEmail = findValidUserByEmail(email);
+        return byEmail.getUserId();
     }
-    
-    // 고객 문의 생성 메소드
+
+    /**
+     * 고객 문의 생성 메소드
+     *
+     * @param userId
+     * @param nickname
+     * @param reqDto
+     * @return
+     */
     public CommonResDto createInform(Long userId, String nickname, @Valid InformReqDto reqDto) {
         // 유저의 유효성 확인
         findValidUser(userId);
@@ -827,7 +938,14 @@ public class UserService {
         return new CommonResDto(HttpStatus.CREATED, "고객문의 생성됨", resDto);
     }
 
-    // 고객 문의 수정 메소드
+    /**
+     * 고객 문의 수정 메소드
+     *
+     * @param userId
+     * @param nickname
+     * @param reqDto
+     * @return
+     */
     public CommonResDto modifyInform(Long userId, String nickname, @Valid InformModiReqDto reqDto) {
         // 유저의 유효성 확인
         findValidUser(userId);
@@ -845,7 +963,13 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "문의 수정됨", resDto);
     }
 
-    // 고객 문의 삭제 메소드
+    /**
+     * 고객 문의 삭제 메소드
+     *
+     * @param userId
+     * @param informId
+     * @return
+     */
     public CommonResDto deleteInform(Long userId, Long informId) {
         // 유저의 유효성 확인
         findValidUser(userId);
@@ -862,7 +986,15 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "문의 삭제됨.", true);
     }
 
-    // 고객 문의 목록 조회 메소드
+    /**
+     * 고객 문의 목록 조회 메소드
+     *
+     * @param userId
+     * @param nickname
+     * @param answered
+     * @param pageable
+     * @return
+     */
     public CommonResDto findMyInform(Long userId, String nickname, String answered ,Pageable pageable) {
         // 사용자 유효성 확인
         findValidUser(userId);
@@ -877,7 +1009,14 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "문의글들 조회됨", resDto);
     }
 
-    // 고객 문의 상세 조회 메소드
+    /**
+     * 고객 문의 상세 조회 메소드
+     *
+     * @param userId
+     * @param nickname
+     * @param informId
+     * @return
+     */
     public CommonResDto findMyInformDetail(Long userId, String nickname, Long informId) {
         // 사용자 유효성 확인
         findValidUser(userId);
@@ -887,15 +1026,40 @@ public class UserService {
         return new CommonResDto(HttpStatus.OK, "해당 문의 글 상세 정보 조회됨", resDto);
     }
 
+    /**
+     * 사용자 신고 메소드
+     *
+     * @param userId
+     * @param reqDto
+     * @return
+     */
+    public CommonResDto createReport(Long userId, @Valid ReportSaveReqDto reqDto) {
+        
+        // 신고자, 피신고자 유저 유효성 확인
+        User reporter = findValidUser(userId);
+        User accused = findValidUser(reqDto.getUserId());
+        
+        // 신고 카테고리 입력값 유효성 확인
+        ReportCategory category = ReportCategory.fromString(reqDto.getCategory());
+        
+        // 새로운 신고 객체 생성
+        Report newReport 
+                = new Report(accused.getUserId(), reqDto.getContent(), reporter.getUserId(), category);
+
+        reportRepository.save(newReport);
+
+        return new CommonResDto(HttpStatus.CREATED, "신고 생성됨", true);
+    }
+
 ///////////  공통적으로 사용하는 공통 로직들입니다.
 
 
     /**
+     * 프로필 이미지를 저장하는 로직
      *
      * @param imageFile
      * @return
      */
-    // 프로필 이미지를 저장하는 로직
     private String setProfileImage(MultipartFile imageFile) {
         String profileImagePath = null;
 
@@ -923,12 +1087,12 @@ public class UserService {
     }
 
     /**
+     * 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
      *
      * @param email
      * @param occasion  --> 회원가입 또는 개인정보 변경 여부
      * @return
      */
-    // 인증코드 전송 및 redis에 해당 키값 저장을 담당하는 메소드
     private String sendEmailAuthCode(String email, String occasion) {
         String authNum;
         // 이메일 전송만을 담당하는 객체를 이용해서 이메일 로직 작성.
@@ -964,11 +1128,11 @@ public class UserService {
     }
 
     /**
+     * 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
      *
      * @param email
      * @return
      */
-    // 인증번호를 3회 이상 발송시킨 이메일인지 확인 여부
     private boolean isBlocked(String email) {
         // redis key 생성
         String key = VERIFICATION_BLOCK_KEY + email;
@@ -977,10 +1141,10 @@ public class UserService {
     }
 
     /**
+     * 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
      *
      * @param email
      */
-    // 인증번호를 30분동안 3회이상 발송하지 못하게 하기 위한 로직
     private void blockUser(String email) {
         // redis key 생성
         String key = VERIFICATION_BLOCK_KEY + email;
@@ -989,11 +1153,11 @@ public class UserService {
     }
 
     /**
+     * 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
      *
      * @param email
      * @return
      */
-    // 이메일 발송을 요청하게 되면, redis에 있는 발송횟수 값을 하나 늘림.
     private int incrementAttemptCount(String email) {
 
         // redis key 생성
@@ -1008,7 +1172,12 @@ public class UserService {
         return count;
     }
 
-    // 사용자의 id를 통해 nickname을 리턴하는 메소드
+    /**
+     * 사용자의 id를 통해 nickname을 리턴하는 메소드
+     *
+     * @param userId
+     * @return
+     */
     private String findNicknameByUserID(Long userId) {
         Optional<User> byId = userRepository.findById(userId);
         // 회원이 없는 경우
@@ -1018,7 +1187,12 @@ public class UserService {
         return byId.get().getNickname();
     }
 
-    // 사용자의 id를 통해 해당 사용자의 유효성을 확인하는 메소드
+    /**
+     * 사용자의 id를 통해 해당 사용자의 유효성을 확인하는 메소드
+     *
+     * @param userId
+     * @return
+     */
     private User findValidUser(Long userId) {
         // 아이디를 통해 찾음
         Optional<User> byId = userRepository.findById(userId);
@@ -1029,7 +1203,12 @@ public class UserService {
         return byId.get();
     }
 
-    // 사용자의 이메일을 통해 해당 사용자의 유효성을 확인하는 메소드
+    /**
+     * 사용자의 이메일을 통해 해당 사용자의 유효성을 확인하는 메소드
+     *
+     * @param email
+     * @return
+     */
     private User findValidUserByEmail(String email) {
         // 이메일을 통해 찾음
         Optional<User> byEmail = userRepository.findByEmail(email);
@@ -1040,7 +1219,12 @@ public class UserService {
         return byEmail.get();
     }
 
-    // Inform의 유효성 확인
+    /**
+     * Inform의 유효성 확인
+     *
+     * @param informId
+     * @return
+     */
     private Inform findValidInform(Long informId) {
         // informId를 통해 찾음
         Optional<Inform> byId = informRepository.findById(informId);
@@ -1051,7 +1235,12 @@ public class UserService {
         return byId.get();
     }
 
-    // answered값을 통한 boolean 변환
+    /**
+     * answered값을 통한 boolean 변환
+     *
+     * @param answered
+     * @return
+     */
     private boolean isAnswered(String answered) {
         if(answered.equals("Y") || answered.equals("y") || answered.equals("T") || answered.equals("t")) {
             return true;
@@ -1063,5 +1252,5 @@ public class UserService {
             throw new CommonException(ErrorCode.BAD_REQUEST, "잘못된 요청값입니다.");
         }
     }
-
+    
 }

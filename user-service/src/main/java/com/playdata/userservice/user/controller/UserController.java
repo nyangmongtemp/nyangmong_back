@@ -9,6 +9,7 @@ import com.playdata.userservice.user.dto.inform.req.InformReqDto;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
 import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.req.UserMessageReqDto;
+import com.playdata.userservice.user.dto.report.req.ReportSaveReqDto;
 import com.playdata.userservice.user.dto.req.*;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
@@ -39,14 +40,13 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    /**
+    /** 회원가입
      *
-     * @param userSaveReqDto
+     * @param userSaveReqDto  : email, 이름, 별명, pw, (전화번호, 주소)
      * @param profileImage
      * @return
      * @throws JsonProcessingException
      */
-    // 회원가입
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> userCreate(
             @RequestPart("user") @Valid UserSaveReqDto userSaveReqDto,
@@ -62,11 +62,11 @@ public class UserController {
     }
     
     /***
+     *   로그인
      *
      * @param userLoginReqDto  --> email, password
      * @return
      */
-    // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginReqDto userLoginReqDto){
         CommonResDto resDto = userService.login(userLoginReqDto);
@@ -75,11 +75,11 @@ public class UserController {
     }
     
     /***
+     *   회원가입 시 인증코드 발송
      *
      * @param email
      * @return
      */
-    // 회원가입 시 인증코드 발송
     @GetMapping("/verify-email")
     public ResponseEntity<?> sendVerifyEmail(@RequestParam("email") String email){
 
@@ -89,11 +89,11 @@ public class UserController {
     }
 
     /***
-     * 
+     *  회원가입 시 이메일 인증 코드 검증
+     *
      * @param authResDto  --> email, authCode(인증코드)
      * @return
      */
-    // 회원가입 시 이메일 인증 코드 검증
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyUserEmailCode(@RequestBody @Valid UserEmailAuthResDto authResDto){
         CommonResDto resDto = userService.verifyEmailCode(authResDto);
@@ -102,6 +102,8 @@ public class UserController {
     }
 
     /**
+     * 내 정보 수정 (비밀번호, 이메일 제외)
+     * 로그인 필요 -> 토큰 필요함.
      *
      * @param userInfo
      * @param modiDto --> nickname, phone, address
@@ -109,8 +111,6 @@ public class UserController {
      * @return
      * @throws JsonProcessingException
      */
-    // 내 정보 수정 (비밀번호, 이메일 제외)
-    // 로그인 필요 -> 토큰 필요함.
     @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
     public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestPart("user") @Valid UserInfoModiReqDto modiDto,
@@ -123,13 +123,13 @@ public class UserController {
     }
 
     /**
+     * 마이페이지에서 이메일 변경 요청 시 인증 시작하는 로직
+     * 토큰 필요
      * 
      * @param userInfo
      * @param newEmail
      * @return
      */
-    // 마이페이지에서 이메일 변경 요청 시 인증 시작하는 로직
-    // 토큰 필요
     @GetMapping("/modify-email")
     public ResponseEntity<?> modifyUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
                                              @RequestParam String newEmail) {
@@ -138,15 +138,15 @@ public class UserController {
     }
 
     /**
-     * 
+     *  마이페이지에서 이메일 변경 요청 인증 코드를 검증하는 로직
+     * 인증이 완료되면, 새로운 이메일로 DB에 업데이트
+     * 화면단에서는 로그아웃 처리 해야함.
+     * 토큰 필요
+     *
      * @param userInfo
      * @param authResDto  --> email, authCode(인증코드)
      * @return
      */
-    // 마이페이지에서 이메일 변경 요청 인증 코드를 검증하는 로직
-    // 인증이 완료되면, 새로운 이메일로 DB에 업데이트
-    // 화면단에서는 로그아웃 처리 해야함.
-    // 토큰 필요
     @PatchMapping("/verify-new-email")
     public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody @Valid UserEmailAuthResDto authResDto){
@@ -157,12 +157,12 @@ public class UserController {
     }
 
     /**
+     * 마이페이지에서 비밀번호 변경 요청 시, 등록된 이메일에 인증 코드를 발송하는 로직
+     * 토큰 필요
      * 
      * @param userInfo
      * @return
      */
-    // 마이페이지에서 비밀번호 변경 요청 시, 등록된 이메일에 인증 코드를 발송하는 로직
-    // 토큰 필요
     @GetMapping("/new-password-req")
     public ResponseEntity<?> newPasswordReq(@AuthenticationPrincipal TokenUserInfo userInfo){
 
@@ -172,13 +172,13 @@ public class UserController {
     }
 
     /**
+     * 마이페이지에서 비밀번호 변경 요청 및 인증 코드 발송 후, 해당 인증 코드를 검증
+     * 토큰 필요
      * 
      * @param userInfo
      * @param authResDto  --> email, authCode(인증코드)
      * @return
      */
-    // 마이페이지에서 비밀번호 변경 요청 및 인증 코드 발송 후, 해당 인증 코드를 검증
-    // 토큰 필요
     @PostMapping("/verify-new-password")
     public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo
             , @RequestBody UserPwAuthReqDto authResDto){
@@ -195,13 +195,13 @@ public class UserController {
     }
 
     /**
+     * 비밀번호 변경 인증이 모두 완료되면 변경해주는 메소드
+     * 화면단에서는 로그아웃 처리해야함.
      *
      * @param userInfo
      * @param reqDto  --> password, 민감정보라서 data 하나지만 post로 받음
      * @return
      */
-    // 비밀번호 변경 인증이 모두 완료되면 변경해주는 메소드
-    // 화면단에서는 로그아웃 처리해야함.
     @PatchMapping("/modify-password")
     public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody UserPasswordModiReqDto reqDto) {
@@ -211,7 +211,12 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 비밀번호 분실 시 입력한 이메일로 인증번호를 발송해주는 메소드
+    /***
+     * 비밀번호 분실 시 입력한 이메일로 인증번호를 발송해주는 메소드
+     *
+     * @param email
+     * @return
+     */
     @GetMapping("/forget/{email}")
     public ResponseEntity<?> forgetPasswordReq(@PathVariable String email){
         CommonResDto resDto = userService.forgetPasswordReq(email);
@@ -219,7 +224,12 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 비밀번호 분실 시, 발급된 인증번호로 인증 후 임시비밀번호를 발급해주는 메소드
+    /***
+     * 비밀번호 분실 시, 발급된 인증번호로 인증 후 임시비밀번호를 발급해주는 메소드
+     *
+     * @param reqDto
+     * @return
+     */
     @PostMapping("/forget/auth")
     public ResponseEntity<?> forgetAuth(@RequestBody @Valid UserEmailAuthResDto reqDto){
         CommonResDto resDto = userService.authCodeAndRePw(reqDto);
@@ -228,11 +238,11 @@ public class UserController {
     }
 
     /**
+     * 마이페이지 요청 메소드
      *
      * @param userInfo
      * @return
      */
-    // 마이페이지 요청 메소드
     @GetMapping("/mypage")
     public ResponseEntity<?> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo){
 
@@ -242,11 +252,11 @@ public class UserController {
     }
 
     /**
+     * 회원 탈퇴 요청 메소드
      *
      * @param userInfo
      * @return
      */
-    // 회원 탈퇴 요청 메소드
     @DeleteMapping("/resign")
     public ResponseEntity<?> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.resignUser(userInfo.getUserId());
@@ -296,9 +306,15 @@ public class UserController {
 
 /////////////// 쪽지 관련 로직들입니다.
 
-    // 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
-    // 마이페이지에서 요청을 보내는 것이기에, token의 정보는 쓰지 않더라도 token이 필요로 하게 함.
-    // 비로그인 상태의 사용자는 사용하지 못하게 할 것 임.
+    /**
+     * 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
+     * 마이페이지에서 요청을 보내는 것이기에, token의 정보는 쓰지 않더라도 token이 필요로 하게 함.
+     * 비로그인 상태의 사용자는 사용하지 못하게 할 것 임.
+     *
+     * @param userInfo
+     * @param keyword
+     * @return
+     */
     @GetMapping("/search/{keyword}")
     public ResponseEntity<?> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
                                         @PathVariable String keyword){
@@ -307,14 +323,25 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 본인의 활성화된 대화방 조회
+    /**
+     * 본인의 활성화된 대화방 조회
+     * 
+     * @param userInfo
+     * @return
+     */
     @GetMapping("/chat")
     public ResponseEntity<?> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.findMyActiveChat(userInfo.getUserId(), userInfo.getNickname());
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 대화방 삭제
+    /**
+     * 대화방 삭제
+     * 
+     * @param userInfo
+     * @param chatId
+     * @return
+     */
     @DeleteMapping("/clear/{chatId}")
     public ResponseEntity<?> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "chatId") Long chatId) {
@@ -324,7 +351,13 @@ public class UserController {
     }
 
 
-    // 선택한 채팅방의 7일간의 모든 쪽지 내용 조회
+    /**
+     * 선택한 채팅방의 7일간의 모든 쪽지 내용 조회
+     * 
+     * @param userInfo
+     * @param chatId
+     * @return
+     */
     @GetMapping("/chat/list/{id}")
     public ResponseEntity<?> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
                                             @PathVariable(name = "id") Long chatId){
@@ -334,7 +367,13 @@ public class UserController {
     }
 
 
-    // 쪽지 발송
+    /**
+     *  쪽지 발송
+     * 
+     * @param userInfo
+     * @param reqDto
+     * @return
+     */
     @PostMapping("/send")
     public ResponseEntity<?> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
                                              @RequestBody @Valid UserMessageReqDto reqDto){
@@ -343,6 +382,12 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
+    /**
+     * 이메일은 통한 userId 리턴
+     *
+     * @param userInfo
+     * @return
+     */
     @GetMapping("/findId")
     ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
         Long foundUserId = userService.findByEmail(userInfo.getEmail());
@@ -352,7 +397,13 @@ public class UserController {
 
     /////////////////////// 고객 문의 관련 메소드입니다.
 
-    // 고객문의 생성
+    /**
+     * 고객문의 생성
+     *
+     * @param userInfo
+     * @param reqDto
+     * @return
+     */
     @PostMapping("/inform/create")
     public ResponseEntity<?> createInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                         @RequestBody @Valid InformReqDto reqDto) {
@@ -362,7 +413,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
-    // 고객 문의 수정
+    /**
+     * 고객 문의 수정
+     *
+     * @param userInfo
+     * @param reqDto
+     * @return
+     */
     @PatchMapping("/inform/modify")
     public ResponseEntity<?> modifyInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @RequestBody @Valid InformModiReqDto reqDto) {
@@ -372,7 +429,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 고객 문의 삭제
+    /**
+     * 고객 문의 삭제
+     *
+     * @param userInfo
+     * @param informId
+     * @return
+     */
     @DeleteMapping("/inform/{id}")
     public ResponseEntity<?> deleteInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @PathVariable(name = "id") Long informId) {
@@ -381,9 +444,18 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 고객 문의 목록 조회
-    // answered를 통해서 응답여부에 따른 정렬 조건을 정함
-    // 화면단에서는 y, n으로 주면 될듯.
+    /**
+     * 고객 문의 목록 조회
+     * answered를 통해서 응답여부에 따른 정렬 조건을 정함
+     * 화면단에서는 y, n으로 주면 될듯.
+     *
+     * @param userInfo
+     * @param answered
+     * @param page
+     * @param size
+     * @param sort
+     * @return
+     */
     @GetMapping("/inform/list/{answered}")
     public ResponseEntity<?> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "answered") String answered,
@@ -399,7 +471,13 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // 고객 문의 상세 조회
+    /**
+     * 고객 문의 상세 조회
+     *
+     * @param userInfo
+     * @param informId
+     * @return
+     */
     @GetMapping("/inform/detail/{id}")
     public ResponseEntity<?> getMyInformDetail(@AuthenticationPrincipal TokenUserInfo userInfo,
                                                @PathVariable(name = "id") Long informId) {
@@ -408,17 +486,33 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     * 사용자 신고 생성
+     *
+     * @param userInfo
+     * @param reqDto
+     * @return
+     */
+    @PostMapping("/report")
+    public ResponseEntity<?> createReport(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                          @RequestBody @Valid ReportSaveReqDto reqDto) {
+        CommonResDto resDto
+                = userService.createReport(userInfo.getUserId(), reqDto);
+
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
+    }
+
 
 ///////////////////////  refresh 관련 메소드 입니다.
     /**
+     * 리프레시 토큰을 통한 Access Token 재발급용 메소드
+     * localStorage에 사용자의 이메일을 저장해놓고 이 메소드의 요청값으로 넣자
+     * Access Token이 필요한 요청을 보냈을 때, 토큰이 만료된 경우
+     * 화면단에서 요청하는 메소드
      *
      * @param userEmail
      * @return
      */
-    // 리프레시 토큰을 통한 Access Token 재발급용 메소드
-    // localStorage에 사용자의 이메일을 저장해놓고 이 메소드의 요청값으로 넣자
-    // Access Token이 필요한 요청을 보냈을 때, 토큰이 만료된 경우
-    // 화면단에서 요청하는 메소드
     @PostMapping("/refresh")
     public ResponseEntity<?> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
         log.error("refresh 발급 로직 발동!!!");
@@ -433,11 +527,11 @@ public class UserController {
 
 
     /**
+     * 댓글 및 대댓글 생성 시 프로필 이미지 주소를 넘겨주는 메소드
      *
      * @param userId
      * @return
      */
-    // 댓글 및 대댓글 생성 시 프로필 이미지 주소를 넘겨주는 메소드
     @GetMapping("/profileImage/{id}")
     ResponseEntity<String> getUserProfileImage(@PathVariable(name = "id") Long userId) {
         String profileImage = userService.getProfileImage(userId);
