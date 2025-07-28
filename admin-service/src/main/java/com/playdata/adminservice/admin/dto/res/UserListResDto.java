@@ -12,9 +12,10 @@ public class UserListResDto {
     private String userName;
     private String email;
     private String nickname;
-    private boolean active;
-    private int reportCount;
+    private boolean active;;
     private int pauseCount;
     private LocalDateTime createAt;
+
+    private int reportCount;
 
 }

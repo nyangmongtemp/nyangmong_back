@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -51,8 +52,6 @@ public class User extends BaseTimeEntity {
 
     private boolean active; // 계정 활성화 여부 (true = 정상, false = 정지/탈퇴)
 
-    private int reportCount; // 누적 신고 횟수 (욕설, 스팸 등으로 신고당한 횟수)
-
     private LocalDateTime passwordUpdatedAt; // 마지막 비밀번호 변경 일시
 
     private int passwordFaultCount; // 로그인 실패 횟수
@@ -61,4 +60,7 @@ public class User extends BaseTimeEntity {
 
     // 정지 풀리는 날짜
     private LocalDateTime releaseAt;
+
+    @Transient
+    private int reportCount; // 누적 신고 횟수 (욕설, 스팸 등으로 신고당한 횟수)
 }
