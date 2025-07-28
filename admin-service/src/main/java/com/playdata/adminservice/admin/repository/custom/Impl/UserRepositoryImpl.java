@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import static com.playdata.adminservice.admin.entity.QAdmin.admin;
+import static com.playdata.adminservice.admin.entity.QTerms.terms;
 import static com.playdata.adminservice.admin.entity.QUser.*;
 
 @RequiredArgsConstructor
@@ -59,17 +61,25 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
     private BooleanBuilder builderCondition(UserSearchDto searchDto) {
         BooleanBuilder builder = new BooleanBuilder();
 
-        if (!StringUtils.isBlank(searchDto.getUsername())) {
-            builder.and(user.userName.startsWithIgnoreCase(searchDto.getUsername()));
-        }
+        if (!StringUtils.isBlank(searchDto.getKeyword())) {
+            String keyword = searchDto.getKeyword();
+            BooleanBuilder searchBuilder = new BooleanBuilder();
 
-        if (!StringUtils.isBlank(searchDto.getEmail())) {
-            builder.and(user.email.startsWithIgnoreCase(searchDto.getEmail()));
+            // 제목 또는 작성자 이름에 검색어가 포함된 경우
+            searchBuilder.or(user.userName.containsIgnoreCase(keyword));
+            searchBuilder.or(user.email.containsIgnoreCase(keyword));
+            searchBuilder.or(user.nickname.containsIgnoreCase(keyword));
+
+            builder.and(searchBuilder);
         }
 
         if (searchDto.getReport() != null && searchDto.getReport()) {
             // pause가 true일 때만 pauseCount >= 1 조건 추가
             builder.and(user.reportCount.goe(1));
+        }
+
+        if (searchDto.getActive() != null) {
+            builder.and(user.active.eq(searchDto.getActive()));
         }
 
         return builder;

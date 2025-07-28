@@ -1,10 +1,9 @@
 package com.playdata.adminservice.admin.controller;
 
 import com.playdata.adminservice.admin.dto.req.InformReplyReqDto;
-import com.playdata.adminservice.admin.dto.req.SearchDto;
+import com.playdata.adminservice.admin.dto.req.InformSearchDto;
 import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
-import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Inform;
 import com.playdata.adminservice.admin.service.InformService;
 import com.playdata.adminservice.common.auth.TokenUserInfo;
@@ -19,8 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +41,7 @@ public class InformController {
      * @return 문의 목록 페이지
      */
     @GetMapping("/list")
-    public ResponseEntity<CommonResDto> getInformList(SearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<CommonResDto> getInformList(InformSearchDto searchDto, Pageable pageable) {
         Page<InformListResDto> result = informService.findInformList(searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -61,7 +60,15 @@ public class InformController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")
+    /**
+     * 문의 답변
+     *
+     * @param id
+     * @param informReplyReqDto
+     * @param adminInfo
+     * @return
+     */
+    @PatchMapping("/{id}")
     public ResponseEntity<CommonResDto> replyInform(
             @PathVariable Long id,
             @RequestBody @Valid InformReplyReqDto informReplyReqDto,

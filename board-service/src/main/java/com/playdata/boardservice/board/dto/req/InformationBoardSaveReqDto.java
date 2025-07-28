@@ -2,6 +2,7 @@ package com.playdata.boardservice.board.dto.req;
 
 import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.entity.InformationBoard;
+import com.playdata.boardservice.common.util.HtmlSanitizer;
 import lombok.*;
 
 @Getter
@@ -20,12 +21,12 @@ public class InformationBoardSaveReqDto {
 
     private  String title;
 
-    public InformationBoard toEntity(Long userId, String nickname,String imageUrl) {
+    public InformationBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlSanitizer) {
         return InformationBoard.builder()
                 .userId(userId)
                 .category(category)
                 .thumbnailImage(imageUrl)
-                .content(content)
+                .content(htmlSanitizer.sanitize(content))
                 .nickname(nickname)
                 .viewCount(0)
                 .active(true)

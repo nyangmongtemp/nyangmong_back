@@ -4,6 +4,7 @@ import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
 import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsLastPostResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
@@ -13,7 +14,6 @@ import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.validation.Valid;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,9 +24,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -74,18 +74,18 @@ public class TermsController {
     /**
      * 약관/개인정보처리방침/QNA 등록
      *
-     * @param userInfo 인증된 관리자 정보 (Spring Security AuthenticationPrincipal)
+     * @param adminInfo 인증된 관리자 정보 (Spring Security AuthenticationPrincipal)
      * @param category URL 경로 변수로 전달되는 카테고리명
      * @param termsInsertReqDto 등록할 약관 정보가 담긴 요청 DTO
      * @return 등록된 약관 엔티티를 담은 CommonResDto를 ResponseEntity로 반환
      */
     @PostMapping()
     public ResponseEntity<CommonResDto> createTerms(
-            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
             @PathVariable String category,
             @RequestBody @Valid TermsInsertReqDto termsInsertReqDto) {
         TermsCategory termsCategory = parseCategory(category);
-        Terms result = termsService.insertTerms(userInfo, termsCategory, termsInsertReqDto);
+        Terms result = termsService.insertTerms(adminInfo, termsCategory, termsInsertReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "등록 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -98,13 +98,14 @@ public class TermsController {
      * @param termsUpdateReqDto 수정할 내용이 담긴 요청 DTO
      * @return 수정 완료된 약관 엔티티를 담은 CommonResDto를 ResponseEntity로 반환
      */
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<CommonResDto> updateTerms(
+            @AuthenticationPrincipal TokenUserInfo adminInfo,
             @PathVariable Long id,
             @PathVariable String category,
             @RequestBody @Valid TermsUpdateReqDto termsUpdateReqDto) {
         TermsCategory termsCategory = parseCategory(category);
-        Terms result = termsService.updateTerms(id, termsCategory, termsUpdateReqDto);
+        Terms result = termsService.updateTerms(adminInfo, id, termsCategory, termsUpdateReqDto);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "수정 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -125,11 +126,14 @@ public class TermsController {
     }
 
     /**
-     * 약관 마지막 게시글 조회
+     * 가장 최근 약관 게시글을 조회하는 API
      *
-     * @param category URL 경로 변수로 전달되는 카테고리명 (TERMS만 허용)
-     * @return 가장 최근 등록된 약관 상세 정보를 담은 CommonResDto를 ResponseEntity로 반환,
-     *         TERMS가 아닌 경우 BAD_REQUEST 예외 발생
+     * 조건:
+     * - 카테고리는 반드시 'TERMS' 이어야 한다. (기타 카테고리는 BAD_REQUEST 예외 발생)
+     * - 최근 게시글이 없을 경우, data=null로 응답된다.
+     *
+     * @param category 문자열 형태의 카테고리명 (ex: "TERMS")
+     * @return CommonResDto (status, message, data 포함)
      */
     @GetMapping("/lastPost")
     public ResponseEntity<CommonResDto> getLastPostTerms(@PathVariable String category) {
@@ -137,8 +141,9 @@ public class TermsController {
         if (termsCategory != TermsCategory.TERMS) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
-        Optional<TermsDetailResDto> result = termsService.getLastPostTerms(termsCategory);
-        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "약관 마지막게시글 조회", result.orElse(null));
+        TermsLastPostResDto result = termsService.getLastPostTerms(termsCategory);
+        String message = (result == null) ? "등록된 약관이 없습니다." : "약관 마지막 게시글 조회";
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, message, result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
