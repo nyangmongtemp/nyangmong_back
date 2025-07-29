@@ -68,6 +68,14 @@ public class User extends BaseTimeEntity {
     public void updateUserReport(ReportUpdateReqDto reportUpdateReqDto) {
         this.pauseCount++;
         this.active = false;
-        this.releaseAt = (reportUpdateReqDto.getReleaseAt() == 999) ? LocalDateTime.now().plusYears(999) : LocalDateTime.now().plusDays(reportUpdateReqDto.getReleaseAt());
+        if (reportUpdateReqDto.getReleaseAt() == 999) {
+            this.releaseAt = LocalDateTime.now().plusYears(999);
+        } else {
+            if (this.releaseAt == null || this.releaseAt.isBefore(LocalDateTime.now())) {
+                this.releaseAt = LocalDateTime.now().plusDays(reportUpdateReqDto.getReleaseAt());
+            } else {
+                this.releaseAt = this.releaseAt.plusDays(reportUpdateReqDto.getReleaseAt());
+            }
+        }
     }
 }
