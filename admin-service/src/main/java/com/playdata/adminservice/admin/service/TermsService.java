@@ -1,9 +1,10 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.TermsInsertReqDto;
-import com.playdata.adminservice.admin.dto.req.TermsSearchDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.dto.req.TermsUpdateReqDto;
 import com.playdata.adminservice.admin.dto.res.TermsDetailResDto;
+import com.playdata.adminservice.admin.dto.res.TermsLastPostResDto;
 import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
@@ -34,7 +35,7 @@ public class TermsService {
      * @param pageable 페이징 정보 (페이지 번호, 사이즈, 정렬 등)
      * @return 조건에 맞는 약관 목록을 페이징 처리한 결과(Page)로 반환
      */
-    public Page<TermsListResDto> findTermsList(TermsCategory termsCategory, TermsSearchDto searchDto, Pageable pageable) {
+    public Page<TermsListResDto> findTermsList(TermsCategory termsCategory, SearchDto searchDto, Pageable pageable) {
         return termsRepository.findByTermsList(termsCategory, searchDto, pageable);
     }
 
@@ -53,14 +54,14 @@ public class TermsService {
     /**
      * 약관/개인정보처리방침/QNA 등록
      *
-     * @param userInfo 현재 인증된 관리자 정보 (adminId 포함)
+     * @param adminInfo 현재 인증된 관리자 정보 (adminId 포함)
      * @param category 등록할 약관 카테고리 (TERMS, POLICY, QNA 등)
      * @param termsInsertReqDto 약관 등록을 위한 요청 DTO
      * @return 저장된 Terms 엔티티 반환
      */
     @Transactional
-    public Terms insertTerms(TokenUserInfo userInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
-        Long adminId = userInfo.getAdminId();
+    public Terms insertTerms(TokenUserInfo adminInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
+        Long adminId = adminInfo.getAdminId();
         return termsRepository.save(termsInsertReqDto.toEntity(adminId, category));
     }
 
@@ -74,9 +75,9 @@ public class TermsService {
      * @throws CommonException 해당 약관이 없으면 DATA_NOT_FOUND 예외 발생
      */
     @Transactional
-    public Terms updateTerms(Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
+    public Terms updateTerms(TokenUserInfo adminInfo, Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
         Terms terms = findTermsOrThrow(id, termsCategory);
-        terms.updateTerms(termsUpdateReqDto);
+        terms.updateTerms(adminInfo.getAdminId(), termsUpdateReqDto);
         return terms;
     }
 
@@ -96,15 +97,17 @@ public class TermsService {
     }
 
     /**
-     * 특정 카테고리에 해당하며 활성 상태가 true인 약관 중
-     * 가장 최근에 등록된 약관 한 건을 조회한다.
+     * 가장 최근 약관 게시글을 반환한다.
      *
-     * @param category 조회할 TermsCategory (TERMS, POLICY, QNA)
-     * @return 조건에 맞는 최신 약관을 Optional로 감싸 반환, 없으면 Optional.empty()
+     * 조건:
+     * - 비활성화된 약관은 제외 (active = true)
+     * - 게시글이 존재하지 않을 경우 null 반환
+     *
+     * @param category 조회할 약관 카테고리
+     * @return 가장 최근의 TermsDetailResDto 또는 null
      */
-    public Optional<TermsDetailResDto> getLastPostTerms(TermsCategory category) {
-        Optional<Terms> terms = termsRepository.findTopByCategoryAndActiveIsTrueOrderByTermsIdDesc(category);
-        return terms.map(TermsDetailResDto::new);
+    public TermsLastPostResDto getLastPostTerms(TermsCategory category) {
+        return termsRepository.findByTermsLastPost(category);
     }
 
     /**

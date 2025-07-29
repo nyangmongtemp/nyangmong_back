@@ -69,7 +69,10 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/admin/login", "/admin/create", "/admin/admin-create", "/admin/verify-code",
 
             // 스웨거
-            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**",
+
+            // 메인 화면 목록 조회
+            "/main/screen/banner/list"
     );
 
     @Override

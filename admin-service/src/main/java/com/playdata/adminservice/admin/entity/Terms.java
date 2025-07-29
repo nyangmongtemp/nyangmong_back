@@ -35,7 +35,7 @@ public class Terms extends BaseTimeEntity {
     @Column(nullable = false)
     private String title; // 제목
 
-    @Column(nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content; // 내용
 
     @Column(nullable = false)
@@ -56,7 +56,8 @@ public class Terms extends BaseTimeEntity {
      * 수정
      * @param reqDto
      */
-    public void updateTerms(TermsUpdateReqDto reqDto) {
+    public void updateTerms(Long adminId, TermsUpdateReqDto reqDto) {
+        this.adminId = adminId;
         this.title = reqDto.getTitle();
         this.content = reqDto.getContent();
     }

@@ -26,8 +26,8 @@ public class MainController {
 
     private final MainService mainService;
 
-    // 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
     /**
+     * 게시물 좋아요 --> 좋아요 생성, 취소 모두 이 메소드로 통일함.
      *
      * @param userInfo
      * @param reqDto  --> contentId, contentType, category
@@ -45,12 +45,12 @@ public class MainController {
     }
 
     /**
+     * 댓글 생성
      *
      * @param userInfo
      * @param reqDto --> categoty, hidden, contentType, contentId
      * @return
      */
-    // 댓글 생성
     @PostMapping("/comment/create")
     public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody @Valid MainComReqDto reqDto){
@@ -59,9 +59,9 @@ public class MainController {
         return new ResponseEntity(resDto, HttpStatus.CREATED);
     }
     
-    // 댓글 삭제
     /**
-     * asdf
+     * 댓글 삭제
+     * 
      * @param userInfo
      * @param commentId
      * @return
@@ -75,12 +75,12 @@ public class MainController {
     }
 
     /**
+     * 댓글 수정
      *
      * @param userInfo
      * @param reqDto  --> content, commentId
      * @return
      */
-    // 댓글 수정
     @PatchMapping("/comment/modify")
     public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody @Valid ComModiReqDto reqDto){
@@ -91,12 +91,12 @@ public class MainController {
     }
 
     /**
+     * 대댓글 생성
      *
      * @param userInfo
      * @param reqDto  --> content, commentId
      * @return
      */
-    // 대댓글 생성
     @PostMapping("/reply/create")
     public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody @Valid ReplySaveReqDto reqDto) {
@@ -106,12 +106,12 @@ public class MainController {
     }
 
     /**
+     * 대댓글 삭제
      *
      * @param userInfo
      * @param replyId
      * @return
      */
-    // 대댓글 삭제
     @DeleteMapping("/reply/delete/{id}")
     public ResponseEntity<?> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@PathVariable(name = "id") Long replyId) {
@@ -121,12 +121,12 @@ public class MainController {
     }
 
     /**
+     * 대댓글 수정
      *
      * @param userInfo
      * @param reqDto  --> content, commentId
      * @return
      */
-    // 대댓글 수정
     @PatchMapping("/reply/modify")
     public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody @Valid ReplyModiReqDto reqDto){
@@ -136,11 +136,11 @@ public class MainController {
     }
 
     /**
+     * 게시물 상세 조회 시 모든 좋아요, 댓글 개수 리턴
      *
      * @param reqDto  ->> contentId, category
      * @return
      */
-    // 게시물 상세 조회 시 모든 좋아요, 댓글 개수 리턴
     @PostMapping("/detail")
     public ResponseEntity<?> getDetailLikeCommentCount(@RequestBody LikeComCountReqDto reqDto) {
         CommonResDto resDto = mainService.getDetail(reqDto);
@@ -149,12 +149,12 @@ public class MainController {
     }
 
     /**
+     * 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
      *
      * @param reqDto  --> contentId, category
      * @param pageable  --> ?page=2&size=10&sort=createTime
      * @return
      */
-    // 게시물 상세 조회 시 모든 댓글 리턴 --> 페이징 처리 필요
     @PostMapping("/comment/list")
     public ResponseEntity<?> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
         CommonResDto resDto = mainService.getCommentDetail(reqDto, pageable);
@@ -162,6 +162,12 @@ public class MainController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
+    /**
+     * 특정 댓글의, 대댓글 목록 조회
+     * 
+     * @param commentId
+     * @return
+     */
     @GetMapping("/reply/list/{id}")
     public ResponseEntity<?> getReplyList(@PathVariable(name = "id") Long commentId) {
         CommonResDto resDto = mainService.getCommentReplies(commentId);
@@ -170,6 +176,7 @@ public class MainController {
     }
 
     /**
+     * 마이페이지에서 내가 작성한 댓글 조회
      *
      * @param userInfo
      * @param page
@@ -177,7 +184,6 @@ public class MainController {
      * @param sort
      * @return
      */
-    // 마이페이지에서 내가 쓴 댓글 목록 조회
     @GetMapping("/comment/mypage")
     public ResponseEntity<?> getMyComment(
             @AuthenticationPrincipal TokenUserInfo userInfo,
@@ -191,12 +197,12 @@ public class MainController {
     }
 
     /**
-     *
+     * 마이페이지에서 내가 쓴 대댓글의 댓글 목록 조회  --> 사용 안하는 중
+     * 
      * @param userInfo
      * @param pageable  --> ?page=2&size=10&sort=createTime
      * @return
      */
-    // 마이페이지에서 내가 쓴 대댓글의 댓글 목록 조회
     @GetMapping("/reply/mypage")
     public ResponseEntity<?> getMyReply(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
         CommonResDto resDto = mainService.getMyReply(userInfo.getUserId(), pageable);
@@ -205,12 +211,12 @@ public class MainController {
     }
 
     /**
+     * 화면단에서 commentId 와 게시물 작성자 userId를 줘야함.
      *
      * @param userInfo
      * @param reqDto  --> commentId, userId (작성자 id)
      * @return
      */
-    // 화면단에서 commentId 와 게시물 작성자 userId를 줘야함.
     @PostMapping("/comment/hidden")
     public ResponseEntity<?> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @RequestBody @Valid SeeHideComReqDto reqDto) {
@@ -248,12 +254,12 @@ public class MainController {
 ////// feign 요청를 필요로 하는 메소드들입니다. --> 게시판 서비스가 완성이 된다면 그때 작성하도록 하겠습니다.
 
     /**
+     * 회원의 프로필 사진이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 profileImage 값을 변경하는 메소드
      *
      * @param userId
      * @param profileImage
      * @return
      */
-    // 회원의 프로필 사진이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 profileImage 값을 변경하는 메소드
     @PutMapping("/modifyProfileImage/{id}/{profileImage}")
         ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
                                      @PathVariable("profileImage") String profileImage) {
@@ -265,11 +271,11 @@ public class MainController {
 //////// feign 요청을 받는 메소드들입니다.
 
     /**
+     * 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
      *
      * @param userId
      * @return
      */
-    // 회원이 탈퇴했을 때, 회원이 작성한 좋아요, 댓글, 대댓글을 모두 active false로 변경하는 메소드
     @DeleteMapping("/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
         CommonResDto resDto = mainService.deleteUserAll(userId);
@@ -278,12 +284,12 @@ public class MainController {
     }
 
     /**
+     * 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
      *
      * @param userId
      * @param nickname
      * @return
      */
-    // 회원의 닉네임이 변경되었을 때, 해당 사용자가 작성한 모든 댓글, 대댓글의 nickname값을 변경하는 메소드
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
@@ -292,11 +298,12 @@ public class MainController {
     }
 
     /**
+     * feign으로 받으셔야 합니다.
+     * 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
+     *
      * @param contentList --> List<contentId, category>
      * @return  List<LikeComCountResDto>  --> category, contentId, commentCount(대댓글까지 포함), likeCount
      */
-    // feign으로 받으셔야 합니다.
-    // 게시물 좋아요, 댓글 개수 조회 -> 리스트 형태로 올 경우
     @PostMapping("/list")
     public List<LikeComCountResDto> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
         return mainService.getLikeCommentCount(contentList);

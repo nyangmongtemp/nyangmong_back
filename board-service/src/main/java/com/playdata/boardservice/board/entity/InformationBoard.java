@@ -3,6 +3,7 @@ package com.playdata.boardservice.board.entity;
 import com.playdata.boardservice.board.dto.BoardModiDto;
 import com.playdata.boardservice.board.dto.res.InformationBoardResDto;
 import com.playdata.boardservice.common.entity.BaseTimeEntity;
+import com.playdata.boardservice.common.util.HtmlSanitizer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -59,9 +60,10 @@ public class InformationBoard extends BaseTimeEntity {
     }
 
     // 수정
-    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage) {
+    public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         this.thumbnailImage = newThumbnailImage;
-        this.content = boardModiDto.getContent();
+        this.content = htmlPolicy.sanitizeHtml(boardModiDto.getContent());
+        this.title = plainTextSanitizer.sanitizeHtml(boardModiDto.getTitle());
     }
 
     // 사용자가 nickname을 변경하면 그 작성자의 게시물들의 nickname을 변경

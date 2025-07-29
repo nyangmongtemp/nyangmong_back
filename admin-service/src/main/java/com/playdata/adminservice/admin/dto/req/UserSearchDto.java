@@ -13,8 +13,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserSearchDto {
 
-    private String username;
+    private String keyword;
     private Boolean report;
-    private String email;
+    private Boolean active;
 
 }

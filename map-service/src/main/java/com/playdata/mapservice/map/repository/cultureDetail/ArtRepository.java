@@ -14,7 +14,15 @@ public interface ArtRepository extends JpaRepository<Art,Long> {
     @Query("SELECT DISTINCT p.sigungu FROM Art p WHERE p.sido = :sido")
     List<String> findDetailRegion(@Param("sido") String targetRegion);
 
+    // 세종은 sigungu가 없어서, legalDong을 받자.
+    @Query("SELECT DISTINCT p.legalDong FROM Art p WHERE p.sido = :sido")
+    List<String> findDetailSejong(@Param("sido") String targetRegion);
+
     @Query("SELECT p FROM Art p WHERE p.sido = :sido AND p.sigungu = :sigungu")
     List<Art> findListByRegion(@Param("sido") String desc, @Param("sigungu") String sigungu);
+
+    // 세종용....
+    @Query("SELECT p FROM Art p WHERE p.sido = :sido AND p.legalDong = :legal")
+    List<Art> findListByRegionSejong(@Param("sido") String desc, @Param("legal") String legalDong);
 
 }
