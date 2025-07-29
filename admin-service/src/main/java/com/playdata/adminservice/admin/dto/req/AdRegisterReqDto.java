@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,9 +13,6 @@ import java.time.LocalDate;
 @Data
 public class AdRegisterReqDto {
 
-    // 광고 썸네일 이미지 URL (필수)
-    @NotBlank(message = "썸네일 이미지는 필수입니다.")
-    private MultipartFile thumbnailImage;
 
     // 광고 제목 (필수)
     @NotBlank(message = "광고 제목은 필수입니다.")
@@ -28,10 +26,12 @@ public class AdRegisterReqDto {
     private Boolean active;
 
     // 광고 시작 날짜 (필수)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "광고 시작일은 필수입니다.")
     private LocalDate startDate;
 
     // 광고 종료 날짜 (필수)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "광고 종료일은 필수입니다.")
     private LocalDate endDate;
 
