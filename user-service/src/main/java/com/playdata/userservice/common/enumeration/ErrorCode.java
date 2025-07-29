@@ -61,6 +61,7 @@ public enum ErrorCode {
     AUTH_CODE_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-011", "인증코드가 존재하지 않습니다."),
     AUTH_ACCOUNT_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-012", "로그인을 해주세요."), // 인증할 계정이 존재하지 않을 때
     AUTH_OTP_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ACCOUNT-013", "OTP 개인키가 존재하지 않습니다."),
+    AUTH_DISALLOWED(HttpStatus.UNAUTHORIZED, "ACCOUNT-014", "이메일 인증 코드 발급 회수 초과, 30분동안 발급 불가"),
 
 
 
@@ -76,6 +77,7 @@ public enum ErrorCode {
     NO_UPDATE_PERMISSION(HttpStatus.FORBIDDEN, "AUTHORITY-005", "수정 권한이 없습니다."),
     NO_DELETE_PERMISSION(HttpStatus.FORBIDDEN, "AUTHORITY-006", "삭제 권한이 없습니다."),
     NOT_ALLOWED_API(HttpStatus.FORBIDDEN, "AUTHORITY-007", "접근할 수 없는 API 입니다."),
+    NOT_ALLOWED_USER(HttpStatus.FORBIDDEN, "AUTHORITY-008", "현재 정지된 회원입니다."),
 
 
 
@@ -153,6 +155,7 @@ public enum ErrorCode {
     MAIL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL-001", "메일 서버에 오류가 발생했습니다."),
 
     MISSING_MAIL_RECIPIENT(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL-002", "메일 수신자 정보가 누락되었습니다."),
+    
 
 
     ;

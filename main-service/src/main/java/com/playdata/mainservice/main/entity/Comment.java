@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.main.dto.res.CommentDetailResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -107,4 +108,23 @@ public class Comment extends BaseTimeEntity {
         }
         return false;
     }
+
+    // 게시물 상세 조회 시, 댓글의 정보들 + 좋아요 수 + 대댓글 여부를 담은 dto 변환 메소드
+    public CommentDetailResDto getDetailResDto() {
+        return CommentDetailResDto.builder()
+                .contentId(this.getContentId())
+                .category(String.valueOf(this.getCategory()))
+                .content(this.getContent())
+                // 대댓글 존재 여부
+                .isReply(this.isReplyExist())
+                .createAt(this.getCreateAt())
+                .profileImage(this.getProfileImage())
+                .nickname(this.getNickname())
+                .userId(this.getUserId())
+                // 비공개 여부
+                .hidden(this.isHidden())
+                .commentId(this.getCommentId())
+                .build();
+    }
+
 }

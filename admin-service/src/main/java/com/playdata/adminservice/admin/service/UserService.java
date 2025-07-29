@@ -1,20 +1,29 @@
 package com.playdata.adminservice.admin.service;
 
 import com.playdata.adminservice.admin.dto.req.AdminLogReqDto;
+import com.playdata.adminservice.admin.dto.req.ReportUpdateReqDto;
 import com.playdata.adminservice.admin.dto.req.UserSearchDto;
+import com.playdata.adminservice.admin.dto.res.ReportListResDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
+import com.playdata.adminservice.admin.entity.Report;
 import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.AdminLogRepository;
+import com.playdata.adminservice.admin.repository.ReportRepository;
 import com.playdata.adminservice.admin.repository.UserRepository;
-import com.playdata.adminservice.common.auth.TokenAdminInfo;
+import com.playdata.adminservice.common.auth.TokenUserInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +35,8 @@ public class UserService {
     private final UserRepository userRepository;
 
     private final AdminLogRepository adminLogRepository;
+
+    private final ReportRepository reportRepository;
 
     /**
      * [관리자] - 사용자 목록 조회 (검색, 페이징)
@@ -43,7 +54,7 @@ public class UserService {
      * @return
      */
     @Transactional
-    public UserDetailResDto findUser(TokenAdminInfo adminInfo, Long id, HttpServletRequest request) {
+    public UserDetailResDto findUser(TokenUserInfo adminInfo, Long id, HttpServletRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
@@ -51,6 +62,56 @@ public class UserService {
         adminLogRepository.save(logDto.toEntity());
 
         return new UserDetailResDto(user);
+    }
+
+    /**
+     * [관리자] - 사용자의 신고내역 조회
+     *
+     * @param userId
+     * @return
+     */
+    public List<ReportListResDto> findReposrtList(long userId) {
+        return reportRepository.findReportList(userId);
+    }
+
+    /**
+     * 사용자의 신고내역 확인처리
+     *
+     * @param id
+     * @param adminInfo
+     * @return
+     */
+    @Transactional
+    public Report updateReportTreat(long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+        Report report = reportRepository.findByReportIdAndTreatIsFalse(id).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        report.updateTreat(adminInfo.getAdminId());
+        return report;
+    }
+
+    /**
+     * 사용자 정지
+     *
+     * @param userId
+     * @param adminInfo
+     * @return
+     */
+    @Transactional
+    public Map<String, Object> updateReport(long userId, TokenUserInfo adminInfo, ReportUpdateReqDto reportUpdateReqDto) {
+        List<Report> reports = reportRepository.findAllByAccusedUserIdAndTreatIsFalse(userId);
+        if (reports.isEmpty()) {throw new CommonException(ErrorCode.DATA_NOT_FOUND, "신고 이력이 존재하지 않습니다.");}
+        User user = userRepository.findById(userId).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        for (Report report : reports) {
+            report.updateTreat(adminInfo.getAdminId());
+        }
+
+        user.updateUserReport(reportUpdateReqDto);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("reports", reports);
+        result.put("user", user);
+
+        return result;
     }
 
     /**

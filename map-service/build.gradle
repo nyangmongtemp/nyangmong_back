@@ -21,10 +21,16 @@ configurations {
 
 repositories {
     mavenCentral()
+    // ai
+    /*maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+    maven { url 'https://jitpack.io/' }*/
 }
 
 ext {
     set('springCloudVersion', "2023.0.6")
+    // ai
+    //set('springAiVersion', "1.0.0-M7")
 }
 
 dependencies {
@@ -60,12 +66,19 @@ dependencies {
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
+    // ai
+    //implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
+    // ai
+    /*imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }*/
 }
 
 tasks.named('test') {

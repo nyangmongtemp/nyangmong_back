@@ -53,8 +53,6 @@ public class User extends BaseTimeEntity {
 
     private boolean active;
 
-    private int reportCount;
-
     private LocalDateTime passwordUpdatedAt;
 
     private int passwordFaultCount;
@@ -139,5 +137,6 @@ public class User extends BaseTimeEntity {
     public void updateReleaseAt(LocalDateTime releaseAt) {
         this.releaseAt = releaseAt;
     }
+
 
 }
