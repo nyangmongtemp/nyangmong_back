@@ -8,6 +8,7 @@ import com.playdata.adminservice.admin.repository.AdvertisementSettingRepository
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
+import com.playdata.adminservice.common.util.ImageValidation;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +70,6 @@ public class AdvertisementService {
 
     /**
      * 광고 수정
-     *
      * @param id     수정할 광고 ID
      * @param dto    광고 수정 요청 DTO
      * @return 수정된 광고 응답 DTO
@@ -78,22 +78,11 @@ public class AdvertisementService {
         Advertisement ad = adRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-        String updatedThumbnail = ad.getThumbnailImage();
+        String thumbnailImage = (image != null && !image.isEmpty())
+                ? saveImage(image)
+                : ad.getThumbnailImage();
 
-        if (image != null && !image.isEmpty()) {
-            updatedThumbnail = saveImage(image);
-        }
-
-        ad.update(
-                dto.getTitle(),
-                dto.getDescription(),
-                dto.getActive(),
-                dto.getConfirmed(),
-                updatedThumbnail,
-                dto.getStartDate(),
-                dto.getEndDate(),
-                dto.getLinkUrl()
-        );
+        ad.update(dto, thumbnailImage);
 
         return new CommonResDto(HttpStatus.OK, "광고 수정 완료", ad);
     }
@@ -103,6 +92,8 @@ public class AdvertisementService {
         if (imageFile == null || imageFile.isEmpty()) {
             throw new CommonException(ErrorCode.EMPTY_FILE);
         }
+        // 이미지 파일 유효성 검사
+        ImageValidation.validateImageFile(imageFile);
 
         String originalFilename = imageFile.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
