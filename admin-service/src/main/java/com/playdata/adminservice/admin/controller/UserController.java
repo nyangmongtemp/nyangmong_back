@@ -4,7 +4,7 @@ import com.playdata.adminservice.admin.dto.req.UserSearchDto;
 import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
 import com.playdata.adminservice.admin.service.UserService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class UserController {
      */
     @GetMapping("/user/detail/{id}")
     public ResponseEntity<CommonResDto> userDetail(
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @PathVariable long id,
             HttpServletRequest request
     ) {

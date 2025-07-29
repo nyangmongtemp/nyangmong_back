@@ -9,10 +9,9 @@ import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.repository.TermsRepository;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -60,7 +59,7 @@ public class TermsService {
      * @return 저장된 Terms 엔티티 반환
      */
     @Transactional
-    public Terms insertTerms(TokenUserInfo adminInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
+    public Terms insertTerms(TokenAdminInfo adminInfo, TermsCategory category, TermsInsertReqDto termsInsertReqDto) {
         Long adminId = adminInfo.getAdminId();
         return termsRepository.save(termsInsertReqDto.toEntity(adminId, category));
     }
@@ -75,7 +74,7 @@ public class TermsService {
      * @throws CommonException 해당 약관이 없으면 DATA_NOT_FOUND 예외 발생
      */
     @Transactional
-    public Terms updateTerms(TokenUserInfo adminInfo, Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
+    public Terms updateTerms(TokenAdminInfo adminInfo, Long id, TermsCategory termsCategory, TermsUpdateReqDto termsUpdateReqDto) {
         Terms terms = findTermsOrThrow(id, termsCategory);
         terms.updateTerms(adminInfo.getAdminId(), termsUpdateReqDto);
         return terms;

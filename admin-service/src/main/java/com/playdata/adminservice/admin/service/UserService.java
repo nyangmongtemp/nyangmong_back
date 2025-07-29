@@ -7,8 +7,7 @@ import com.playdata.adminservice.admin.dto.res.UserListResDto;
 import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.AdminLogRepository;
 import com.playdata.adminservice.admin.repository.UserRepository;
-import com.playdata.adminservice.admin.repository.custom.AdminLogRepositoryCustom;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +43,7 @@ public class UserService {
      * @return
      */
     @Transactional
-    public UserDetailResDto findUser(TokenUserInfo adminInfo, Long id, HttpServletRequest request) {
+    public UserDetailResDto findUser(TokenAdminInfo adminInfo, Long id, HttpServletRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 

@@ -1,7 +1,7 @@
 package com.playdata.boardservice.board.dto.res;
 
+import com.playdata.boardservice.board.entity.Board;
 import com.playdata.boardservice.board.entity.Category;
-import com.playdata.boardservice.board.entity.InformationBoard;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InformationBoardResDto {
+public class BoardResDto {
 
     private Long postid;
     private Category category;
@@ -25,8 +25,8 @@ public class InformationBoardResDto {
     private String title;
 
     @Builder
-    public static InformationBoardResDto fromEntity(InformationBoard Board) {
-        return InformationBoardResDto.builder()
+    public static BoardResDto fromEntity(Board Board) {
+        return BoardResDto.builder()
                 .postid(Board.getPostId())
                 .category(Board.getCategory())
                 .userid(Board.getUserId())
@@ -39,6 +39,5 @@ public class InformationBoardResDto {
                 .createdat(Board.getCreateAt())
                 .updatedat(Board.getUpdateAt())
                 .build();
-
     }
 }

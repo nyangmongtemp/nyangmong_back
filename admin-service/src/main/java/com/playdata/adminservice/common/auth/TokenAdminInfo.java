@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TokenUserInfo {
+public class TokenAdminInfo {
 
     private String email;
     private Role role;

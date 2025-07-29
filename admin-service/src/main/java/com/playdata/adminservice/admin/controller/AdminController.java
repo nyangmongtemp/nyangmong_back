@@ -5,11 +5,10 @@ import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.dto.res.AdminListResDto;
 import com.playdata.adminservice.admin.service.AdminService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 
 // 광고 관리 관련 import 추가
-import com.playdata.adminservice.admin.dto.res.AdResDto;
 import com.playdata.adminservice.admin.service.AdvertisementService;
 
 import jakarta.validation.Valid;
@@ -23,10 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static org.springframework.security.authorization.AuthorityReactiveAuthorizationManager.hasRole;
 
 @RestController
 @RequestMapping("/admin")
@@ -90,16 +85,16 @@ public class AdminController {
 
     /**
      *
-     * @param tokenUserInfo
+     * @param tokenAdminInfo
      * @param newEmail
      * @return
      */
     // 이메일 변경 요청
     @GetMapping("/modify-email")
-    public ResponseEntity<?> emailModify(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+    public ResponseEntity<?> emailModify(@AuthenticationPrincipal TokenAdminInfo tokenAdminInfo,
                                          @RequestParam String newEmail) {
 
-        CommonResDto resDto = adminService.modifyEmail(tokenUserInfo, newEmail);
+        CommonResDto resDto = adminService.modifyEmail(tokenAdminInfo, newEmail);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -110,76 +105,76 @@ public class AdminController {
     // 토큰 필요
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param authResDto
      * @return
      */
     @PatchMapping("/verify-new-email")
-    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                             @RequestBody @Valid AdminEmailAuthResDto authResDto){
 
-        CommonResDto resDto = adminService.verifyAdminNewEmail(authResDto, userInfo);
+        CommonResDto resDto = adminService.verifyAdminNewEmail(authResDto, adminInfo);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @return
      */
     // 비밀번호 변경 요청
     @GetMapping("/modify-password-req")
-    public ResponseEntity<?> passwordModifyReq(@AuthenticationPrincipal TokenUserInfo userInfo) {
-        CommonResDto resDto = adminService.modifyPasswordReq(userInfo.getEmail());
+    public ResponseEntity<?> passwordModifyReq(@AuthenticationPrincipal TokenAdminInfo adminInfo) {
+        CommonResDto resDto = adminService.modifyPasswordReq(adminInfo.getEmail());
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param authReqDto
      * @return
      */
     // 비밀번호 변경 검증
     @PatchMapping("/verify-new-password")
-    public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                                @RequestBody @Valid AdminPasswordAuthReqDto authReqDto) {
 
-        CommonResDto resDto = adminService.verifyNewPassword(userInfo, authReqDto);
+        CommonResDto resDto = adminService.verifyNewPassword(adminInfo, authReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param modifyReqDto
      * @return
      */
     // 비밀번호 변경
     @PatchMapping("/modify-password")
-    public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                             @RequestBody AdminPasswordModifyReqDto modifyReqDto) {
 
-        CommonResDto resDto = adminService.modifyPassword(userInfo, modifyReqDto);
+        CommonResDto resDto = adminService.modifyPassword(adminInfo, modifyReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param modifyReqDto
      * @return
      */
     // 비밀번호, 이메일 외 정보 수정
     @PatchMapping("/modify")
-    public ResponseEntity<?> modify(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> modify(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                     @RequestBody AdminModifyReqDto modifyReqDto) {
 
-        CommonResDto resDto = adminService.myPageModify(userInfo, modifyReqDto);
+        CommonResDto resDto = adminService.myPageModify(adminInfo, modifyReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -216,13 +211,13 @@ public class AdminController {
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @return
      */
     // 토큰 검증
     @GetMapping("/temp22")
-    public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
-        log.info(userInfo.toString());
-        return ResponseEntity.ok(userInfo);
+    public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenAdminInfo adminInfo){
+        log.info(adminInfo.toString());
+        return ResponseEntity.ok(adminInfo);
     }
 }

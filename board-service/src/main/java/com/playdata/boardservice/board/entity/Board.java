@@ -1,21 +1,21 @@
 package com.playdata.boardservice.board.entity;
 
 import com.playdata.boardservice.board.dto.BoardModiDto;
-import com.playdata.boardservice.board.dto.res.InformationBoardResDto;
+import com.playdata.boardservice.board.dto.res.BoardResDto;
 import com.playdata.boardservice.common.entity.BaseTimeEntity;
 import com.playdata.boardservice.common.util.HtmlSanitizer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-
 @Getter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "tbl_board")
 @EntityListeners(AuditingEntityListener.class) // 서버 어플리케이션에 @EnableJpaAuditing를 불러올 수 있는 어노테이션
-public class InformationBoard extends BaseTimeEntity {
+public class Board extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -76,8 +76,8 @@ public class InformationBoard extends BaseTimeEntity {
         this.active = false;
     }
 
-    public InformationBoardResDto fromEntity(InformationBoard Board) {
-        return InformationBoardResDto.builder()
+    public BoardResDto fromEntity(Board Board) {
+        return BoardResDto.builder()
                 .postid(postId)
                 .category(category)
                 .userid(userId)

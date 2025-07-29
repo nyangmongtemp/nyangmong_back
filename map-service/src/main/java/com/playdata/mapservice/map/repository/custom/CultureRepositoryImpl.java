@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class CultureRepositoryImpl implements CultureRepositoryCustom {
+public class
+CultureRepositoryImpl implements CultureRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 

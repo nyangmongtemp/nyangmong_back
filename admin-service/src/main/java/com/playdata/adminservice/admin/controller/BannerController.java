@@ -4,7 +4,7 @@ import com.playdata.adminservice.admin.dto.banner.req.BannerModiReqDto;
 import com.playdata.adminservice.admin.dto.banner.req.BannerSaveReqDto;
 import com.playdata.adminservice.admin.dto.banner.req.OrderModiReqDto;
 import com.playdata.adminservice.admin.service.BannerService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
@@ -32,17 +32,17 @@ public class BannerController {
     
     // 배너 생성
     @PostMapping("/create")
-    public ResponseEntity<?> createBanner(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> createBanner(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                           @RequestPart(value = "banner") @Valid BannerSaveReqDto reqDto,
                                           @RequestPart(value = "thumbnailImage", required = true) MultipartFile thumbnailImage) {
-        CommonResDto resDto = bannerService.createBanner(userInfo.getAdminId(), reqDto, thumbnailImage);
+        CommonResDto resDto = bannerService.createBanner(adminInfo.getAdminId(), reqDto, thumbnailImage);
 
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
     
     // 배너 상세 수정 -> 제목, 이미지
     @PatchMapping("/modify")
-    public ResponseEntity<?> updateBanner(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> updateBanner(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                           @RequestPart(value = "banner") @Valid BannerModiReqDto reqDto,
                                           @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
         // 수정할 데이터가 없는 경우
@@ -50,26 +50,26 @@ public class BannerController {
             throw new CommonException(ErrorCode.BAD_REQUEST, "수정할 데이터가 없습니다.");
         }
 
-        CommonResDto resDto = bannerService.updateBanner(userInfo.getAdminId(), reqDto, thumbnailImage);
+        CommonResDto resDto = bannerService.updateBanner(adminInfo.getAdminId(), reqDto, thumbnailImage);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
     
     // 배너 삭제
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteBanner(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> deleteBanner(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                           @PathVariable(name = "id") Long bannerId) {
-        CommonResDto resDto = bannerService.deleteBanner(userInfo.getAdminId(), bannerId);
+        CommonResDto resDto = bannerService.deleteBanner(adminInfo.getAdminId(), bannerId);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
     
     // 배너의 순서 수정
     @PatchMapping("/order")
-    public ResponseEntity<?> changeOrders(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<?> changeOrders(@AuthenticationPrincipal TokenAdminInfo adminInfo,
                                           @RequestBody @Valid List<OrderModiReqDto> reqDtoList) {
 
-        CommonResDto resDto = bannerService.updateOrder(userInfo.getAdminId(), reqDtoList);
+        CommonResDto resDto = bannerService.updateOrder(adminInfo.getAdminId(), reqDtoList);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

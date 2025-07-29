@@ -6,7 +6,7 @@ import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.entity.Inform;
 import com.playdata.adminservice.admin.service.InformService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,7 +72,7 @@ public class InformController {
     public ResponseEntity<CommonResDto> replyInform(
             @PathVariable Long id,
             @RequestBody @Valid InformReplyReqDto informReplyReqDto,
-            @AuthenticationPrincipal TokenUserInfo adminInfo
+            @AuthenticationPrincipal TokenAdminInfo adminInfo
     ) {
         Inform result = informService.replyInform(id, informReplyReqDto, adminInfo);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "답변 등록", result);

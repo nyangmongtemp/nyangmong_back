@@ -1,7 +1,7 @@
 package com.playdata.boardservice.board.dto.res;
 
+import com.playdata.boardservice.board.entity.Board;
 import com.playdata.boardservice.board.entity.Category;
-import com.playdata.boardservice.board.entity.InformationBoard;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -29,7 +29,7 @@ public class LikeComResDto { // 좋아요 수, 댓글 수 를 화면단으로 �
     private Long commentCount;
 
 
-    public static LikeComResDto fromEntity(InformationBoard Board, Long likeCount, Long commentCount) {
+    public static LikeComResDto fromEntity(Board Board, Long likeCount, Long commentCount) {
         return LikeComResDto.builder()
                 .postid(Board.getPostId())
                 .category(Board.getCategory())
