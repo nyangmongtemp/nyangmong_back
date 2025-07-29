@@ -529,7 +529,7 @@ public class UserService {
         
         // 소셜 로그인 사용자인 경우 에러 처리
         if(foundUser.getSocialProvider() != null) {
-            throw new CommonException(ErrorCode.BAD_REQUEST);
+            throw new CommonException(ErrorCode.BAD_REQUEST, "소셜 로그인한 회원은 임시비밀번호 발급 불가");
         }
 
         String authCode = sendEmailAuthCode(email, "FORGET");
@@ -1088,7 +1088,7 @@ public class UserService {
             }
         } catch (MessagingException e) {
             log.info(e.getMessage());
-            throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
+            throw new CommonException(ErrorCode.MAIL_SERVER_ERROR);
         }
 
         // 인증 코드를 redis에 저장하자
