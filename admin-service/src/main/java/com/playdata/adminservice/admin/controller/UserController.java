@@ -84,7 +84,7 @@ public class UserController {
      * @return
      */
     @PatchMapping("/report/{id}")
-    public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+    public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenAdminInfo adminInfo) {
         Report result = userService.updateReportTreat(id, adminInfo);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "신고내역 확인처리", result);
         return ResponseEntity.ok(resDto);
@@ -99,7 +99,7 @@ public class UserController {
      */
     @PatchMapping("/ban/{userId}")
     public ResponseEntity<CommonResDto> updateReport(@PathVariable long userId,
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @RequestBody ReportUpdateReqDto reportUpdateReqDto
             ) {
         Map<String, Object> result = userService.updateReport(userId, adminInfo, reportUpdateReqDto);
