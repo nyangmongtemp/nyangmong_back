@@ -100,7 +100,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
-    @PatchMapping("/{postId}")
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateAnimal(@PathVariable Long postId,
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
@@ -163,6 +163,5 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
-
 
 }

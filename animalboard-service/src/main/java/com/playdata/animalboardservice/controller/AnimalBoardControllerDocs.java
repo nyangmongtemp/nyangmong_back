@@ -132,6 +132,13 @@ public interface AnimalBoardControllerDocs {
             )),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content)
     })
+    @Parameter(
+            name = "animalRequest",
+            description = "분양 게시물 수정 JSON 데이터",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalUpdateRequestDto.class)),
+            examples = @ExampleObject(name = "수정 예시", value = SwaggerExampleConstants.ANIMAL_UPDATE_REQUEST)
+    )
     ResponseEntity<Void> updateAnimal(
             @Parameter(description = "수정할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
@@ -139,7 +146,7 @@ public interface AnimalBoardControllerDocs {
                     name = "animalRequest",
                     description = "분양 게시물 JSON 데이터",
                     required = true,
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalUpdateRequestDto.class))
             )
             @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
             @Parameter(
