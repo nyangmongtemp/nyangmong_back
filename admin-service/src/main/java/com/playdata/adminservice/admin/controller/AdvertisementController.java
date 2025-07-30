@@ -1,5 +1,5 @@
 package com.playdata.adminservice.admin.controller;
-
+import org.springframework.web.multipart.MultipartFile;
 import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdResDto;
 import com.playdata.adminservice.admin.entity.Advertisement;
@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.util.List;
 
@@ -31,25 +33,31 @@ public class AdvertisementController {
 
     /**
      * 광고 등록 API
-     * @param dto 광고 등록 요청 DTO
+     * @param dto 광고 등록 요청 DTO (JSON)
+     * @param image 광고 이미지 파일
      * @return 등록 결과 응답 DTO
      */
-    @PostMapping("/ads")
-    public ResponseEntity<CommonResDto> registerAd(@ModelAttribute AdRegisterReqDto dto) {
-        CommonResDto resDto = advertisementService.registerAd(dto);
+    @PostMapping(value = "/ads", consumes = "multipart/form-data")
+    public ResponseEntity<CommonResDto> registerAd(
+            @RequestPart("dto") @Valid AdRegisterReqDto dto,
+            @RequestPart("image") MultipartFile image
+    ) {
+        CommonResDto resDto = advertisementService.registerAd(dto, image);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
-
-
     /**
      * 광고 수정 API
      * @param id 수정할 광고 ID
-     * @param dto 광고 수정 요청 DTO
+     * @param dto 광고 수정 요청 DTO (JSON)
      * @return 수정 결과 응답 DTO
      */
-    @PutMapping("/ads/{id}")
-    public ResponseEntity<?> updateAd(@PathVariable Long id, @ModelAttribute @Valid AdUpdateReqDto dto) {
-        CommonResDto resDto = advertisementService.updateAd(id, dto);
+    @PutMapping(value = "/ads/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<CommonResDto> updateAd(
+            @PathVariable Long id,
+            @RequestPart("dto") @Valid AdUpdateReqDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        CommonResDto resDto = advertisementService.updateAd(id, dto, image);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 

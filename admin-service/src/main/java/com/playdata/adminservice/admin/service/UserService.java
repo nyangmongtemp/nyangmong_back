@@ -11,14 +11,13 @@ import com.playdata.adminservice.admin.entity.User;
 import com.playdata.adminservice.admin.repository.AdminLogRepository;
 import com.playdata.adminservice.admin.repository.ReportRepository;
 import com.playdata.adminservice.admin.repository.UserRepository;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -54,7 +53,7 @@ public class UserService {
      * @return
      */
     @Transactional
-    public UserDetailResDto findUser(TokenUserInfo adminInfo, Long id, HttpServletRequest request) {
+    public UserDetailResDto findUser(TokenAdminInfo adminInfo, Long id, HttpServletRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
@@ -82,7 +81,7 @@ public class UserService {
      * @return
      */
     @Transactional
-    public Report updateReportTreat(long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+    public Report updateReportTreat(long id, @AuthenticationPrincipal TokenAdminInfo adminInfo) {
         Report report = reportRepository.findByReportIdAndTreatIsFalse(id).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
         report.updateTreat(adminInfo.getAdminId());
         return report;
@@ -96,7 +95,7 @@ public class UserService {
      * @return
      */
     @Transactional
-    public Map<String, Object> updateReport(long userId, TokenUserInfo adminInfo, ReportUpdateReqDto reportUpdateReqDto) {
+    public Map<String, Object> updateReport(long userId, TokenAdminInfo adminInfo, ReportUpdateReqDto reportUpdateReqDto) {
         List<Report> reports = reportRepository.findAllByAccusedUserIdAndTreatIsFalse(userId);
         if (reports.isEmpty()) {throw new CommonException(ErrorCode.DATA_NOT_FOUND, "신고 이력이 존재하지 않습니다.");}
         User user = userRepository.findById(userId).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));

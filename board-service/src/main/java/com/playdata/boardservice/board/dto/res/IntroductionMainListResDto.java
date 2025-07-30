@@ -1,6 +1,6 @@
 package com.playdata.boardservice.board.dto.res;
 
-import com.playdata.boardservice.board.entity.IntroductionBoard;
+import com.playdata.boardservice.board.entity.Board;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,7 +14,7 @@ public class IntroductionMainListResDto {
     private Long commentCount; // 댓글 수
 
     @Builder
-    public IntroductionMainListResDto(IntroductionBoard introductionBoard, Long likeCount, Long commentCount) {
+    public IntroductionMainListResDto(Board introductionBoard, Long likeCount, Long commentCount) {
         this.postId = introductionBoard.getPostId();
         this.thumbnailImage = introductionBoard.getThumbnailImage();
         this.viewCount = introductionBoard.getViewCount();

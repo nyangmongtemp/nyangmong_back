@@ -6,15 +6,13 @@ import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.dto.res.AdminListResDto;
 import com.playdata.adminservice.admin.dto.res.AdminLoginResDto;
 import com.playdata.adminservice.admin.entity.Admin;
-import com.playdata.adminservice.admin.entity.Role;
 import com.playdata.adminservice.admin.repository.AdminRepository;
 import com.playdata.adminservice.common.auth.JwtTokenProvider;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -219,12 +217,12 @@ public class AdminService {
 
     /**
      *
-     * @param tokenUserInfo
+     * @param tokenAdminInfo
      * @param newEmail
      * @return
      */
     // 이메일 변경 요청
-    public CommonResDto modifyEmail(TokenUserInfo tokenUserInfo, String newEmail) {
+    public CommonResDto modifyEmail(TokenAdminInfo tokenAdminInfo, String newEmail) {
 
         Optional<Admin> findAdmin = adminRepository.findByEmail(newEmail);
 
@@ -242,17 +240,17 @@ public class AdminService {
     /**
      *
      * @param authResDto
-     * @param userInfo
+     * @param adminInfo
      * @return
      */
     // 이메일 변경 요청 검증
-    public CommonResDto verifyAdminNewEmail(@Valid AdminEmailAuthResDto authResDto, TokenUserInfo userInfo) {
+    public CommonResDto verifyAdminNewEmail(@Valid AdminEmailAuthResDto authResDto, TokenAdminInfo adminInfo) {
 
         // 이메일 검증 로직 호출
         CommonResDto resDto =  verifyEmailCode(authResDto);
 
         // userInfo 에서 관리자 Id 조회
-        Optional<Admin> findAdmin = adminRepository.findById(userInfo.getAdminId());
+        Optional<Admin> findAdmin = adminRepository.findById(adminInfo.getAdminId());
 
         // 변경할 관리자가 있는지, 활성화 상태인지 검증
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
@@ -298,15 +296,15 @@ public class AdminService {
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param authReqDto
      * @return
      */
     // 비밀번호 변경 요청 검증
-    public CommonResDto verifyNewPassword(TokenUserInfo userInfo, AdminPasswordAuthReqDto authReqDto) {
+    public CommonResDto verifyNewPassword(TokenAdminInfo adminInfo, AdminPasswordAuthReqDto authReqDto) {
 
         // 기존 이메일 값과, 인증번호 값 받기
-        AdminEmailAuthResDto required = new AdminEmailAuthResDto(userInfo.getEmail(), authReqDto.getAuthCode());
+        AdminEmailAuthResDto required = new AdminEmailAuthResDto(adminInfo.getEmail(), authReqDto.getAuthCode());
 
         // 인증번호 검증 로직 호출
         CommonResDto resDto = verifyEmailCode(required);
@@ -321,14 +319,14 @@ public class AdminService {
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param modifyReqDto
      * @return
      */
     // 비밀번호 변경
-    public CommonResDto modifyPassword(TokenUserInfo userInfo, AdminPasswordModifyReqDto modifyReqDto) {
+    public CommonResDto modifyPassword(TokenAdminInfo adminInfo, AdminPasswordModifyReqDto modifyReqDto) {
 
-        Optional<Admin> findAdmin = adminRepository.findByEmail(userInfo.getEmail());
+        Optional<Admin> findAdmin = adminRepository.findByEmail(adminInfo.getEmail());
 
         // 계정이 존재하고 활성화 상태인지 조회
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
@@ -348,14 +346,14 @@ public class AdminService {
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @param modifyReqDto
      * @return
      */
     // 비밀번호, 이메일 외의 정보 수정
-    public CommonResDto myPageModify(TokenUserInfo userInfo, AdminModifyReqDto modifyReqDto) {
+    public CommonResDto myPageModify(TokenAdminInfo adminInfo, AdminModifyReqDto modifyReqDto) {
 
-        Optional<Admin> findAdmin = adminRepository.findById(userInfo.getAdminId());
+        Optional<Admin> findAdmin = adminRepository.findById(adminInfo.getAdminId());
 
         // 관리자가 존재하는지, 활성화 상태인지 검증
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {

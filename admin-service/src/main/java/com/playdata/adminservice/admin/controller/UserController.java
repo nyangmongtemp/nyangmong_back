@@ -7,7 +7,7 @@ import com.playdata.adminservice.admin.dto.res.UserDetailResDto;
 import com.playdata.adminservice.admin.dto.res.UserListResDto;
 import com.playdata.adminservice.admin.entity.Report;
 import com.playdata.adminservice.admin.service.UserService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -56,7 +56,7 @@ public class UserController {
      */
     @GetMapping("/user/detail/{id}")
     public ResponseEntity<CommonResDto> userDetail(
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @PathVariable long id,
             HttpServletRequest request
     ) {
@@ -84,7 +84,7 @@ public class UserController {
      * @return
      */
     @PatchMapping("/report/{id}")
-    public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenUserInfo adminInfo) {
+    public ResponseEntity<CommonResDto> updateReportTreat(@PathVariable long id, @AuthenticationPrincipal TokenAdminInfo adminInfo) {
         Report result = userService.updateReportTreat(id, adminInfo);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "신고내역 확인처리", result);
         return ResponseEntity.ok(resDto);
@@ -99,7 +99,7 @@ public class UserController {
      */
     @PatchMapping("/ban/{userId}")
     public ResponseEntity<CommonResDto> updateReport(@PathVariable long userId,
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @RequestBody ReportUpdateReqDto reportUpdateReqDto
             ) {
         Map<String, Object> result = userService.updateReport(userId, adminInfo, reportUpdateReqDto);

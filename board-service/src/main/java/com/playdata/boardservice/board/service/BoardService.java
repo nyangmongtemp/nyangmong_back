@@ -1,15 +1,12 @@
 package com.playdata.boardservice.board.service;
 
 import com.playdata.boardservice.board.dto.*;
-import com.playdata.boardservice.board.dto.req.InformationBoardSaveReqDto;
-import com.playdata.boardservice.board.dto.req.IntroductionBoardSaveReqDto;
+import com.playdata.boardservice.board.dto.req.BoardSaveReqDto;
 import com.playdata.boardservice.board.dto.req.LikeComCountReqDto;
 import com.playdata.boardservice.board.dto.res.*;
+import com.playdata.boardservice.board.entity.Board;
 import com.playdata.boardservice.board.entity.Category;
-import com.playdata.boardservice.board.entity.InformationBoard;
-import com.playdata.boardservice.board.entity.IntroductionBoard;
-import com.playdata.boardservice.board.repository.InformationBoardRepository;
-import com.playdata.boardservice.board.repository.IntroductionBoardRepository;
+import com.playdata.boardservice.board.repository.BoardRepository;
 import com.playdata.boardservice.client.MainServiceClient;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
@@ -38,18 +35,20 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.playdata.boardservice.board.entity.Category.INTRODUCTION;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class BoardService {
 
-    private final InformationBoardRepository informationBoardRepository;
-    private final IntroductionBoardRepository introductionBoardRepository;
+    private final BoardRepository boardRepository;
 
     private final RedisTemplate<String, String> redisTemplate;
 
     private final MainServiceClient mainServiceClient;
 
+    // xss 필터 정화 클래스
     private final HtmlSanitizer htmlPolicy;
     private final HtmlSanitizer plainTextPolicy;
 
@@ -57,65 +56,50 @@ public class BoardService {
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
 
-    private List<Category> categoryList = List.of(Category.FREE, Category.INTRODUCTION, Category.QUESTION, Category.REVIEW);
+    private List<Category> categoryList = List.of(Category.FREE, INTRODUCTION, Category.QUESTION, Category.REVIEW);
 
 
-    // 질문, 후기, 자유 게시판 게시물 등록
+    /**
+     *
+     * @param boardSaveReqDto
+     * @param thumbnailImage
+     * @param userInfo
+     * @return
+     */
+    // 게시판 게시물 등록
     @Transactional
-    public CommonResDto informationCreate(InformationBoardSaveReqDto informationSaveDto,
-                                          MultipartFile thumbnailImage,
-                                          TokenUserInfo userInfo) {
-
-        if (!isValidCategory(informationSaveDto.getCategory())){
-            throw new CommonException(ErrorCode.BAD_REQUEST);
-        }
-
-        Category cate = informationSaveDto.getCategory();
-
-        // 카테고리 값 가져와서 null, 빈문자열 체크 후 값이 있다면 대문자로 변환
-        String category = (informationSaveDto.getCategory() != null)
-                ? informationSaveDto.getCategory().name().toUpperCase()
-                : "default";
+    public CommonResDto create(BoardSaveReqDto boardSaveReqDto,
+                               MultipartFile thumbnailImage,
+                               TokenUserInfo userInfo, Category category) {
 
         // 썸네일 경로를 저장할 변수
         String savedPath = setThumbnailImage(thumbnailImage);
+
+
+        // 소개 게시판 썸네일 이미지 필수 검증
+        if (category == INTRODUCTION && (savedPath == null || savedPath.isEmpty())) {
+            throw new CommonException(ErrorCode.EMPTY_FILE, "이미지는 필수 입니다.");
+        }
 
         // DTO → toEntity() 로 변환 -> DB
-        InformationBoard entity = informationSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlPolicy, plainTextPolicy);
-        
+        Board entity = boardSaveReqDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlPolicy, plainTextPolicy);
+
         // DB에 저장
-        informationBoardRepository.save(entity);
+        boardRepository.save(entity);
 
         // 성공 응답 반환
         return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
 
     }
 
-    // 소개 게시판 게시물 등록
-    @Transactional
-    public CommonResDto introductionCreate(IntroductionBoardSaveReqDto introductionSaveDto,
-                                           MultipartFile thumbnailImage,
-                                           TokenUserInfo userInfo) {
-
-        if (thumbnailImage == null || thumbnailImage.isEmpty()) {
-            throw new CommonException(ErrorCode.EMPTY_FILE, "썸네일 이미지는 필수 입니다.");
-        }
-
-        // 썸네일 경로를 저장할 변수
-        String savedPath = setThumbnailImage(thumbnailImage);
-
-
-        // DTO → Entity 변환 후 저장
-        IntroductionBoard entity = introductionSaveDto.toEntity(userInfo.getUserId(), userInfo.getNickname(), savedPath, htmlPolicy, plainTextPolicy);
-        
-        // DB에 저장
-        introductionBoardRepository.save(entity);
-
-        // 성공 응답 반환
-        return new CommonResDto(HttpStatus.CREATED, "게시물 등록 성공", entity.getPostId());
-
-    }
-
+    /**
+     *
+     * @param modiDto
+     * @param thumbnailImage
+     * @param userInfo
+     * @param category
+     * @param postId
+     */
     // 게시물 수정 (공통)
     @Transactional
     public void boardModify(BoardModiDto modiDto,
@@ -127,39 +111,24 @@ public class BoardService {
         // 썸네일 저장 경로 변수
         String savedPath = setThumbnailImage(thumbnailImage);
 
-        // 소개 게시판은 INTRODUCTION enum 으로 단일 구분
-        if (category == Category.INTRODUCTION) {
-            // 게시글 조회 (없으면 예외)
-            IntroductionBoard board = introductionBoardRepository.findById(postId)
-                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        // 게시글 조회 (없으면 예외)
+        Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, category)
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "게시글이 존재하지 않습니다."));
 
-            // 작성자 검증 (자기 글만 수정 가능)
-            if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new CommonException(ErrorCode.UNAUTHORIZED);
-            }
+        // 작성자 검증
+        if (!board.getUserId().equals(userInfo.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED, "작성자만 작성할 수 있습니다.");
+        }
+
+        if (category == INTRODUCTION) {
 
             // 썸네일은 필수이므로 없으면 예외
             if (savedPath == null) {
                 throw new CommonException(ErrorCode.EMPTY_FILE, "썸네일 이미지를 첨부해주세요.");
             }
 
-            // 본문 및 썸네일 수정
-            board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
-
             // 정보 게시판의 카테고리를 설정
         } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
-
-            // 게시글 조회 (없으면 예외)
-            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
-                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "게시글이 존재하지 않습니다."));
-
-            // 작성자 검증
-            if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new CommonException(ErrorCode.UNAUTHORIZED, "작성자만 작성할 수 있습니다.");
-            }
-
-            // content 수정
-            board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
 
             if (savedPath != null) {
                 // 새 이미지가 있으면 교체
@@ -174,65 +143,58 @@ public class BoardService {
                 // 변경사항 저장
                 board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
             }
-        } else {
-            // 그 외 잘못된 카테고리는 예외
-            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않는 카테고리 입니다.");
         }
+        // 본문 및 썸네일 수정
+        board.boardModify(modiDto, savedPath, htmlPolicy, plainTextPolicy);
     }
 
-    // 게시물 삭제 (공통)
+    /**
+     *
+     * @param userInfo
+     * @param category
+     * @param postId
+     */
+    // 게시물 삭제
     @Transactional
     public void deleteBoard(TokenUserInfo userInfo, Category category, Long postId) {
-        // 소개 게시판인 경우
-        if (category == Category.INTRODUCTION) {
 
-            // 게시글 조회 (없으면 예외)
-            IntroductionBoard board = introductionBoardRepository.findById(postId)
-                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        // 게시글 조회 (없으면 예외)
+        Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, category)
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-            // 작성자 검증 (다른 사람이 삭제 요청하면 차단)
-            if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new CommonException(ErrorCode.UNAUTHORIZED);
-            }
-
-            // 실제 삭제하지 않고 active 값을 false 로 변경 (소프트 삭제)
-            board.boardDelete();
+        // 작성자 검증
+        if (!board.getUserId().equals(userInfo.getUserId())) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED);
         }
-        // 질문/후기/자유 게시판인 경우
-        else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
-            // 게시글 조회 (없으면 예외)
-            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
-                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-            // 작성자 검증
-            if (!board.getUserId().equals(userInfo.getUserId())) {
-                throw new CommonException(ErrorCode.UNAUTHORIZED);
-            }
-
-            // active = false로 비활성화 처리
-            board.boardDelete();
-        } else { // 지원하지 않는 카테고리
-            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "지원하지 않은 카테고리 입니다.");
-        }
+        // active = false로 비활성화 처리
+        board.boardDelete();
     }
 
-    // 정보 게시판 게시물 목록 조회
+    /**
+     *
+     * @param boardSearchDto
+     * @param category
+     * @param pageable
+     * @return
+     */
+    // 게시판 게시물 목록 조회
     public Page<LikeComResDto> findInformationBoardList(BoardSearchDto boardSearchDto,
                                                         Category category,
                                                         Pageable pageable) {
 
         // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
-        Page<InformationBoard> informationBoardList = informationBoardRepository.findList(boardSearchDto,
+        Page<Board> boardList = boardRepository.findList(boardSearchDto,
                 category,
                 pageable);
 
-        List<LikeComCountReqDto> likeCom = informationBoardList.stream().map(informationBoard -> {
+        List<LikeComCountReqDto> likeCom = boardList.stream().map(board -> {
             // ReqDto 에서 category, postId 를 뽑아서 List로 만들겠다. (category는 string 변환)
-            return new LikeComCountReqDto(String.valueOf(informationBoard.getCategory()), informationBoard.getPostId());
+            return new LikeComCountReqDto(String.valueOf(board.getCategory()), board.getPostId());
         }).collect(Collectors.toList());
 
         List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
-        List<LikeComResDto> result = informationBoardList.stream().map(inform -> {
+        List<LikeComResDto> result = boardList.stream().map(inform -> {
             for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
                 if (inform.getCategory().equals(Category.valueOf(likeComCountResDto.getCategory())) &&
                         inform.getPostId().equals(likeComCountResDto.getContentId())) {
@@ -246,60 +208,27 @@ public class BoardService {
 
         Page<LikeComResDto> dtoPage = new PageImpl<>(
                 result,
-                informationBoardList.getPageable(),
-                informationBoardList.getTotalElements()
+                boardList.getPageable(),
+                boardList.getTotalElements()
         );
         // Entity → DTO 변환
 //        return informationBoardList.map(InformationBoardListResDto::new);
         return dtoPage;
     }
 
-    // 소개 게시판 게시물 목록 조회
-    public Page<LikeComIntroResDto> findIntroductionBoardList(BoardSearchDto boardSearchDto, Pageable pageable) {
-
-        // 검색 조건과 페이징 정보를 통해 DB 에서 게시물 목록 조회
-        Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findList(boardSearchDto, pageable);
-
-        List<LikeComCountReqDto> likeCom = introductionBoardList.stream().map(introductionBoard -> {
-            // ReqDto 에서 category(INTRODUCTION), postId 를 뽑아서 List로 만들겠다.
-            return new LikeComCountReqDto(Category.INTRODUCTION.name(), introductionBoard.getPostId());
-        }).collect(Collectors.toList());
-
-        List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
-        List<LikeComIntroResDto> result = introductionBoardList.stream().map(introductionBoard -> {
-                    for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
-                        if (introductionBoard.getPostId().equals(likeComCountResDto.getContentId())) {
-                            return LikeComIntroResDto.fromEntity(introductionBoard, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
-                        }
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        Page<LikeComIntroResDto> dtoPage = new PageImpl<>(
-                result,
-                introductionBoardList.getPageable(),
-                introductionBoardList.getTotalElements()
-        );
-        // Entity → DTO 변환
-//        return informationBoardList.map(InformationBoardListResDto::new);
-        return dtoPage;
-
-    }
-
+    /**
+     *
+     * @param category
+     * @param postId
+     * @param email
+     * @param request
+     * @return
+     */
     // 게시판 게시물 상세 조회
     public CommonResDto boardDetail(Category category, Long postId, String email, HttpServletRequest request) {
 
-
-        // 입력 받은 카테고리 값이 설정 해둔 값과 일치 하지 않다면 예외
-        if (!isValidCategory(category)) {
-            throw new CommonException(ErrorCode.DATA_NOT_FOUND, "옳지 않은 카테고리 입니다.");
-        }
-
-        if (category == Category.INTRODUCTION) {
             // 게시물 조회 (null 방지)
-            IntroductionBoard board = introductionBoardRepository.findById(postId)
+            Board board = boardRepository.findById(postId)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
 
             // 사용자 식별 정보 생성
@@ -310,86 +239,76 @@ public class BoardService {
             String redisKey = generateRedisKey(email, ip, userAgent, category, postId);
 
             // Redis에 기록이 없으면 첫 조회 → 조회수 증가 처리
-            increaseViewCountIntroductionFirstTime(redisKey, board);
+            increaseViewCountFirstTime(redisKey, board);
 
             // 화면단으로 보낼 DTO로 변환
-            IntroductionBoardResDto resDto = board.fromEntity(board);
+            BoardResDto resDto = board.fromEntity(board);
 
             return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
-        } else {
-            // null 이면 들어올 수 없으니까 에러 던짐
-            InformationBoard board = informationBoardRepository.findByPostIdAndCategory(postId, category)
-                    .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
-
-            // 사용자 식별 정보 생성
-            String ip = extractClientIp(request);
-            String userAgent = request.getHeader("User-Agent");
-
-            // Redis 중복 조회 방지를 위한 Key 생성
-            String redisKey = generateRedisKey(email, ip, userAgent, category, postId);
-
-            // Redis에 기록이 없으면 첫 조회 → 조회수 증가 처리
-            increaseViewCountInformationFirstTime(redisKey, board);
-
-            // 화면단으로 보낼 DTO로 변환
-            InformationBoardResDto resDto = board.fromEntity(board);
-
-            return new CommonResDto(HttpStatus.OK, "게시물 상세 조회 성공!", resDto);
-        }
     }
 
+    /**
+     *
+     * @return
+     */
     // 정보 게시판 메인 최근 게시물 조회
-    public List<InformationBoardListResDto> findInformationMainList() {
-        List<InformationBoard> informationBoardList = informationBoardRepository.findMainList();
+    public List<BoardListResDto> findInformationMainList() {
+        List<Board> boardList = boardRepository.findMainList();
 
-        return informationBoardList.stream()
-                .map(informationBoard -> InformationBoardListResDto.builder()
-                        .informationBoard(informationBoard) // 엔티티 -> DTO 변환
+        return boardList.stream()
+                .map(board -> BoardListResDto.builder()
+                        .board(board) // 엔티티 -> DTO 변환
                         .build())
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * @return
+     */
     // 정보 게시판 메인 인기 게시물 조회
-    public List<InformationBoardListResDto> findPopularInformationBoard() {
-        List<InformationBoard> board = informationBoardRepository.findPopularList(10, 7); // 최근 7일 상위 10개
+    public List<BoardListResDto> findPopularInformationBoard() {
+        List<Board> board = boardRepository.findPopularList(10, 7); // 최근 7일 상위 10개
 
         return board.stream()
-                .map(informationBoard -> InformationBoardListResDto.builder()
-                        .informationBoard(informationBoard) // 엔티티 → DTO 변환
+                .map(boardList -> BoardListResDto.builder()
+                        .board(boardList) // 엔티티 → DTO 변환
                         .build())
                 .toList();
     }
 
+    /**
+     *
+     * @param userId
+     */
     // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
     @Transactional
     public void deleteUserFindBoard(Long userId) {
 
-        informationBoardRepository.findByUserId(userId)
-                .forEach(InformationBoard::boardDelete);
-
-        introductionBoardRepository.findByUserId(userId)
-                .forEach(IntroductionBoard::boardDelete);
+        boardRepository.findByUserId(userId)
+                .forEach(Board::boardDelete);
     }
 
+    /**
+     *
+     * @param userId
+     * @param encodedNickname
+     */
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
     @Transactional
     public void modifyUserFindBoard(Long userId, String encodedNickname) {
 
-        informationBoardRepository.findByUserId(userId)
+        boardRepository.findByUserId(userId)
                 .forEach(InformationBoard -> InformationBoard.nicknameModify(encodedNickname));
-
-        introductionBoardRepository.findByUserId(userId)
-                .forEach(IntroductionBoard -> IntroductionBoard.nicknameModify(encodedNickname));
-
-
-
     }
 
     /**
-     * 소개 게시판 좋아요순 3개 목록 조회
+     *
+     * @return
      */
+    // 소개 게시판 좋아요순 3개 목록 조회
     public List<IntroductionMainListResDto> findIntroductionMainList() {
-        // 1. Feign으로 좋아요 많은 게시글 리스트 가져오기
+        // 1. Feign 으로 좋아요 많은 게시글 리스트 가져오기
         List<LikeComCountResDto> introductionLikeCountList = mainServiceClient.getMainIntroduction();
 
         // 2. postId만 추출
@@ -404,15 +323,15 @@ public class BoardService {
                         dto -> dto
                 ));
 
-        // 4. DB에서 postId로 게시글 조회
-        List<IntroductionBoard> introductionBoards = introductionBoardRepository.findAllById(postIds);
+        // 4. DB 에서 postId로 게시글 조회
+        List<Board> introductionBoards = boardRepository.findAllById(postIds);
 
         // 5. 게시글 + 좋아요/댓글 정보 조합 후 DTO 변환
         return introductionBoards.stream()
-                .map(introduction -> {
-                    LikeComCountResDto likeDto = likeCountMap.get(introduction.getPostId());
+                .map(board -> {
+                    LikeComCountResDto likeDto = likeCountMap.get(board.getPostId());
                     return IntroductionMainListResDto.builder()
-                            .introductionBoard(introduction)
+                            .introductionBoard(board)
                             .likeCount(likeDto.getLikeCount())
                             .commentCount(likeDto.getCommentCount())
                             .build();
@@ -420,52 +339,26 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
-    public CommonResDto findMyPost(Long userId, String category, Pageable pageable) {
+    /**
+     *
+     * @param userId
+     * @param category
+     * @param pageable
+     * @return
+     */
+    // 내 게시물 조회
+    public CommonResDto findMyPost(Long userId, Category category, Pageable pageable) {
 
-        List<String> cate = List.of("review", "question", "free", "introduction");
-        if(!cate.contains(category)) {
-            throw new CommonException(ErrorCode.BAD_REQUEST, "옳지 않은 카테고리값입니다.");
-        }
-        Category targetCategory = Category.valueOf(category.toUpperCase());
-        if(targetCategory.equals(Category.INTRODUCTION)) {
+            Page<Board> boardList
+                    = boardRepository.findMyPost(userId, category, pageable);
 
-            Page<IntroductionBoard> introductionBoardList = introductionBoardRepository.findMyPost(userId, pageable);
-
-            List<LikeComCountReqDto> likeCom = introductionBoardList.stream().map(introductionBoard -> {
-                // ReqDto 에서 category(INTRODUCTION), postId 를 뽑아서 List로 만들겠다.
-                return new LikeComCountReqDto(Category.INTRODUCTION.name(), introductionBoard.getPostId());
-            }).collect(Collectors.toList());
-
-            List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
-            List<LikeComIntroResDto> result = introductionBoardList.stream().map(introductionBoard -> {
-                        for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
-                            if (introductionBoard.getPostId().equals(likeComCountResDto.getContentId())) {
-                                return LikeComIntroResDto.fromEntity(introductionBoard, likeComCountResDto.getLikeCount(), likeComCountResDto.getCommentCount());
-                            }
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            Page<LikeComIntroResDto> dtoPage = new PageImpl<>(
-                    result,
-                    introductionBoardList.getPageable(),
-                    introductionBoardList.getTotalElements()
-            );
-            return new CommonResDto(HttpStatus.OK, "모든 게시물 찾음", dtoPage);
-        }
-        else {
-            Page<InformationBoard> informationBoardList
-                    = informationBoardRepository.findMyPost(userId, targetCategory, pageable);
-
-            List<LikeComCountReqDto> likeCom = informationBoardList.stream().map(informationBoard -> {
+            List<LikeComCountReqDto> likeCom = boardList.stream().map(board -> {
                 // ReqDto 에서 category, postId 를 뽑아서 List로 만들겠다. (category는 string 변환)
-                return new LikeComCountReqDto(String.valueOf(informationBoard.getCategory()), informationBoard.getPostId());
+                return new LikeComCountReqDto(String.valueOf(board.getCategory()), board.getPostId());
             }).collect(Collectors.toList());
 
             List<LikeComCountResDto> listLikeCommentCount = mainServiceClient.getListLikeCommentCount(likeCom);
-            List<LikeComResDto> result = informationBoardList.stream().map(inform -> {
+            List<LikeComResDto> result = boardList.stream().map(inform -> {
                         for (LikeComCountResDto likeComCountResDto : listLikeCommentCount) {
                             if (inform.getCategory().equals(Category.valueOf(likeComCountResDto.getCategory())) &&
                                     inform.getPostId().equals(likeComCountResDto.getContentId())) {
@@ -479,23 +372,29 @@ public class BoardService {
 
             Page<LikeComResDto> pages = new PageImpl<>(
                     result,
-                    informationBoardList.getPageable(),
-                    informationBoardList.getTotalElements()
+                    boardList.getPageable(),
+                    boardList.getTotalElements()
             );
-            // Entity → DTO 변환
-//        return informationBoardList.map(InformationBoardListResDto::new);
-
             return new CommonResDto(HttpStatus.OK, "내 정보 게시물 모두 찾음", pages);
-        }
     }
 
 
+    /**
+     *
+     * @param input
+     * @return
+     */
     // 입력받은 카테고리가 유효하냐 (contains)
     private boolean isValidCategory(Category input) {
         return categoryList.contains(input);
     }
 
-
+    /**
+     *
+     * @param thumbnailImage
+     * @return
+     */
+    // 썸네일 이미지 저장 메소드
     private String setThumbnailImage(MultipartFile thumbnailImage) {
 
         // 썸네일 이미지를 저장할 경로
@@ -589,39 +488,14 @@ public class BoardService {
      * Redis를 활용하여 하루 1회만 조회수 증가 처리
      *
      * @param redisKey Redis 중복 조회 방지용 키
-     * @param InformationBoard 조회 대상 엔티티 (조회수 업데이트 대상)
+     * @param Board 조회 대상 엔티티 (조회수 업데이트 대상)
      */
-    private void increaseViewCountInformationFirstTime(String redisKey, InformationBoard informationBoard) {
+    private void increaseViewCountFirstTime(String redisKey, Board board) {
         // Redis에 키가 없을 경우만 조회수 증가
         if (!redisTemplate.hasKey(redisKey)) {
             // 현재 조회수를 1 증가시킨 후 저장
-            informationBoard.viewCountUp(informationBoard.getViewCount() + 1);
-            informationBoardRepository.save(informationBoard);
-
-            // Redis에 키 등록 (value: "1") → 자정 만료
-            redisTemplate.opsForValue().set(redisKey, "1");
-
-            // 자정까지 유효하도록 만료 시간 설정
-            redisTemplate.expireAt(redisKey,
-                    java.util.Date.from(LocalDate.now()
-                            .plusDays(1) // 다음날
-                            .atStartOfDay(java.time.ZoneId.systemDefault()) // 자정
-                            .toInstant()));
-        }
-    }
-
-    /**
-     * Redis를 활용하여 하루 1회만 조회수 증가 처리
-     *
-     * @param redisKey Redis 중복 조회 방지용 키
-     * @param IntroductionBoard 조회 대상 엔티티 (조회수 업데이트 대상)
-     */
-    private void increaseViewCountIntroductionFirstTime(String redisKey, IntroductionBoard introductionBoard) {
-        // Redis에 키가 없을 경우만 조회수 증가
-        if (!redisTemplate.hasKey(redisKey)) {
-            // 현재 조회수를 1 증가시킨 후 저장
-            introductionBoard.viewCountUp(introductionBoard.getViewCount() + 1);
-            introductionBoardRepository.save(introductionBoard);
+            board.viewCountUp(board.getViewCount() + 1);
+            boardRepository.save(board);
 
             // Redis에 키 등록 (value: "1") → 자정 만료
             redisTemplate.opsForValue().set(redisKey, "1");

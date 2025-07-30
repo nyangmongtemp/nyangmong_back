@@ -46,7 +46,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authorityList.add(new SimpleGrantedAuthority("ROLE_" + adminRole));
 
             Authentication auth = new UsernamePasswordAuthenticationToken(
-                    new TokenUserInfo(adminEmail, Role.valueOf(adminRole) ,Long.valueOf(adminId)),
+                    new TokenAdminInfo(adminEmail, Role.valueOf(adminRole) ,Long.valueOf(adminId)),
                     "",
                     authorityList // 인가 정보 (권한)
             );

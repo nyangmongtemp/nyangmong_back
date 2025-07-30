@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,10 +19,10 @@ public class AdUpdateReqDto {
 
     private Integer orderNum;
 
-    private MultipartFile thumbnailImage;
-
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
     private String linkUrl;

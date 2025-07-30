@@ -1,6 +1,6 @@
 package com.playdata.boardservice.board.dto.res;
 
-import com.playdata.boardservice.board.entity.IntroductionBoard;
+import com.playdata.boardservice.board.entity.Board;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +27,7 @@ public class LikeComIntroResDto {
     private Long commentCount;
 
 
-    public static LikeComIntroResDto fromEntity(IntroductionBoard Board, Long likeCount, Long commentCount) {
+    public static LikeComIntroResDto fromEntity(Board Board, Long likeCount, Long commentCount) {
         return LikeComIntroResDto.builder()
                 .postid(Board.getPostId())
                 .userid(Board.getUserId())

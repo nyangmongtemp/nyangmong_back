@@ -45,10 +45,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/scheduler/**",
 
             // 게시판
-            "/board/popular/children",
-            "/board/introduction/list", "/board/introduction/main",
-            "/board/information/list", "/board/information/main", "/board/information/popular",
-            "/board/detail/**",
+            "/board//list/{category}", "/board/information/main", "/board/main", "/board/popular",
+            "/board/detail/{category}/{id}",
 
             // 맵 관련 정보 서비스
             "/map/find", "/map/detail/**",
