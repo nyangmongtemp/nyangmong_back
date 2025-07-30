@@ -10,10 +10,4 @@ public class UserInfoModiReqDto {
 
     String nickname;
 
-    @NotNull
-    String phone;
-
-    @NotNull
-    String address;
-
 }

@@ -13,8 +13,6 @@ public class UserMyPageResDto {
     private String userName;
     private String nickname;
     private LocalDateTime createAt;
-    private String phone;
-    private String address;
     private String profileImage;
 
 }
