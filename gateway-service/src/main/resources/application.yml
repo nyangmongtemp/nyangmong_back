@@ -82,7 +82,7 @@ spring:
         - id: admin-service
           uri: lb://ADMIN-SERVICE
           predicates:
-            - Path=/admin-service/**
+            - Path=/admin-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
             - RemoveRequestHeader=Cookie
             - RewritePath=/admin-service/(?<segment>.*), /$\{segment}

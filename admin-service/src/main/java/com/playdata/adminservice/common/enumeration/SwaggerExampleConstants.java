@@ -1,0 +1,233 @@
+package com.playdata.adminservice.common.enumeration;
+
+/**
+ * Swagger example Json 상수 관리
+ */
+public class SwaggerExampleConstants {
+    /**
+     * [약관 / 방침 / QNA] 목록 조회 Response Json
+     */
+    public static final String TERMS_LIST_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "목록 조회",
+        "result": {
+            "content": [
+                {
+                    "termsId": 5,
+                    "title": "제목",
+                    "content": "내용",
+                    "adminName": "관리자이름",
+                    "createAt": "2020-01-01T00:00:00.000000",
+                    "updateAt": "2020-01-01T00:00:00.000000"
+                },
+                {
+                    "termsId": 4,
+                    "title": "제목",
+                    "content": "내용",
+                    "adminName": "관리자이름",
+                    "createAt": "2020-01-01T00:00:00.000000",
+                    "updateAt": "2020-01-01T00:00:00.000000"
+                },
+                {
+                    "termsId": 3,
+                    "title": "제목",
+                    "content": "내용",
+                    "adminName": "관리자이름",
+                    "createAt": "2020-01-01T00:00:00.000000",
+                    "updateAt": "2020-01-01T00:00:00.000000"
+                },
+                {
+                    "termsId": 2,
+                    "title": "제목",
+                    "content": "내용",
+                    "adminName": "관리자이름",
+                    "createAt": "2020-01-01T00:00:00.000000",
+                    "updateAt": "2020-01-01T00:00:00.000000"
+                },
+                {
+                    "termsId": 1,
+                    "title": "제목",
+                    "content": "내용",
+                    "adminName": "관리자이름",
+                    "createAt": "2020-01-01T00:00:00.000000",
+                    "updateAt": "2020-01-01T00:00:00.000000"
+                }
+            ],
+            "pageable": {
+                "pageNumber": 0,
+                "pageSize": 10,
+                "sort": [],
+                "offset": 0,
+                "unpaged": false,
+                "paged": true
+            },
+            "totalPages": 1,
+            "totalElements": 6,
+            "last": true,
+            "size": 10,
+            "number": 0,
+            "sort": [],
+            "numberOfElements": 6,
+            "first": true,
+            "empty": false
+        }
+    }
+    """;
+
+    /**
+     * [약관 / 방침 / QNA] 상세 조회 Response Json
+     */
+    public static final String TERMS_DETAIL_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "상세 조회",
+        "result": {
+            "title": "제목",
+            "content": "<p>내용</p>",
+            "adminName": "등록한 관리자 이름",
+            "createAt": "2020-01-01T00:00:00.000000",
+            "updateAt": "2020-01-01T00:00:00.000000"
+        }
+    }
+    """;
+
+    /**
+     * [약관 / 방침 / QNA] 생성 요청 Request Json 예시
+     */
+    public static final String TERMS_CREATE_REQUEST = """
+    {
+      "title": "2살 믹스견 분양합니다",
+      "content": "우리강아지 분양합니다",
+      "petCategory": "강아지",
+      "petKind": "믹스견",
+      "age": "2살",
+      "vaccine": "1차접종 완료, 2차접종 준비중",
+      "sexCode": "M",
+      "neuterYn": "N",
+      "address": "서울시 서초구",
+      "fee": 20000
+    }""";
+
+    /**
+     * [약관 / 방침 / QNA] 수정 요청 Request Json 예시
+     */
+    public static final String TERMS_UPDATE_REQUEST = """
+    {
+        "title":"2살 믹스견 분양합니다 수정",
+        "content":"우리강아지 분양합니다 수정",
+        "petCategory":"강아지",
+        "petKind":"믹스견",
+        "age":"2살",
+        "vaccine":"1차접종 완료, 2차접종 완료중",
+        "sexCode":"F",
+        "neuterYn":"Y",
+        "address":"서울시 서초구 1-1",
+        "fee":10000
+    }""";
+
+    /**
+     * [공통] 잘못된 요청 Exception Response Json
+     */
+    public static final String TERMS_BAD_REQUEST = """
+    {
+        "code": "DEFAULT-001",
+        "message": "잘못된 요청입니다."
+    }""" ;
+
+    /**
+     * [공통] 없는데이터 Exception Response Json
+     */
+    public static final String TERMS_DETAIL_EXCEPTION = """
+    {
+        "code": "GET-002",
+        "message": "요청 데이터가 존재하지 않습니다."
+    }""";
+
+    /**
+     * [공통] 등록 완료 Response Json
+     */
+    public static final String CREATE_TERMS_SUCCESS = """
+    {
+        "statusCode": 201,
+        "statusMessage": "등록 완료",
+        "result": {
+            "createAt": "2025-07-30T20:11:41.124507",
+            "updateAt": "2025-07-30T20:11:41.124507",
+            "termsId": 11,
+            "adminId": 1,
+            "title": "제목",
+            "content": "내용",
+            "category": "TERMS",
+            "active": true,
+            "adminName": null
+        }
+    }""";
+
+    /**
+     * [공통] 등록 완료 Response Json
+     */
+    public static final String UPDATE_TERMS_SUCCESS = """
+    {
+        "statusCode": 200,
+        "statusMessage": "수정 완료",
+            "result": {
+            "createAt": "2025-07-26T11:33:50.507393",
+            "updateAt": "2025-07-30T20:09:52.974359",
+            "termsId": 1,
+            "adminId": 1,
+            "title": "제목",
+            "content": "내용",
+            "category": "TERMS",
+            "active": true,
+            "adminName": null
+        }
+    }""";
+
+    /**
+     * [공통] 삭제 완료 Response Json
+     */
+    public static final String DELETE_TERMS_SUCCESS = """
+    {
+        "statusCode": 200,
+        "statusMessage": "삭제 완료",
+            "result": {
+            "createAt": "2025-07-26T11:29:38.380821",
+            "updateAt": "2025-07-30T20:05:23.423013",
+            "termsId": 1,
+            "adminId": 1,
+            "title": "제목",
+            "content": "내용",
+            "category": "TERMS",
+            "active": false,
+            "adminName": null
+        }
+    }""";
+
+    /**
+     * [공통] 마지막 글 NULL 일시 조회 Response Json
+     */
+    public static final String LAST_TERMS_NULL_SUCCESS = """
+    {
+        "statusCode": 200,
+        "statusMessage": "등록된 약관이 없습니다.",
+        "result": null
+    }""";
+
+    /**
+     * [공통] 마지막 글 조회 Response Json
+     */
+    public static final String LAST_TERMS_SUCCESS = """
+    {
+        "statusCode": 200,
+        "statusMessage": "약관 마지막 게시글 조회",
+        "result": {
+            "id": 1,
+            "title": "제목",
+            "content": "내용",
+            "adminName": "총관리자",
+            "createAt": "2025-07-26T11:29:38.380821",
+            "updateAt": "2025-07-30T20:05:23.423013"
+        }
+    }""";
+}
