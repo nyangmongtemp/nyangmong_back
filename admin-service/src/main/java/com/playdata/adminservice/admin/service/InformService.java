@@ -6,7 +6,7 @@ import com.playdata.adminservice.admin.dto.res.InformDetailResDto;
 import com.playdata.adminservice.admin.dto.res.InformListResDto;
 import com.playdata.adminservice.admin.entity.Inform;
 import com.playdata.adminservice.admin.repository.InformRepository;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class InformService {
      * @return
      */
     @Transactional
-    public Inform replyInform(Long id, InformReplyReqDto informReplyReqDto, TokenUserInfo adminInfo) {
+    public Inform replyInform(Long id, InformReplyReqDto informReplyReqDto, TokenAdminInfo adminInfo) {
         Inform inform = informRepository.findById(id).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
         inform.replyInform(informReplyReqDto, adminInfo.getAdminId());
         return inform;

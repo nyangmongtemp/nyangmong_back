@@ -9,7 +9,7 @@ import com.playdata.adminservice.admin.dto.res.TermsListResDto;
 import com.playdata.adminservice.admin.entity.Terms;
 import com.playdata.adminservice.admin.entity.TermsCategory;
 import com.playdata.adminservice.admin.service.TermsService;
-import com.playdata.adminservice.common.auth.TokenUserInfo;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
@@ -81,7 +81,7 @@ public class TermsController {
      */
     @PostMapping()
     public ResponseEntity<CommonResDto> createTerms(
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @PathVariable String category,
             @RequestBody @Valid TermsInsertReqDto termsInsertReqDto) {
         TermsCategory termsCategory = parseCategory(category);
@@ -100,7 +100,7 @@ public class TermsController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<CommonResDto> updateTerms(
-            @AuthenticationPrincipal TokenUserInfo adminInfo,
+            @AuthenticationPrincipal TokenAdminInfo adminInfo,
             @PathVariable Long id,
             @PathVariable String category,
             @RequestBody @Valid TermsUpdateReqDto termsUpdateReqDto) {

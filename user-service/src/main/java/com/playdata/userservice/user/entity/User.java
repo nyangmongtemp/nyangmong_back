@@ -138,4 +138,5 @@ public class User extends BaseTimeEntity {
         this.releaseAt = releaseAt;
     }
 
+
 }

@@ -122,10 +122,8 @@ public class UserService {
      */
     public CommonResDto userCreate(UserSaveReqDto userSaveReqDto, MultipartFile profileImage) {
 
-        String email = userSaveReqDto.getEmail();
-        Optional<User> foundByEmail = userRepository.findByEmail(email);
         // 회원가입을 요청한 이메일로 이미 가입한 회원정보가 있는 경우
-        if (foundByEmail.isPresent()) {
+        if (validEmail(userSaveReqDto.getEmail())) {
             // 회원가입 실패
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
@@ -191,28 +189,14 @@ public class UserService {
                     user.updatePasswordFaultCount(++passwordFaultCount);
                     userRepository.save(user);
                 }
-                throw new CommonException(ErrorCode.INVALID_PASSWORD);
+                throw new CommonException(ErrorCode.INVALID_PASSWORD, "비밀번호 오류!");
             }
             // 유효한 회원이고, 비밀번호도 일치한 경우
             else{
                 User user = foundUser.get();
                 
-                // 만약 출소 날짜값이 있다면?
-                if(user.getReleaseAt() != null) {
-                    // 현재 시각과 비교
-                    Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
-
-                    // 정지 기한이 끝났다면
-                    if(between.isNegative()) {
-                        // null로 없애줌
-                        user.updateReleaseAt(null);
-                    }
-                    // 아직 정지중이라면?
-                    else {
-                        // 로그인 실패
-                        throw new CommonException(ErrorCode.ACCOUNT_DISABLED);
-                    }
-                }
+                // 정지된 사용자인지 확인
+                isPaused(user);
 
                 // redis에 해당 유저의 블락 정보 조회
                 if(redisTemplate.opsForValue()
@@ -268,10 +252,9 @@ public class UserService {
         if(isBlocked(email)){
             throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
         }
-        Optional<User> foundEmail =
-                userRepository.findByEmail(email);
+
         // 이미 존재하는 이메일인 경우 -> 회원가입 불가
-        if (foundEmail.isPresent()) {
+        if (validEmail(email)) {
             // 이미 존재하는 이메일이라는 에러를 발생 -> controller가 이 에러를 처리
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
@@ -301,8 +284,8 @@ public class UserService {
         Object foundCode = redisTemplate.opsForValue().get(key);
         // 인증 코드 유효시간이 만료된 경우
         if(foundCode == null) {
-            throw new CommonException(ErrorCode.BAD_REQUEST);
-            //throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
+            //throw new CommonException(ErrorCode.BAD_REQUEST);
+            throw new CommonException(ErrorCode.EXPIRED_AUTH_CODE);
         }
 
         // 인증 시도 횟수 증가
@@ -314,14 +297,13 @@ public class UserService {
             if(attemptCount >= 3){
                 // 최대 시도 횟수 초과 시 해당 이메일 인증 차단
                 blockUser(email);
-                throw new CommonException(ErrorCode.BAD_REQUEST);
+                throw new CommonException(ErrorCode.AUTH_DISALLOWED);
                 // throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
             }
             // 인증 횟수 차감하여 프론트로 메시지 전송
             int remainingAttempt = 3 - attemptCount;
-            throw new CommonException(ErrorCode.BAD_REQUEST);
-            /*throw new CommonException(ErrorCode.INVALID_AUTH_CODE,
-                    (String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt)));*/
+            throw new CommonException(ErrorCode.INVALID_AUTH_CODE,
+                    (String.format("인증코드가 틀렸습니다. 인증 기회는 %d회 남았습니다.", remainingAttempt)));
         }
 
         log.info("이메일 인증 성공!, email: {}", email);
@@ -399,9 +381,8 @@ public class UserService {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
 
-        Optional<User> byEmail = userRepository.findByEmail(newEmail);
         // 이메일 변경 요청을 보낸 사용자가 DB에 이미 존재하는 경우
-        if(byEmail.isPresent()) {
+        if(validEmail(newEmail)) {
             throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일입니다.");
         }
         String authCode = sendEmailAuthCode(newEmail, "MODIFY");
@@ -423,15 +404,12 @@ public class UserService {
         
         // 이메일 인증 처리
         CommonResDto resDto = verifyEmailCode(authResDto);
-        
-        Optional<User> foundUser = userRepository.findById(userInfo.getUserId());
-        // 이메일을 변경할 사용자가 존재 및 활성화 되었는지 확인
-        if(!foundUser.isPresent() || !foundUser.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
-        }
+
+        // 변경을 요청한 사용자가  유효한지 확인
+        User user = findValidUser(userInfo.getUserId());
+
         // 이메일 변경 요청 사용자의 유효성 확인 후
         // 해당 사용자의 이메일 변경 및 저장
-        User user = foundUser.get();
         user.modifyEmail(authResDto.getEmail());
         userRepository.save(user);
 
@@ -445,15 +423,9 @@ public class UserService {
      * @return
      */
     public CommonResDto sendEmailAuthCodeNewPw(String email) {
-
-        Optional<User> byEmail = userRepository.findByEmail(email);
-        // 비밀번호 변경 요청을 보낸 유저가 DB에 없는 경우
-        if(!byEmail.isPresent() || !byEmail.get().isActive() 
-                // 또는 소셜로그인 사용자인 경우
-                || byEmail.get().getSocialProvider() != null) {
-            // -> 비밀번호 변경 요청 에러 처리
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "변경을 진행할 회원이 존재하지 않습니다.");
-        }
+        
+        // 유효한 사용자 인지 확인
+        findValidUserByEmail(email);
         // 이메일 전송
         String code = sendEmailAuthCode(email, "MODIFY");
 
@@ -557,7 +529,7 @@ public class UserService {
         
         // 소셜 로그인 사용자인 경우 에러 처리
         if(foundUser.getSocialProvider() != null) {
-            throw new CommonException(ErrorCode.BAD_REQUEST);
+            throw new CommonException(ErrorCode.BAD_REQUEST, "소셜 로그인한 회원은 임시비밀번호 발급 불가");
         }
 
         String authCode = sendEmailAuthCode(email, "FORGET");
@@ -628,7 +600,8 @@ public class UserService {
      * @return
      */
     public CommonResDto reProvideToken(String email) {
-
+        
+        // 유효한 사용자인지 확인
         User user = findValidUserByEmail(email);
         // redis에 해당 유저의 refresh token 조회
         Object obj = redisTemplate.opsForValue().get("user:refresh:" + user.getUserId());
@@ -704,17 +677,13 @@ public class UserService {
      */
     public CommonResDto clearChat(Long userId, Long chatId) {
 
-        Optional<Chat> byId = chatRepository.findById(chatId);
         // 삭제하려는 채팅방이 유효하지 않은 경우
-        if(!byId.isPresent() || !byId.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND);
-        }
-        Chat chat = byId.get();
+        Chat chat = findValidChat(chatId);
         // 채팅방 삭제 권한 여부 확인
         if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
             throw new CommonException(ErrorCode.NOT_FOUND);
         }
-        byId.get().deleteChat();
+        chat.deleteChat();
         chatRepository.save(chat);
         return new CommonResDto(HttpStatus.OK, "해당 채팅방 삭제됨.", true);
     }
@@ -759,12 +728,8 @@ public class UserService {
     @Transactional
     public CommonResDto getMyChatMessages(Long userId, String requestNickname, Long chatId) {
 
-        Optional<Chat> byId = chatRepository.findById(chatId);
         // 조회하려는 채팅방이 유효하지 않는 경우
-        if(!byId.isPresent() || !byId.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND);
-        }
-        Chat chat = byId.get();
+        Chat chat = findValidChat(chatId);
         // 조회하려는 채팅방이 내가 볼 수 있는 채팅방이 아닌 경우
         if(chat.getUserId1() != userId && chat.getUserId2() != userId) {
             throw new CommonException(ErrorCode.NOT_FOUND);
@@ -846,6 +811,7 @@ public class UserService {
      * @param kakaoUserDto
      * @return
      */
+    @Transactional
     public KakaoLoginResDto findOrCreateKakaoUser(KakaoUserDto kakaoUserDto) {
 
         Optional<User> kakao
@@ -858,6 +824,10 @@ public class UserService {
                 throw new CommonException(ErrorCode.BAD_REQUEST, "이미 탈퇴한 회원입니다.");
             }
             User user = kakao.get();
+            
+            // 정지 이력이 있는 지 확인
+            isPaused(user);
+
             // Access Token 발급
             String token
                     = jwtTokenProvider.createToken(user.getEmail(), "USER", user.getNickname(), user.getUserId());
@@ -1046,6 +1016,7 @@ public class UserService {
         Report newReport 
                 = new Report(accused.getUserId(), reqDto.getContent(), reporter.getUserId(), category);
 
+
         reportRepository.save(newReport);
 
         return new CommonResDto(HttpStatus.CREATED, "신고 생성됨", true);
@@ -1117,7 +1088,7 @@ public class UserService {
             }
         } catch (MessagingException e) {
             log.info(e.getMessage());
-            throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
+            throw new CommonException(ErrorCode.MAIL_SERVER_ERROR);
         }
 
         // 인증 코드를 redis에 저장하자
@@ -1188,6 +1159,16 @@ public class UserService {
     }
 
     /**
+     * 회원가입, 이메일 변경 시 가능한 이메일인지
+     * 
+     * @param email
+     * @return
+     */
+    private boolean validEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
      * 사용자의 id를 통해 해당 사용자의 유효성을 확인하는 메소드
      *
      * @param userId
@@ -1217,6 +1198,22 @@ public class UserService {
             throw new CommonException(ErrorCode.BAD_REQUEST, "유효하지 않은 회원임");
         }
         return byEmail.get();
+    }
+
+    /**
+     * 유효한 채팅방인지 확인하는 메소드
+     * 
+     * @param chatId
+     * @return
+     */
+    private Chat findValidChat(Long chatId) {
+        // 채팅방 찾음
+        Optional<Chat> byId = chatRepository.findById(chatId);
+        // 유효한 채팅방인지
+        if(!byId.isPresent() || !byId.get().isActive()) {
+            throw new CommonException(ErrorCode.NOT_FOUND);
+        }
+        return  byId.get();
     }
 
     /**
@@ -1251,6 +1248,26 @@ public class UserService {
         }
         else {
             throw new CommonException(ErrorCode.BAD_REQUEST, "잘못된 요청값입니다.");
+        }
+    }
+    
+    // 사용자의 정지 여부 확인 및 처리 메소드
+    private void isPaused(User user) {
+        // 만약 출소 날짜값이 있다면?
+        if(user.getReleaseAt() != null) {
+            // 현재 시각과 비교
+            Duration between = Duration.between(LocalDateTime.now(), user.getReleaseAt());
+
+            // 정지 기한이 끝났다면
+            if(between.isNegative()) {
+                // null로 없애줌
+                user.updateReleaseAt(null);
+            }
+            // 아직 정지중이라면?
+            else {
+                // 로그인 실패
+                throw new CommonException(ErrorCode.NOT_ALLOWED_USER, user.getReleaseAt().toString());
+            }
         }
     }
     

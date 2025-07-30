@@ -1,7 +1,7 @@
 package com.playdata.boardservice.board.dto.req;
 
+import com.playdata.boardservice.board.entity.Board;
 import com.playdata.boardservice.board.entity.Category;
-import com.playdata.boardservice.board.entity.InformationBoard;
 import com.playdata.boardservice.common.util.HtmlSanitizer;
 import lombok.*;
 
@@ -10,9 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InformationBoardSaveReqDto {
+public class BoardSaveReqDto {
 
-    
     private Category category;
 
     private String thumbnailImage;
@@ -21,8 +20,8 @@ public class InformationBoardSaveReqDto {
 
     private  String title;
 
-    public InformationBoard toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
-        return InformationBoard.builder()
+    public Board toEntity(Long userId, String nickname, String imageUrl, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
+        return Board.builder()
                 .userId(userId)
                 .category(category)
                 .thumbnailImage(imageUrl)
