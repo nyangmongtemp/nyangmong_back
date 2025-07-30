@@ -14,6 +14,7 @@ import lombok.Getter;
 public class AnimalInsertRequestDto {
 
     private Long userId; // 사용자 id 값
+
     private String thumbnailImage; // 썸넹일 이미지
 
     private String nickname; // 닉네임
