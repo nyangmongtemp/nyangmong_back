@@ -58,7 +58,7 @@ public class BannerService {
         if (bannerCountRepository.count() == 0) {
             bannerCountRepository.save(
                     BannerCount.builder()
-                            // 초기값은 3으로 지정
+                            // 초기값은 4으로 지정
                             .count(bannerCount)
                             .build()
             );
