@@ -1,5 +1,6 @@
 package com.playdata.userservice.user.dto.req;
 
+import com.playdata.userservice.common.util.HtmlSanitizer;
 import com.playdata.userservice.user.entity.User;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -28,16 +29,16 @@ public class UserSaveReqDto {
 
 
 
-    public User toEntity(String encodedPassword, String profileImagePath) {
+    public User toEntity(String encodedPassword, String profileImagePath, HtmlSanitizer plainTextPolicy) {
         if(StringUtils.isBlank(nickname)){
             nickname = userName;
         }
         return User.builder()
-                .email(email)
+                .email(plainTextPolicy.sanitizeText(email))
                 .password(encodedPassword)
-                .userName(userName)
+                .userName(plainTextPolicy.sanitizeText(userName))
                 .profileImage(profileImagePath)
-                .nickname(nickname)
+                .nickname(plainTextPolicy.sanitizeText(nickname))
                 .active(true)
                 .passwordFaultCount(0)
                 .pauseCount(0)

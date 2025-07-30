@@ -3,6 +3,7 @@ package com.playdata.userservice.user.entity;
 import com.playdata.userservice.common.entity.BaseTimeEntity;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
+import com.playdata.userservice.common.util.HtmlSanitizer;
 import com.playdata.userservice.user.dto.inform.res.InformListResDto;
 import com.playdata.userservice.user.dto.inform.res.InformResDto;
 import jakarta.persistence.*;
@@ -46,10 +47,10 @@ public class Inform extends BaseTimeEntity {
     private String reply;
 
     // 문의 생성용 생성자
-    public Inform(Long userId, String title, String content) {
+    public Inform(Long userId, String title, String content, HtmlSanitizer plainTextPolicy) {
         this.userId = userId;
-        this.title = title;
-        this.content = content;
+        this.title = plainTextPolicy.sanitizeText(title);
+        this.content = plainTextPolicy.sanitizeText(content);
         this.active = true;
         this.answered = false;
         this.reply = null;
@@ -57,7 +58,7 @@ public class Inform extends BaseTimeEntity {
     }
 
     // 문의 수정용 메소드
-    public void modifyInform(String title, String content) {
+    public void modifyInform(String title, String content, HtmlSanitizer plainTextPolicy) {
         // 수정할 데이터가 없는 경우
         if(title == null && content == null) {
             // 에러 처리
@@ -65,11 +66,11 @@ public class Inform extends BaseTimeEntity {
         }
         // 제목 수정
         if (title != null) {
-            this.title = title;
+            this.title = plainTextPolicy.sanitizeText(title);
         }
         // 내용 수정
         if (content != null) {
-            this.content = content;
+            this.content = plainTextPolicy.sanitizeText(content);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
+import com.playdata.userservice.common.util.HtmlSanitizer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,9 +39,9 @@ public class Report extends BaseTimeEntity {
     // 신고 처리 여부
     private boolean treat;
 
-    public Report(Long accusedUserId, String content, Long reportUserId, ReportCategory category) {
+    public Report(Long accusedUserId, String content, Long reportUserId, ReportCategory category, HtmlSanitizer plainTextPolicy) {
         this.accusedUserId = accusedUserId;
-        this.content = content;
+        this.content = plainTextPolicy.sanitizeText(content);
         this.reportUserId = reportUserId;
         this.category = category;
         this.treat = false;
