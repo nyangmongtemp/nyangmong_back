@@ -8,7 +8,7 @@ import com.playdata.adminservice.admin.repository.AdvertisementSettingRepository
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
-import jakarta.persistence.EntityNotFoundException;
+import com.playdata.adminservice.common.util.ImageValidation;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 광고 서비스 클래스
@@ -48,22 +47,18 @@ public class AdvertisementService {
 
     /**
      * 광고 등록
-     *
-     * @param dto 광고 등록 요청 DTO
+     * @param dto    광고 등록 요청 DTO
      * @return 등록된 광고 정보를 담은 응답 DTO
-     *
      */
-    @Transactional
-    public CommonResDto registerAd(AdRegisterReqDto dto) {
-        MultipartFile imageFile = dto.getThumbnailImage();
-        String savedFileName = saveImage(imageFile);
+    public CommonResDto registerAd(AdRegisterReqDto dto, MultipartFile image) {
+        String savedFileName = saveImage(image);
 
         Advertisement ad = Advertisement.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .active(dto.getActive())
                 .confirmed(dto.getConfirmed())
-                .thumbnailImage(savedFileName) // 파일명 또는 접근 가능한 경로
+                .thumbnailImage(savedFileName)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .linkUrl(dto.getLinkUrl())
@@ -75,33 +70,19 @@ public class AdvertisementService {
 
     /**
      * 광고 수정
-     *
-     * @param id  수정할 광고 ID
-     * @param dto 광고 수정 요청 DTO
+     * @param id     수정할 광고 ID
+     * @param dto    광고 수정 요청 DTO
      * @return 수정된 광고 응답 DTO
      */
-    @Transactional
-    public CommonResDto updateAd(Long id, @Valid AdUpdateReqDto dto) {
+    public CommonResDto updateAd(Long id, @Valid AdUpdateReqDto dto, MultipartFile image) {
         Advertisement ad = adRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
-        String updatedThumbnail = ad.getThumbnailImage(); // 기존 이미지 유지
+        String thumbnailImage = (image != null && !image.isEmpty())
+                ? saveImage(image)
+                : ad.getThumbnailImage();
 
-        MultipartFile newFile = dto.getThumbnailImage();
-        if (newFile != null && !newFile.isEmpty()) {
-            updatedThumbnail = saveImage(newFile); // 새 이미지가 있으면 교체
-        }
-
-        ad.update(
-                dto.getTitle(),
-                dto.getDescription(),
-                dto.getActive(),
-                dto.getConfirmed(),
-                updatedThumbnail,
-                dto.getStartDate(),
-                dto.getEndDate(),
-                dto.getLinkUrl()
-        );
+        ad.update(dto, thumbnailImage);
 
         return new CommonResDto(HttpStatus.OK, "광고 수정 완료", ad);
     }
@@ -111,6 +92,8 @@ public class AdvertisementService {
         if (imageFile == null || imageFile.isEmpty()) {
             throw new CommonException(ErrorCode.EMPTY_FILE);
         }
+        // 이미지 파일 유효성 검사
+        ImageValidation.validateImageFile(imageFile);
 
         String originalFilename = imageFile.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
