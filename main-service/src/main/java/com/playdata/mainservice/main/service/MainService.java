@@ -5,6 +5,7 @@ import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
 import com.playdata.mainservice.common.enumeration.ErrorCode;
 import com.playdata.mainservice.common.exception.CommonException;
+import com.playdata.mainservice.common.util.HtmlSanitizer;
 import com.playdata.mainservice.main.dto.req.*;
 import com.playdata.mainservice.main.dto.res.CommentDetailResDto;
 import com.playdata.mainservice.main.dto.res.LikeComCountResDto;
@@ -46,6 +47,10 @@ public class MainService {
     
     // queryDSL 사용하는 Repository 서비스
     private final LikeRepositoryImpl likeImpl;
+
+    // xss 필터 정화 클래스
+    private final HtmlSanitizer htmlPolicy;
+    private final HtmlSanitizer plainTextPolicy;
 
     /**
      * 좋아요를 통합적으로 생성하고 삭제하는 서비스 메소드
@@ -98,7 +103,7 @@ public class MainService {
         // user-service로 부터 사용자의 프로필 이미지 수신
         ResponseEntity<String> responseEntity = userClient.getUserProfileImage(userId);
         
-        // user-service로부터 프로필 이미지 수신 중 오류가 발생한 경우
+        // user-service 로부터 프로필 이미지 수신 중 오류가 발생한 경우
         if(responseEntity.getStatusCode() != HttpStatus.OK) {
             throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR, "댓글 생성 중에 에러가 발생하였습니다.");
         }
@@ -106,7 +111,7 @@ public class MainService {
         // 새로운 댓글 생성
         Comment newComment
                 = new Comment(userId, cate, reqDto.getContentId()
-                , reqDto.getContent(), reqDto.isHidden(), nickname, responseEntity.getBody());
+                , reqDto.getContent(), reqDto.isHidden(), nickname, responseEntity.getBody(), plainTextPolicy);
         // DB에 저장
         commentRepository.save(newComment);
 
@@ -143,7 +148,7 @@ public class MainService {
         // 댓글의 유효성 확인
         Comment comment = isValidComment(reqDto.getCommentId(), userId);
         // 댓글 내용 수정 및 저장
-        comment.mofifyComment(reqDto.getContent());
+        comment.mofifyComment(reqDto.getContent(), plainTextPolicy);
         Comment saved = commentRepository.save(comment);
 
         return new CommonResDto(HttpStatus.OK,
@@ -170,7 +175,7 @@ public class MainService {
         
         // 대댓글 생성
         Reply createdReply = new Reply(userInfo.getUserId(), reqDto.getContent(), foundComment,
-                userInfo.getNickname(), res.getBody());
+                userInfo.getNickname(), res.getBody(), plainTextPolicy);
         
         // 화면단에 전송할 dto 변환 및 DB 저장
         ReplyDetailResDto resDto = replyRepository.save(createdReply).fromEntity(0L);
@@ -215,7 +220,7 @@ public class MainService {
 
         // 대댓글의 댓글이 존재하고 수정 권한도 있는 경우
         // 수정 진행
-        validReply.modifyReply(reqDto.getContent());
+        validReply.modifyReply(reqDto.getContent(), plainTextPolicy);
         replyRepository.save(validReply);
 
 
@@ -285,7 +290,7 @@ public class MainService {
             // 활성화가 된 댓글들만 닉네임 변경시키기
             comments.stream().filter(Comment::isActive).forEach(comment -> {
                 // 댓글과 대댓글의 닉네임값도 변환
-                comment.modifyNickname(nickname);
+                comment.modifyNickname(nickname, plainTextPolicy);
                 // 댓글에 대댓글이 존재한다면
                 if(comment.isReplyExist()){
                     // 수정된 대댓글의 정보 저장
