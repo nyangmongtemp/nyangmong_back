@@ -79,7 +79,10 @@ public class AdvertisementController {
      * @return 검색된 광고 목록 페이지 응답 DTO
      */
     @PostMapping("/ads/search")
-    public ResponseEntity<?> getAdsList(AdSearchDto searchDto, Pageable pageable) {
+    public ResponseEntity<?> getAdsList(
+            @RequestBody AdSearchDto searchDto,
+            Pageable pageable
+    ) {
         Page<AdResDto> pageResult = advertisementService.getAdsList(searchDto, pageable);
         CommonResDto resDto = new CommonResDto(HttpStatus.OK, "검색 완료", pageResult);
         return ResponseEntity.ok(resDto);
