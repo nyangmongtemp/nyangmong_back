@@ -76,26 +76,42 @@ public interface AnimalBoardControllerDocs {
     );
 
 
-    @Operation(summary = "분양 게시물 생성", description = "새 분양 게시물 생성 API")
+    @Operation(summary = "분양 게시물 생성",
+            description = """
+               분양 게시물을 생성합니다.
+
+               ## 인증
+               - 로그인한 사용자만 접근 가능합니다.
+           """)
     @ApiResponses({@ApiResponse(responseCode = "200", description = "분양 게시물 생성 성공")})
-    @Parameters({
+    @Parameter(
+            name = "animalRequest",
+            description = "분양 게시물 JSON 데이터",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class)),
+            examples = @ExampleObject(name = "예시", value = SwaggerExampleConstants.ANIMAL_CREATE_REQUEST)
+    )
+    ResponseEntity<AnimalInsertRequestDto> createAnimal(
+            @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
             @Parameter(
                     name = "animalRequest",
                     description = "분양 게시물 JSON 데이터",
                     required = true,
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class)),
-                    examples = @ExampleObject(name = "example", value = SwaggerExampleConstants.ANIMAL_CREATE_REQUEST)
-            ),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class))
+            )
+            @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
             @Parameter(
                     name = "thumbnailImage",
                     description = "썸네일 이미지 파일",
                     required = true,
-                    content = @Content(mediaType = "image/jpeg", schema = @Schema(type = "string", format = "binary"))
+                    content = {
+                            @Content(mediaType = "image/jpeg"),
+                            @Content(mediaType = "image/png"),
+                            @Content(mediaType = "image/gif"),
+                            @Content(mediaType = "image/bmp"),
+                            @Content(mediaType = "image/webp")
+                    }
             )
-    })
-    ResponseEntity<AnimalInsertRequestDto> createAnimal(
-            @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
-            @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
             @RequestPart("thumbnailImage") MultipartFile thumbnailImage
     );
 
@@ -109,14 +125,43 @@ public interface AnimalBoardControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "게시물 없음", content = @Content),
+            @ApiResponse(
+                    responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
+            )),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content)
     })
+    @Parameter(
+            name = "animalRequest",
+            description = "분양 게시물 수정 JSON 데이터",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalUpdateRequestDto.class)),
+            examples = @ExampleObject(name = "수정 예시", value = SwaggerExampleConstants.ANIMAL_UPDATE_REQUEST)
+    )
     ResponseEntity<Void> updateAnimal(
             @Parameter(description = "수정할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
-            @Parameter(description = "수정 요청 데이터") @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
-            @Parameter(description = "새 썸네일 이미지 파일") @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage);
+            @Parameter(
+                    name = "animalRequest",
+                    description = "분양 게시물 JSON 데이터",
+                    required = true,
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalUpdateRequestDto.class))
+            )
+            @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
+            @Parameter(
+                    name = "thumbnailImage",
+                    description = "썸네일 이미지 파일",
+                    required = true,
+                    content = {
+                            @Content(mediaType = "image/jpeg"),
+                            @Content(mediaType = "image/png"),
+                            @Content(mediaType = "image/gif"),
+                            @Content(mediaType = "image/bmp"),
+                            @Content(mediaType = "image/webp")
+                    }
+            )
+            @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage);
 
 
     @Operation(summary = "분양 게시물 삭제",
@@ -129,7 +174,11 @@ public interface AnimalBoardControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "게시물 없음", content = @Content)
+            @ApiResponse(
+                    responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
+            ))
     })
     ResponseEntity<Void> deleteAnimal(
             @Parameter(description = "삭제할 게시물 ID") @PathVariable Long postId,
@@ -146,13 +195,23 @@ public interface AnimalBoardControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상태 변경 성공", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "게시물 없음", content = @Content),
+            @ApiResponse(
+                    responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
+            )),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content)
     })
     ResponseEntity<?> reservationStatusAnimal(
             @Parameter(description = "상태 변경할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
-            @Parameter(description = "예약 상태 변경 요청 데이터") @RequestBody @Valid ReservationReqDto reservationReqDto);
+            @Parameter(
+                    name = "reservationReqDto",
+                    description = "분양 상태 변경 JSON 데이터",
+                    required = true,
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class))
+            )
+            @RequestBody @Valid ReservationReqDto reservationReqDto);
 
 
 }
