@@ -49,7 +49,6 @@ public class MainService {
     private final LikeRepositoryImpl likeImpl;
 
     // xss 필터 정화 클래스
-    private final HtmlSanitizer htmlPolicy;
     private final HtmlSanitizer plainTextPolicy;
 
     /**

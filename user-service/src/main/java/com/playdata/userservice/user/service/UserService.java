@@ -8,6 +8,7 @@ import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
+import com.playdata.userservice.common.util.HtmlSanitizer;
 import com.playdata.userservice.common.util.ImageValidation;
 import com.playdata.userservice.user.dto.chat.res.UserChatInfoResDto;
 import com.playdata.userservice.user.dto.inform.req.InformModiReqDto;
@@ -112,6 +113,9 @@ public class UserService {
 
     @Value("${oauth2.kakao.redirect-uri}")
     private String kakaoRedirectUri;
+
+    // xss 필터 정화 클래스
+    private final HtmlSanitizer plainTextPolicy;
 
     /**
      * 회원 가입
