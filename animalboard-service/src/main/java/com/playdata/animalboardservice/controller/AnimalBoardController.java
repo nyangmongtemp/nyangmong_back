@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +84,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
-    @PostMapping("")
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AnimalInsertRequestDto> createAnimal(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
@@ -151,6 +152,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
     }
 
     // 마이페이지에서 보여줄 게시물 목록 조회 메소드 입니다. made by 이은혁
+    @Operation(hidden = true)
     @GetMapping("/mypage")
     ResponseEntity<?> getMyAdopt(@AuthenticationPrincipal TokenUserInfo userInfo,
                                  @RequestParam(value = "page", defaultValue = "0") int page,
