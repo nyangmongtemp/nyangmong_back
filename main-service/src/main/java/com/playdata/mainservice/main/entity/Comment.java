@@ -83,7 +83,7 @@ public class Comment extends BaseTimeEntity {
 
         // 댓글의 대댓글이 있는 경우
         if(replyList != null) {
-            replyList.forEach(reply -> reply.modifyNickname(nickname));
+            replyList.forEach(reply -> reply.modifyNickname(nickname, plainTextSanitizer));
         }
     }
 
