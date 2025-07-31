@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CONTENT')")
-public class UserController {
+public class UserController implements UserControllerDocs{
 
     private final UserService userService;
 
