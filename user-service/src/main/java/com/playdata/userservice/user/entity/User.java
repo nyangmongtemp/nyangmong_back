@@ -41,15 +41,15 @@ public class User extends BaseTimeEntity {
 
     private String nickname;
 
-    private String address;
-
-    private String phone;
-
     private String socialId;
 
     private Long grade;   // 회원의 커뮤니티 활동을 기반으로 점수를 매길 것임.
 
     private String socialProvider;
+
+    private String address;
+
+    private String phone;
 
     private boolean active;
 
@@ -70,12 +70,6 @@ public class User extends BaseTimeEntity {
         }
         if(modiDto.getNickname() != null) {
             this.nickname = modiDto.getNickname();
-        }
-        if(modiDto.getAddress() != null) {
-            this.address = modiDto.getAddress();
-        }
-        if(modiDto.getPhone() != null) {
-            this.phone = modiDto.getPhone();
         }
     }
 
@@ -107,10 +101,8 @@ public class User extends BaseTimeEntity {
                 .email(this.email)
                 .nickname(this.nickname)
                 .userName(this.userName)
-                .phone(this.phone)
                 .profileImage(profileImage)
                 .createAt(this.getCreateAt())
-                .address(this.address)
                 .build();
     }
 

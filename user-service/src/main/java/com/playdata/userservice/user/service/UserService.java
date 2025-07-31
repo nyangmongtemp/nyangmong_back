@@ -108,6 +108,7 @@ public class UserService {
     @Value("${imagePath.url}")
     private String profileImageSaveUrl;
 
+    // 카카오 로그인 관련 값
     @Value("${oauth2.kakao.client-id}")
     private String kakaoClientId;
 

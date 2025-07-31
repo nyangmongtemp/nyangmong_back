@@ -12,6 +12,7 @@ import com.playdata.adminservice.admin.repository.TermsRepository;
 import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,7 +48,7 @@ public class TermsService {
      * @throws CommonException 약관이 존재하지 않으면 DATA_NOT_FOUND 예외 발생
      */
     public TermsDetailResDto termsDetail(Long id, TermsCategory termsCategory) {
-        return termsRepository.findByTerms(id, termsCategory);
+        return Optional.ofNullable(termsRepository.findByTerms(id, termsCategory)).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
     }
 
     /**

@@ -24,13 +24,8 @@ public class UserSaveReqDto {
     @NotNull
     private String userName;
 
-    @NotNull
-    private String phone;
-
     private String nickname;
 
-    @NotNull
-    private String address;
 
 
     public User toEntity(String encodedPassword, String profileImagePath) {
@@ -42,9 +37,7 @@ public class UserSaveReqDto {
                 .password(encodedPassword)
                 .userName(userName)
                 .profileImage(profileImagePath)
-                .phone(phone)
                 .nickname(nickname)
-                .address(address)
                 .active(true)
                 .passwordFaultCount(0)
                 .pauseCount(0)
