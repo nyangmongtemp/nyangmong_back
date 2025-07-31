@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.dto.res;
 
 import com.playdata.animalboardservice.entity.NeuterYn;
+import com.playdata.animalboardservice.entity.ReservationStatus;
 import com.playdata.animalboardservice.entity.SexCode;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,12 +24,13 @@ public class AnimalListResDto {
     private String address; // 주소
     private Integer fee; // 책임비
     private boolean active; // 게시물 활성화
+    private ReservationStatus reservationStatus; // 예약
 
     @Builder
     public AnimalListResDto(Long postId, Long userId, String thumbnailImage, String title,
             String content, int viewCount, String petCategory, String petKind,
             String age, String vaccine, SexCode sexCode, NeuterYn neuterYn,
-            String address, Integer fee, boolean active) {
+            String address, Integer fee, boolean active, ReservationStatus reservationStatus) {
         this.postId = postId;
         this.userId = userId;
         this.thumbnailImage = thumbnailImage;
@@ -44,6 +46,7 @@ public class AnimalListResDto {
         this.address = address;
         this.fee = fee;
         this.active = active;
+        this.reservationStatus = reservationStatus;
     }
 
     public AnimalListResDto(AnimalListResDto animal, Long likeCount, Long commentCount) {
@@ -62,6 +65,7 @@ public class AnimalListResDto {
         this.address = animal.getAddress();
         this.fee = animal.getFee();
         this.active = animal.isActive();
+        this.reservationStatus = animal.reservationStatus;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
     }

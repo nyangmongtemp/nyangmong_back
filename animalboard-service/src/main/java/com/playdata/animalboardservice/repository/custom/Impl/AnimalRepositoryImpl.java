@@ -45,7 +45,8 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
                         animal.neuterYn,
                         animal.address,
                         animal.fee,
-                        animal.active
+                        animal.active,
+                        animal.reservationStatus
                 ))
                 .from(animal)
                 .where(builderCondition(searchDto), animal.active.eq(true))
