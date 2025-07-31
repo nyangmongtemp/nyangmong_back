@@ -4,6 +4,281 @@ package com.playdata.animalboardservice.common.enumeration;
  * Swagger example Json 상수 관리
  */
 public class SwaggerExampleConstants {
+
+    /**
+     * [유기동물] 목록 조회 Response Json
+     */
+    public static final String STRAY_ANIMAL_LIST_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "목록 조회",
+        "result": [
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            }
+        ]
+    }""";
+
+    /**
+     * [유기 동물] 메인 목록 조회 Response Json
+     */
+    public static final String STRAY_ANIMAL_MAIN_LIST_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "목록 조회",
+        "result": [
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            },
+            {
+                "desertionNo": "469569202500530",
+                "upKindNm": "고양이",
+                "kindNm": "러시안 블루",
+                "age": "2018(년생)",
+                "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/07/202507211907386.jpeg",
+                "sexCd": "M",
+                "careTel": "010-4435-3720",
+                "careAddr": "세종특별자치시  전동면 미륵당1길 188 (전동면) ",
+                "happenDt": "20250721",
+                "neuterYn": "N"
+            }
+        ]
+    }""";
+
+    /**
+     * [유기 동물] 상세 조회 Response Json
+     */
+    public static final String STRAY_ANIMAL_DETAIL_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "상세 조회",
+        "result": {
+            "createAt": "2025-07-31T14:33:21.748382",
+            "updateAt": "2025-07-31T14:33:21.748382",
+            "desertionNo": "411300202500265",
+            "rfidCd": null,
+            "happenDt": "20250704",
+            "happenPlace": "서울 종로구 백석동길 187 (부암동)",
+            "upKindNm": "개",
+            "kindNm": "라브라도 리트리버",
+            "colorCd": "기타(갈/흰)",
+            "age": "2019(년생)",
+            "weight": "30(Kg)",
+            "noticeSdt": "20250705",
+            "noticeEdt": "20250715",
+            "popfile1": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/06/202507051607989.jpg",
+            "popfile2": "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2025/06/20250705160700.jpg",
+            "processState": "보호중",
+            "sexCd": "F",
+            "neuterYn": "U",
+            "specialMark": "온순.얌전. 치석. 배쪽 종기. 유선종양 의심. 파란바탕 노락색 띠 목줄. 꼬리 단미 안됨. 털 상태 양호.",
+            "careNm": "한국동물구조관리협회",
+            "careTel": "031-867-9119",
+            "careAddr": "경기도 양주시 남면 감악산로 63-37 (남면) ",
+            "careOwnerNm": "김철훈",
+            "orgNm": "서울특별시 종로구",
+            "etcBigo": null
+        }
+    }""";
+
     /**
      * [분양 동물] 목록 조회 Response Json
      */
