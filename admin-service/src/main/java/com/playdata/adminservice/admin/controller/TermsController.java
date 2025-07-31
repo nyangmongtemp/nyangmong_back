@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
-public class TermsController {
+public class TermsController implements TermsControllerDocs{
 
     private final TermsService termsService;
 

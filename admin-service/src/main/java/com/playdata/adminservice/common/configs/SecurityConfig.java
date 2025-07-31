@@ -40,9 +40,9 @@ SecurityConfig {
         // 요청 권한 설정 (어떤 url이냐에 따라 검사를 할 지 말지를 결정)
         http.authorizeHttpRequests(auth -> {
             auth
-//
                     .requestMatchers(
-                            "/admin/login", "/admin/create", "/admin/admin-create", "/admin/verify-code"
+                            "/admin/login", "/admin/create", "/admin/admin-create", "/admin/verify-code",
+                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });
