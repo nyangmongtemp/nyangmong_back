@@ -1,4 +1,4 @@
-package com.playdata.mapservice.common.configs;
+package com.playdata.mainservice.common.configs;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "Map-Service API",
+                title = "Main-Service API",
                 version = "1.0.0",
                 description = """
-                        MSA 기반 지도 서비스 API입니다.
+                        MSA 기반 댓글 및 화면 노출을 담당하는 서비스 API입니다.
 
                         ## 주요 기능
-                        - 지도 정보 및 아이템의 정보를 조회하는 서비스입니다.
+                        - 댓글, 대댓글 목록/ 수정/ 삭제/ 조회 및 좋아요, 화면 노출 등
                         """,
                 license = @License(
                         name = "MIT License",
@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
                 )
         ),
         servers = {
-                @Server(url = "http://localhost:8000/map-service", description = "로컬 개발 서버"),
+                @Server(url = "http://localhost:8000/main-service", description = "로컬 개발 서버"),
 //                @Server(url = "https://api.playdatashop9201.store", description = "운영 서버")
         },
         security = @SecurityRequirement(name = "bearerAuth")
