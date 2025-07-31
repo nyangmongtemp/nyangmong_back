@@ -127,7 +127,7 @@ public class BannerService {
         Banner foundBanner = findBannerById(bannerId);
         // 기본 배너인 경우, 삭제 불가
         if(foundBanner.isBasic()) {
-            throw new CommonException(ErrorCode.BAD_REQUEST, "기본 배너는 삭제할 수 없습니다.");
+            throw new CommonException(ErrorCode.BAD_REQUEST, "기본 배너입니다.");
         }
         // order 삭제
         foundBanner.setOrder(null);

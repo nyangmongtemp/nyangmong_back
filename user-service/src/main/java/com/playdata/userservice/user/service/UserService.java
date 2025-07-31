@@ -170,7 +170,7 @@ public class UserService {
         Optional<User> foundUser = userRepository.findByEmail(userLoginReqDto.getEmail());
         // 로그인 요청을 보낸 이메일이 DB에 존재하지 않는 경우
         if(!foundUser.isPresent()) {
-            throw new EntityNotFoundException("회원가입이 되지 않은 이메일입니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND,"회원가입이 되지 않은 이메일입니다.");
         }
         else {
             String pw = foundUser.get().getPassword();

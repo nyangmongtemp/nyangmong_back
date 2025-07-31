@@ -1,6 +1,7 @@
 package com.playdata.mapservice.map.controller;
 
 import com.playdata.mapservice.common.dto.CommonResDto;
+import com.playdata.mapservice.map.controller.swagger.HospitalControllerDocs;
 import com.playdata.mapservice.map.service.HospitalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/hospital")
 @RequiredArgsConstructor
 @Slf4j
-public class HospitalController {
+public class HospitalController implements HospitalControllerDocs {
 
     private final HospitalService hospitalService;
 
@@ -31,7 +32,7 @@ public class HospitalController {
 
     // 큰 지역의 구 혹은 시의 값들을 리턴해주는 메소드
     @GetMapping("/category/{addressCode}")
-    public ResponseEntity<?> regionCategory(@PathVariable String addressCode) {
+    public ResponseEntity<CommonResDto> regionCategory(@PathVariable String addressCode) {
         CommonResDto resDto = hospitalService.findRegionDetail(addressCode);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -39,7 +40,7 @@ public class HospitalController {
 
     // id값을 통해 특정 동물병원의 상세 정보를 리턴해주는 메소드
     @GetMapping("/detail/{id}")
-    public ResponseEntity<?> hospitalDetail(@PathVariable(name = "id") Long hospitalId) {
+    public ResponseEntity<CommonResDto> hospitalDetail(@PathVariable(name = "id") Long hospitalId) {
         CommonResDto resDto = hospitalService.findHospitalDetail(hospitalId);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
