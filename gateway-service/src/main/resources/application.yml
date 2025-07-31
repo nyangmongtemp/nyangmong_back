@@ -91,7 +91,7 @@ spring:
         - id: map-service
           uri: lb://MAP-SERVICE
           predicates:
-            - Path=/map-service/**
+            - Path=/map-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
             - RemoveRequestHeader=Cookie
             - RewritePath=/map-service/(?<segment>.*), /$\{segment}
