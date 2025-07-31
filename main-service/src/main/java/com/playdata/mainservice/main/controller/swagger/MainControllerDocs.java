@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "댓글, 대댓글, 좋아요", description = "댓글, 대댓글, 좋아요 조회 및 CRUD를 담당하는 API")
+@Tag(name = "댓글, 대댓글, 좋아요 컨트롤러", description = "댓글, 대댓글, 좋아요 조회 및 CRUD를 담당하는 API")
 public interface MainControllerDocs {
 
     @Operation(summary = "좋아요 생성, 취소",
