@@ -1,6 +1,5 @@
 package com.playdata.animalboardservice.dto.res;
 
-import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.entity.NeuterYn;
 import com.playdata.animalboardservice.entity.SexCode;
 import lombok.Builder;
@@ -24,13 +23,30 @@ public class AnimalListResDto {
     private String address; // 주소
     private Integer fee; // 책임비
     private boolean active; // 게시물 활성화
-    
-    // 좋아요, 댓글 개수
-    private Long likeCount;
-    private Long commentCount;
 
     @Builder
-    public AnimalListResDto(Animal animal, Long likeCount, Long commentCount) {
+    public AnimalListResDto(Long postId, Long userId, String thumbnailImage, String title,
+            String content, int viewCount, String petCategory, String petKind,
+            String age, String vaccine, SexCode sexCode, NeuterYn neuterYn,
+            String address, Integer fee, boolean active) {
+        this.postId = postId;
+        this.userId = userId;
+        this.thumbnailImage = thumbnailImage;
+        this.title = title;
+        this.content = content;
+        this.viewCount = viewCount;
+        this.petCategory = petCategory;
+        this.petKind = petKind;
+        this.age = age;
+        this.vaccine = vaccine;
+        this.sexCode = sexCode;
+        this.neuterYn = neuterYn;
+        this.address = address;
+        this.fee = fee;
+        this.active = active;
+    }
+
+    public AnimalListResDto(AnimalListResDto animal, Long likeCount, Long commentCount) {
         this.postId = animal.getPostId();
         this.userId = animal.getUserId();
         this.thumbnailImage = animal.getThumbnailImage();
@@ -50,4 +66,7 @@ public class AnimalListResDto {
         this.commentCount = commentCount;
     }
 
+    // 좋아요, 댓글 개수
+    private Long likeCount;
+    private Long commentCount;
 }

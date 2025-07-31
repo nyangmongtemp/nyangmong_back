@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.controller;
 
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
+import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.SwaggerExampleConstants;
 import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.dto.SearchDto;
@@ -19,7 +20,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -48,7 +48,7 @@ public interface AnimalBoardControllerDocs {
                     examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_LIST_RESPONSE)
             ))
     })
-    ResponseEntity<Page<AnimalListResDto>> getAnimalList(@Parameter(description = "검색 조건") SearchDto searchDto, @Parameter(description = "페이지 및 정렬 정보") Pageable pageable);
+    ResponseEntity<CommonResDto> getAnimalList(@Parameter(description = "검색 조건") SearchDto searchDto, @Parameter(description = "페이지 및 정렬 정보") Pageable pageable);
 
     @Operation(summary = "분양 게시물 상세 조회",
             description = """
@@ -64,13 +64,13 @@ public interface AnimalBoardControllerDocs {
                     examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_RESPONSE)
             )),
             @ApiResponse(
-                    responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
+                    responseCode = "404", description = "없는 데이터", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
             ))
     })
-    ResponseEntity<AnimalDetailResDto> getAnimal(@PathVariable Long postId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+    ResponseEntity<CommonResDto> getAnimal(@PathVariable Long postId,
+            @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authHeader,
             HttpServletRequest request
     );
 
@@ -82,15 +82,19 @@ public interface AnimalBoardControllerDocs {
                ## 인증
                - 로그인한 사용자만 접근 가능합니다.
            """)
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "분양 게시물 생성 성공")})
-    @Parameter(
-            name = "animalRequest",
-            description = "분양 게시물 JSON 데이터",
-            required = true,
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalInsertRequestDto.class)),
-            examples = @ExampleObject(name = "예시", value = SwaggerExampleConstants.ANIMAL_CREATE_REQUEST)
-    )
-    ResponseEntity<AnimalInsertRequestDto> createAnimal(
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201", description = "생성 성공", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AnimalDetailResDto.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.CREATE_ANIMAL_SUCCESS)
+            )),
+            @ApiResponse(
+                    responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_EXPIRED_TOKEN)
+            ))
+    })
+    ResponseEntity<CommonResDto> createAnimal(
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
             @Parameter(
                     name = "animalRequest",
@@ -122,23 +126,23 @@ public interface AnimalBoardControllerDocs {
                - 로그인한 사용자만 접근 가능합니다.
            """)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(
+                    responseCode = "200", description = "수정 성공", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AnimalDetailResDto.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.UPDATE_ANIMAL_SUCCESS)
+            )),
+            @ApiResponse(
+                    responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_EXPIRED_TOKEN)
+            )),
             @ApiResponse(
                     responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
-            )),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
+            ))
     })
-    @Parameter(
-            name = "animalRequest",
-            description = "분양 게시물 수정 JSON 데이터",
-            required = true,
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AnimalUpdateRequestDto.class)),
-            examples = @ExampleObject(name = "수정 예시", value = SwaggerExampleConstants.ANIMAL_UPDATE_REQUEST)
-    )
-    ResponseEntity<Void> updateAnimal(
+    ResponseEntity<CommonResDto> updateAnimal(
             @Parameter(description = "수정할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
             @Parameter(
@@ -171,15 +175,23 @@ public interface AnimalBoardControllerDocs {
                - 로그인한 사용자만 접근 가능합니다.
            """)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "삭제 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(
+                    responseCode = "200", description = "삭제 성공", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AnimalDetailResDto.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.DELETE_ANIMAL_SUCCESS)
+            )),
+            @ApiResponse(
+                    responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_EXPIRED_TOKEN)
+            )),
             @ApiResponse(
                     responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
             ))
     })
-    ResponseEntity<Void> deleteAnimal(
+    ResponseEntity<CommonResDto> deleteAnimal(
             @Parameter(description = "삭제할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo);
 
@@ -192,16 +204,23 @@ public interface AnimalBoardControllerDocs {
                - 로그인한 사용자만 접근 가능합니다.
            """)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "상태 변경 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(
+                    responseCode = "200", description = "상태변경 성공", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AnimalDetailResDto.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.CHANGE_ANIMAL_SUCCESS)
+            )),
+            @ApiResponse(
+                    responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CommonException.class),
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_EXPIRED_TOKEN)
+            )),
             @ApiResponse(
                     responseCode = "404", description = "존재하지 않는 게시물 ID", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.ANIMAL_DETAIL_EXCEPTION)
-            )),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
+            ))
     })
-    ResponseEntity<?> reservationStatusAnimal(
+    ResponseEntity<CommonResDto> reservationStatusAnimal(
             @Parameter(description = "상태 변경할 게시물 ID") @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
             @Parameter(

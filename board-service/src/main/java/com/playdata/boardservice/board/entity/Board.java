@@ -63,7 +63,7 @@ public class Board extends BaseTimeEntity {
     public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         this.thumbnailImage = newThumbnailImage;
         this.content = htmlPolicy.sanitizeHtml(boardModiDto.getContent());
-        this.title = plainTextSanitizer.sanitizeHtml(boardModiDto.getTitle());
+        this.title = plainTextSanitizer.sanitizeText(boardModiDto.getTitle());
     }
 
     // 사용자가 nickname을 변경하면 그 작성자의 게시물들의 nickname을 변경

@@ -5,12 +5,14 @@ import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
+import com.playdata.animalboardservice.common.util.HtmlSanitizer;
 import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.req.LikeComCountReqDto;
 import com.playdata.animalboardservice.dto.req.ReservationReqDto;
+import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.dto.res.LikeComCountResDto;
 import com.playdata.animalboardservice.entity.Animal;
@@ -45,6 +47,9 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final MainServiceClient mainClient;
+    // xss 필터 정화 클래스
+    private final HtmlSanitizer htmlPolicy;
+    private final HtmlSanitizer plainTextPolicy;
 
     // application.yml에서 설정한 이미지 저장 경로를 주입받음
     @Value("${imagePath.url}")
@@ -60,8 +65,8 @@ public class AnimalService {
      * @return AnimalListResDto로 매핑된 Page 객체 반환
      */
     public Page<AnimalListResDto> findStrayAnimalList(SearchDto searchDto, Pageable pageable) {
-        // animalRepository에서 커스텀 쿼리로 조건에 맞는 목록을 조회
-        Page<Animal> animalList = animalRepository.findList(searchDto, pageable);
+
+        Page<AnimalListResDto> animalList = animalRepository.findList(searchDto, pageable);
 
         // 요청 DTO 리스트 생성
         List<LikeComCountReqDto> target = animalList.stream()
@@ -86,7 +91,6 @@ public class AnimalService {
                 .toList();
 
         return new PageImpl<>(result, animalList.getPageable(), animalList.getTotalElements());
-
     }
 
     /**
@@ -99,8 +103,7 @@ public class AnimalService {
      */
     public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
         // 게시물 존재 여부 확인 (예외 처리 포함)
-        Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
-        Optional.ofNullable(animal)
+        Animal animal = Optional.ofNullable(animalRepository.findByPostIdAndActiveTrue(postId))
                 .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
         // 사용자 식별 정보 생성
@@ -124,7 +127,7 @@ public class AnimalService {
      * @param thumbnailImage 썸네일 이미지 (Multipart 형식)
      */
     @Transactional
-    public void insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
+    public Animal insertAnimal(TokenUserInfo userInfo, @Valid AnimalInsertRequestDto animalRequestDto, MultipartFile thumbnailImage) {
         Long userId = userInfo.getUserId(); // 사용자 ID 추출
         // 이미지 존재유무
         if (thumbnailImage == null || thumbnailImage.isEmpty()) {
@@ -135,7 +138,8 @@ public class AnimalService {
         // 이미지 저장 후, 저장된 파일명 반환
         String newThumbnailImage = setProfileImage(thumbnailImage);
         // DTO → Entity 변환 후 저장
-        animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage, userInfo.getNickname()));
+        
+        return animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage, userInfo.getNickname(), htmlPolicy, plainTextPolicy));
     }
 
     /**
@@ -146,7 +150,7 @@ public class AnimalService {
      * @return
      */
     @Transactional
-    public void updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage, TokenUserInfo userInfo) {
+    public Animal updateAnimal(Long postId, AnimalUpdateRequestDto animalRequestDto, MultipartFile thumbnailImage, TokenUserInfo userInfo) {
         // 조회
         Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
         Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
@@ -162,7 +166,9 @@ public class AnimalService {
         String newThumbnailImage = setProfileImage(thumbnailImage);
 
         // 수정
-        animal.updateAnimal(animalRequestDto, newThumbnailImage);
+        animal.updateAnimal(animalRequestDto, newThumbnailImage, htmlPolicy, plainTextPolicy);
+
+        return animal;
     }
 
     /**
@@ -171,7 +177,7 @@ public class AnimalService {
      * @return
      */
     @Transactional
-    public void deleteAnimal(Long postId, TokenUserInfo userInfo) {
+    public Animal deleteAnimal(Long postId, TokenUserInfo userInfo) {
         // 조회
         Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
         Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
@@ -183,6 +189,8 @@ public class AnimalService {
 
         // 삭제
         animal.deleteAnimal();
+
+        return animal;
     }
 
     /**
@@ -191,13 +199,14 @@ public class AnimalService {
      * @param userInfo 로그인한 유저 정보
      */
     @Transactional
-    public void reservationStatusAnimal(Long postId, TokenUserInfo userInfo, ReservationReqDto reservationReqDto) {
+    public Animal reservationStatusAnimal(Long postId, TokenUserInfo userInfo, ReservationReqDto reservationReqDto) {
         Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
         Optional.ofNullable(animal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
         if (!userInfo.getUserId().equals(animal.getUserId())) {
             throw new CommonException(ErrorCode.UNAUTHORIZED);
         }
         animal.reservationStatusAnimal(reservationReqDto.getReservationStatus());
+        return animal;
     }
 
     /**
@@ -247,34 +256,28 @@ public class AnimalService {
     }
     
     // 마이페이지 조회용 페이징 메소드 made by 이은혁
-    public PageImpl<AnimalListResDto> findMyAdoptPost(Long userId, Pageable pageable) {
+    public Page<AnimalListResDto> findMyAdoptPost(Long userId, Pageable pageable) {
+        Page<AnimalListResDto> animalPage = animalRepository.findMyPost(userId, pageable);
 
-        Page<Animal> animalList = animalRepository.findMyPost(userId, pageable);
-
-        // 요청 DTO 리스트 생성
-        List<LikeComCountReqDto> target = animalList.stream()
+        List<LikeComCountReqDto> target = animalPage.stream()
                 .map(animal -> new LikeComCountReqDto("ADOPT", animal.getPostId()))
                 .toList();
 
-        // 응답 결과를 Map으로 변환해 빠른 매칭 가능
         Map<Long, LikeComCountResDto> resDtoMap = mainClient.getListLikeCommentCount(target)
                 .stream()
                 .collect(Collectors.toMap(LikeComCountResDto::getContentId, dto -> dto));
 
-        // 순서를 유지하며 DTO 변환
-        List<AnimalListResDto> result = animalList.stream()
+        List<AnimalListResDto> result = animalPage.stream()
                 .map(animal -> {
                     LikeComCountResDto dto = resDtoMap.get(animal.getPostId());
-                    if (dto != null) {
-                        return new AnimalListResDto(animal, dto.getLikeCount(), dto.getCommentCount());
-                    }
-                    return null;
+                    return dto != null
+                            ? new AnimalListResDto(animal, dto.getLikeCount(), dto.getCommentCount())
+                            : null;
                 })
                 .filter(Objects::nonNull)
                 .toList();
 
-        return new PageImpl<>(result, animalList.getPageable(), animalList.getTotalElements());
-
+        return new PageImpl<>(result, animalPage.getPageable(), animalPage.getTotalElements());
     }
 
 

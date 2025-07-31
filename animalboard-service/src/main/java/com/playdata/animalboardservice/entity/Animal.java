@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.entity;
 
 import com.playdata.animalboardservice.common.entity.BaseTimeEntity;
+import com.playdata.animalboardservice.common.util.HtmlSanitizer;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -101,10 +102,10 @@ public class Animal extends BaseTimeEntity {
     }
 
     // 업데이트
-    public void updateAnimal(AnimalUpdateRequestDto animalRequestDto, String newThumbnailImage) {
+    public void updateAnimal(AnimalUpdateRequestDto animalRequestDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         this.thumbnailImage = newThumbnailImage;
-        this.title = animalRequestDto.getTitle();
-        this.content = animalRequestDto.getContent();
+        this.title = plainTextSanitizer.sanitizeText(animalRequestDto.getTitle());
+        this.content = htmlPolicy.sanitizeHtml(animalRequestDto.getContent());
         this.petCategory = animalRequestDto.getPetCategory();
         this.petKind = animalRequestDto.getPetKind();
         this.age = animalRequestDto.getAge();

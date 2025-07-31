@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.common.util.HtmlSanitizer;
 import com.playdata.mainservice.main.dto.res.ReplyDetailResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -36,9 +37,9 @@ public class Reply extends BaseTimeEntity {
     private Comment comment;
 
     // 대댓글 생성 시 사용하는 메소드
-    public Reply(Long userId, String content, Comment comment, String nickname, String profileImage) {
+    public Reply(Long userId, String content, Comment comment, String nickname, String profileImage, HtmlSanitizer plainTextSanitizer) {
         this.userId = userId;
-        this.content = content;
+        this.content = plainTextSanitizer.sanitizeText(content);
         this.comment = comment;
         this.active = true;
         this.nickname = nickname;
@@ -64,13 +65,13 @@ public class Reply extends BaseTimeEntity {
     }
 
     // 대댓글 수정 시 사용하는 메소드
-    public void modifyReply(String content) {
-        this.content = content;
+    public void modifyReply(String content, HtmlSanitizer plainTextSanitizer) {
+        this.content = plainTextSanitizer.sanitizeText(content);
     }
 
     // 사용자의 닉네임 변경 시 사용하는 메소드
-    public void modifyNickname(String nickname) {
-        this.nickname = nickname;
+    public void modifyNickname(String nickname, HtmlSanitizer plainTextSanitizer) {
+        this.nickname = plainTextSanitizer.sanitizeText(nickname);
     }
 
     // 사용자의 프로필 이미지 변경 시 사용하는 메소드
