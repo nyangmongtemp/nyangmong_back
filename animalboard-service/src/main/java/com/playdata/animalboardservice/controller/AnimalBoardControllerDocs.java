@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 // Swagger 전용 인터페이스를 하나 선언해서 비즈니스 로직 vs 문서화 로직을 분리
 // 컨트롤러는 본연의 역할에만 집중
-@Tag(name = "유기동물/분양 게시판(AnimalBoard)", description = "유기동물 / 분양동물 CRUD 관리하는 API")
+@Tag(name = "분양 게시판(AnimalBoard)", description = "분양동물 CRUD 관리하는 API")
 public interface AnimalBoardControllerDocs {
 
     @Operation(summary = "분양동물 목록 조회 (검색, 페이징)",

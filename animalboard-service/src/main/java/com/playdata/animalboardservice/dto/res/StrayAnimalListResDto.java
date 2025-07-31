@@ -3,9 +3,11 @@ package com.playdata.animalboardservice.dto.res;
 import com.playdata.animalboardservice.entity.NeuterYn;
 import com.playdata.animalboardservice.entity.SexCode;
 import com.playdata.animalboardservice.entity.StrayAnimal;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+@AllArgsConstructor
 @Getter
 public class StrayAnimalListResDto {
 
@@ -19,19 +21,5 @@ public class StrayAnimalListResDto {
     private String careAddr; // 보호소 주소
     private String happenDt; // 유기발생 날짜
     private NeuterYn neuterYn; // 중성화 여부 (Y: 예, N: 아니오, U: 미상)
-
-    @Builder
-    public StrayAnimalListResDto(StrayAnimal strayAnimal) {
-        this.desertionNo = strayAnimal.getDesertionNo();
-        this.upKindNm = strayAnimal.getUpKindNm();
-        this.kindNm = strayAnimal.getKindNm();
-        this.age = strayAnimal.getAge();
-        this.popfile1 = strayAnimal.getPopfile1();
-        this.sexCd = strayAnimal.getSexCd();
-        this.careTel = strayAnimal.getCareTel();
-        this.careAddr = strayAnimal.getCareAddr();
-        this.happenDt = strayAnimal.getHappenDt();
-        this.neuterYn = strayAnimal.getNeuterYn();
-    }
 
 }
