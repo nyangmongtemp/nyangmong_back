@@ -10,9 +10,11 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
+@Tag(name = "병원 정보", description = "병원 정보를 조회하는 API")
 public interface HospitalControllerDocs {
 
     @Operation(summary = "세부 지역의 병원 조회",

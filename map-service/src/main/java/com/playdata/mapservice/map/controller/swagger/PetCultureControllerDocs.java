@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
+@Tag(name = "반려동물 동반가능 시설", description = "반려동물 동반가능 시설 정보를 조회하는 API")
 public interface PetCultureControllerDocs {
 
     @Operation(summary = "시/도의 시/군/구 혹은 법정동명 조회",
