@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.controller;
 
+import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.dto.StraySearchDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalDetailResDto;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/stray-animal-board")
-public class StrayAnimalBoardController {
+public class StrayAnimalBoardController implements StrayAnimalBoardControllerDocs{
 
     private final StrayAnimalService strayAnimalService;
 
@@ -31,11 +33,12 @@ public class StrayAnimalBoardController {
      * @return
      */
     @GetMapping("/list")
-    public ResponseEntity<Page<StrayAnimalListResDto>> findStrayAnimalList(
+    public ResponseEntity<CommonResDto> findStrayAnimalList(
             StraySearchDto straySearchDto, Pageable pageable) {
         // 서비스에서 조회된 유기동물 목록 반환
-        Page<StrayAnimalListResDto> resDto = strayAnimalService.findStrayAnimalList(straySearchDto, pageable);
-        return ResponseEntity.ok().body(resDto);
+        Page<StrayAnimalListResDto> result = strayAnimalService.findStrayAnimalList(straySearchDto, pageable);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -44,9 +47,10 @@ public class StrayAnimalBoardController {
      * @return
      */
     @GetMapping("/{desertionNo}")
-    public ResponseEntity<StrayAnimalDetailResDto> getAnimalBoard(@PathVariable String desertionNo) {
-        StrayAnimal resDto = strayAnimalService.findByStaryAnimal(desertionNo);
-        return ResponseEntity.ok().body(new StrayAnimalDetailResDto(resDto));
+    public ResponseEntity<CommonResDto> getAnimalBoard(@PathVariable String desertionNo) {
+        StrayAnimal result = strayAnimalService.findByStaryAnimal(desertionNo);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -54,8 +58,9 @@ public class StrayAnimalBoardController {
      * @return
      */
     @GetMapping("/main")
-    public ResponseEntity<?> findStrayAnimalMainList() {
-        List<StrayAnimalListResDto> resDto = strayAnimalService.findStrayAnimalMainList();
-        return ResponseEntity.ok().body(resDto);
+    public ResponseEntity<CommonResDto> findStrayAnimalMainList() {
+        List<StrayAnimalListResDto> result = strayAnimalService.findStrayAnimalMainList();
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 }

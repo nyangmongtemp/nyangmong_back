@@ -3,6 +3,7 @@ package com.playdata.animalboardservice.service;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
 import com.playdata.animalboardservice.dto.StraySearchDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.repository.StrayAnimalRepository;
@@ -31,15 +32,7 @@ public class StrayAnimalService {
      * @return
      */
     public Page<StrayAnimalListResDto> findStrayAnimalList(StraySearchDto straySearchDto, Pageable pageable) {
-        // 검색 조건과 페이징 정보를 통해 DB에서 유기동물 목록 조회
-        Page<StrayAnimal> strayAnimalList = strayAnimalRepository.findList(straySearchDto, pageable);
-
-        // Entity → DTO 변환
-        return strayAnimalList.map(strayAnimal ->
-                StrayAnimalListResDto.builder()
-                        .strayAnimal(strayAnimal)
-                        .build()
-        );
+        return strayAnimalRepository.findList(straySearchDto, pageable);
     }
 
     /**
@@ -48,8 +41,7 @@ public class StrayAnimalService {
      * @return
      */
     public StrayAnimal findByStaryAnimal(String desertionNo) {
-        StrayAnimal strayAnimal = strayAnimalRepository.findByDesertionNo(desertionNo);
-        Optional.ofNullable(strayAnimal).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+        StrayAnimal strayAnimal = Optional.ofNullable(strayAnimalRepository.findByDesertionNo(desertionNo)).orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
 
         return strayAnimal;
     }
@@ -59,12 +51,6 @@ public class StrayAnimalService {
      * @return
      */
     public List<StrayAnimalListResDto> findStrayAnimalMainList() {
-        List<StrayAnimal> strayAnimalMainList = strayAnimalRepository.findMainList();
-
-        return strayAnimalMainList.stream()
-                .map(strayAnimal -> StrayAnimalListResDto.builder()
-                        .strayAnimal(strayAnimal)
-                        .build())
-                .collect(Collectors.toList());
+        return strayAnimalRepository.findMainList();
     }
 }

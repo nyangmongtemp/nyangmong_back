@@ -1,6 +1,7 @@
 package com.playdata.animalboardservice.repository.custom;
 
 import com.playdata.animalboardservice.dto.StraySearchDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -14,11 +15,11 @@ public interface StrayAnimalRepositoryCustom {
      * @param pageable
      * @return
      */
-    Page<StrayAnimal> findList(StraySearchDto straySearchDto, Pageable pageable);
+    Page<StrayAnimalListResDto> findList(StraySearchDto straySearchDto, Pageable pageable);
 
     /**
      * 유기동물 메인 노출될 리스트 목록 조회 인터페이스
      * @return
      */
-    List<StrayAnimal> findMainList();
+    List<StrayAnimalListResDto> findMainList();
 }

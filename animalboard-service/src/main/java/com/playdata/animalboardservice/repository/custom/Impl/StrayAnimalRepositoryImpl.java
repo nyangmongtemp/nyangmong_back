@@ -1,9 +1,11 @@
 package com.playdata.animalboardservice.repository.custom.Impl;
 
 import com.playdata.animalboardservice.dto.StraySearchDto;
+import com.playdata.animalboardservice.dto.res.StrayAnimalListResDto;
 import com.playdata.animalboardservice.entity.StrayAnimal;
 import com.playdata.animalboardservice.repository.custom.StrayAnimalRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -26,9 +28,21 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
      * @return
      */
     @Override
-    public Page<StrayAnimal> findList(StraySearchDto straySearchDto, Pageable pageable) {
+    public Page<StrayAnimalListResDto> findList(StraySearchDto straySearchDto, Pageable pageable) {
         // 조건에 맞는 유기동물 데이터 조회 (페이징 적용)
-        List<StrayAnimal> list = jpaQueryFactory.select(strayAnimal)
+        List<StrayAnimalListResDto> list = jpaQueryFactory.select(
+                Projections.constructor(StrayAnimalListResDto.class,
+                        strayAnimal.desertionNo,
+                        strayAnimal.upKindNm,
+                        strayAnimal.kindNm,
+                        strayAnimal.age,
+                        strayAnimal.popfile1,
+                        strayAnimal.sexCd,
+                        strayAnimal.careTel,
+                        strayAnimal.careAddr,
+                        strayAnimal.happenDt,
+                        strayAnimal.neuterYn
+                ))
                 .from(strayAnimal)
                 .where(builderCondition(straySearchDto))
                 .offset(pageable.getOffset())       // 페이지 번호 기반 오프셋 적용
@@ -36,27 +50,38 @@ public class StrayAnimalRepositoryImpl implements StrayAnimalRepositoryCustom {
                 .fetch();
 
         // 전체 데이터 개수 조회 (페이징을 위해 필요)
-        Long count = 0L;
-        if (!CollectionUtils.isEmpty(list)) {
-            count = jpaQueryFactory.select(strayAnimal.count().coalesce(0L).as("cnt"))
-                    .from(strayAnimal)
-                    .where(builderCondition(straySearchDto))
-                    .fetchOne();
-        }
+        Long count = jpaQueryFactory
+                .select(strayAnimal.count())
+                .from(strayAnimal)
+                .where(builderCondition(straySearchDto))
+                .fetchOne();
 
         // Page 객체로 변환하여 반환
-        return new PageImpl<>(list, pageable, count);
+        return new PageImpl<>(list, pageable, count == null ? 0L : count);
     }
 
     /**
      * 유기동물 메인 노출될 리스트 목록 조회
      * @return
      */
-    public List<StrayAnimal> findMainList() {
-        return jpaQueryFactory.selectFrom(strayAnimal)
-                .orderBy(strayAnimal.desertionNo.desc())
-                .limit(9L)
-                .fetch();
+    public List<StrayAnimalListResDto> findMainList() {
+        return jpaQueryFactory.select(
+            Projections.constructor(StrayAnimalListResDto.class,
+                strayAnimal.desertionNo,
+                strayAnimal.upKindNm,
+                strayAnimal.kindNm,
+                strayAnimal.age,
+                strayAnimal.popfile1,
+                strayAnimal.sexCd,
+                strayAnimal.careTel,
+                strayAnimal.careAddr,
+                strayAnimal.happenDt,
+                strayAnimal.neuterYn
+            ))
+            .from(strayAnimal)
+            .orderBy(strayAnimal.desertionNo.desc())
+            .limit(9L)
+            .fetch();
     }
 
     // 검색 조건(QueryDSL)을 구성하는 메서드
