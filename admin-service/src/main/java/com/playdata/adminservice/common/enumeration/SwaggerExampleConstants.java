@@ -364,5 +364,133 @@ public class SwaggerExampleConstants {
         }
     }""";
 
+    /**
+     * [사용자] 목록 조회 Response Json
+     */
+    public static final String ADMIN_LOG_LIST_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "목록 조회",
+        "result": {
+        "content": [
+            {
+                "logId": 1,
+                "adminId": 1,
+                "userId": 1,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터1",
+                "userEmail": "test@test.com",
+                "userNickName": "테스터1",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T16:37:22.699758"
+            },
+            {
+                "logId": 2,
+                "adminId": 1,
+                "userId": 1,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터1",
+                "userEmail": "test@test.com",
+                "userNickName": "테스터1",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T16:50:22.589318"
+            },
+            {
+                "logId": 3,
+                "adminId": 1,
+                "userId": 1,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터1",
+                "userEmail": "test@test.com",
+                "userNickName": "테스터1",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:21:44.884364"
+            },
+            {
+                "logId": 4,
+                "adminId": 1,
+                "userId": 2,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터2",
+                "userEmail": "test2@test.com",
+                "userNickName": "테스터2",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:21:48.570728"
+            },
+            {
+                "logId": 5,
+                "adminId": 1,
+                "userId": 1,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터1",
+                "userEmail": "test@test.com",
+                "userNickName": "테스터1",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:21:51.670787"
+            },
+            {
+                "logId": 6,
+                "adminId": 1,
+                "userId": 2,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터2",
+                "userEmail": "test2@test.com",
+                "userNickName": "테스터2",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:21:55.462232"
+            },
+            {
+                "logId": 7,
+                "adminId": 1,
+                "userId": 1,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터1",
+                "userEmail": "test@test.com",
+                "userNickName": "테스터1",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:21:58.02837"
+            },
+            {
+                "logId": 8,
+                "adminId": 1,
+                "userId": 2,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터2",
+                "userEmail": "test2@test.com",
+                "userNickName": "테스터2",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:22:00.659286"
+            },
+            {
+                "logId": 9,
+                "adminId": 1,
+                "userId": 2,
+                "adminIp": "192.168.0.155",
+                "userName": "테스터2",
+                "userEmail": "test2@test.com",
+                "userNickName": "테스터2",
+                "adminName": "총관리자",
+                "createAt": "2025-07-31T17:22:01.390493"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": [],
+            "offset": 0,
+            "unpaged": false,
+            "paged": true
+        },
+            "totalPages": 1,
+            "totalElements": 9,
+            "last": true,
+            "size": 10,
+            "number": 0,
+            "sort": [],
+            "numberOfElements": 9,
+            "first": true,
+            "empty": false
+        }
+    }""";
 
 }

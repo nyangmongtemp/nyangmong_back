@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
-public class AdminLogController {
+public class AdminLogController implements AdminLogControllerDocs{
 
     private final AdminLogService adminLogService;
 
