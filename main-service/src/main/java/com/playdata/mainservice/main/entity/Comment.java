@@ -1,6 +1,7 @@
 package com.playdata.mainservice.main.entity;
 
 import com.playdata.mainservice.common.entity.BaseTimeEntity;
+import com.playdata.mainservice.common.util.HtmlSanitizer;
 import com.playdata.mainservice.main.dto.res.CommentDetailResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -47,11 +48,11 @@ public class Comment extends BaseTimeEntity {
     
     // 댓글 생성용 메소드
     public Comment(Long userId, Category category,
-                   Long contentId, String content, boolean hidden, String nickname, String profileImage) {
+                   Long contentId, String content, boolean hidden, String nickname, String profileImage, HtmlSanitizer plainTextSanitizer) {
         this.userId = userId;
         this.category = category;
         this.contentId = contentId;
-        this.content = content;
+        this.content = plainTextSanitizer.sanitizeText(content);
         this.hidden = hidden;
         this.active = true;
         this.nickname = nickname;
@@ -72,17 +73,17 @@ public class Comment extends BaseTimeEntity {
     }
 
     // 댓글 수정 메소드
-    public void mofifyComment(String newContent) {
-        this.content = newContent;
+    public void mofifyComment(String newContent, HtmlSanitizer plainTextSanitizer) {
+        this.content = plainTextSanitizer.sanitizeText(newContent);
     }
 
     // 사용자의 닉네임 변경 시 사용하는 메소드
-    public void modifyNickname(String nickname) {
-        this.nickname = nickname;
+    public void modifyNickname(String nickname, HtmlSanitizer plainTextSanitizer) {
+        this.nickname = plainTextSanitizer.sanitizeText(nickname);
 
         // 댓글의 대댓글이 있는 경우
         if(replyList != null) {
-            replyList.forEach(reply -> reply.modifyNickname(nickname));
+            replyList.forEach(reply -> reply.modifyNickname(nickname, plainTextSanitizer));
         }
     }
 

@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.dto.req;
 
+import com.playdata.animalboardservice.common.util.HtmlSanitizer;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.entity.NeuterYn;
 import com.playdata.animalboardservice.entity.SexCode;
@@ -51,13 +52,13 @@ public class AnimalInsertRequestDto {
     @Schema(description = "책임비", example = "0")
     private Integer fee; // 책임비
 
-    public Animal toEntity(Long userId, String newThumbnailImage, String nickname) {
+    public Animal toEntity(Long userId, String newThumbnailImage, String nickname, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
         return Animal.builder()
                 .userId(userId)
                 .thumbnailImage(newThumbnailImage)
                 .nickname(nickname)
-                .title(title)
-                .content(content)
+                .title(plainTextSanitizer.sanitizeText(title))
+                .content(htmlPolicy.sanitizeHtml(content))
                 .petCategory(petCategory)
                 .petKind(petKind)
                 .age(age)

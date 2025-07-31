@@ -5,6 +5,7 @@ import com.playdata.animalboardservice.common.auth.TokenUserInfo;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
+import com.playdata.animalboardservice.common.util.HtmlSanitizer;
 import com.playdata.animalboardservice.common.util.ImageValidation;
 import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
@@ -46,6 +47,9 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final MainServiceClient mainClient;
+    // xss 필터 정화 클래스
+    private final HtmlSanitizer htmlPolicy;
+    private final HtmlSanitizer plainTextPolicy;
 
     // application.yml에서 설정한 이미지 저장 경로를 주입받음
     @Value("${imagePath.url}")
@@ -134,7 +138,8 @@ public class AnimalService {
         // 이미지 저장 후, 저장된 파일명 반환
         String newThumbnailImage = setProfileImage(thumbnailImage);
         // DTO → Entity 변환 후 저장
-        return animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage, userInfo.getNickname()));
+        
+        return animalRepository.save(animalRequestDto.toEntity(userId, newThumbnailImage, userInfo.getNickname(), htmlPolicy, plainTextPolicy));
     }
 
     /**
@@ -161,7 +166,7 @@ public class AnimalService {
         String newThumbnailImage = setProfileImage(thumbnailImage);
 
         // 수정
-        animal.updateAnimal(animalRequestDto, newThumbnailImage);
+        animal.updateAnimal(animalRequestDto, newThumbnailImage, htmlPolicy, plainTextPolicy);
 
         return animal;
     }
