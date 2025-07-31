@@ -2,9 +2,11 @@ package com.playdata.mainservice.main.controller;
 
 import com.playdata.mainservice.common.auth.TokenUserInfo;
 import com.playdata.mainservice.common.dto.CommonResDto;
+import com.playdata.mainservice.main.controller.swagger.MainControllerDocs;
 import com.playdata.mainservice.main.dto.req.*;
 import com.playdata.mainservice.main.dto.res.LikeComCountResDto;
 import com.playdata.mainservice.main.service.MainService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/main")
 @RequiredArgsConstructor
-public class MainController {
+public class MainController implements MainControllerDocs {
 
     private final MainService mainService;
 
@@ -34,7 +36,7 @@ public class MainController {
      * @return
      */
     @PostMapping("/like")
-    public ResponseEntity<?> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<CommonResDto> createLike(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody @Valid MainLikeReqDto reqDto) {
 
         CommonResDto likePost = mainService.createLike(userInfo.getUserId(), reqDto);
@@ -52,7 +54,7 @@ public class MainController {
      * @return
      */
     @PostMapping("/comment/create")
-    public ResponseEntity<?> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> createComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody @Valid MainComReqDto reqDto){
         CommonResDto resDto = mainService.createComment(reqDto, userInfo.getUserId(), userInfo.getNickname());
 
@@ -67,7 +69,7 @@ public class MainController {
      * @return
      */
     @DeleteMapping("/comment/delete/{id}")
-    public ResponseEntity<?> deleteComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> deleteComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @PathVariable(name = "id") Long commentId) {
         CommonResDto resDto = mainService.deleteComment(commentId, userInfo.getUserId());
 
@@ -82,7 +84,7 @@ public class MainController {
      * @return
      */
     @PatchMapping("/comment/modify")
-    public ResponseEntity<?> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> modifyComment(@AuthenticationPrincipal TokenUserInfo userInfo,
                                            @RequestBody @Valid ComModiReqDto reqDto){
         CommonResDto resDto
                 = mainService.modifyComment(userInfo.getUserId(), reqDto);
@@ -98,7 +100,7 @@ public class MainController {
      * @return
      */
     @PostMapping("/reply/create")
-    public ResponseEntity<?> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> createReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody @Valid ReplySaveReqDto reqDto) {
         CommonResDto resDto = mainService.createReply(userInfo, reqDto);
 
@@ -113,7 +115,7 @@ public class MainController {
      * @return
      */
     @DeleteMapping("/reply/delete/{id}")
-    public ResponseEntity<?> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<CommonResDto> deleteReply(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@PathVariable(name = "id") Long replyId) {
         CommonResDto resDto = mainService.deleteReply(userInfo.getUserId(), replyId);
 
@@ -128,7 +130,7 @@ public class MainController {
      * @return
      */
     @PatchMapping("/reply/modify")
-    public ResponseEntity<?> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> modifyReply(@AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestBody @Valid ReplyModiReqDto reqDto){
         CommonResDto resDto = mainService.modifyReply(userInfo, reqDto);
 
@@ -142,7 +144,7 @@ public class MainController {
      * @return
      */
     @PostMapping("/detail")
-    public ResponseEntity<?> getDetailLikeCommentCount(@RequestBody LikeComCountReqDto reqDto) {
+    public ResponseEntity<CommonResDto> getDetailLikeCommentCount(@RequestBody LikeComCountReqDto reqDto) {
         CommonResDto resDto = mainService.getDetail(reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -156,7 +158,7 @@ public class MainController {
      * @return
      */
     @PostMapping("/comment/list")
-    public ResponseEntity<?> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
+    public ResponseEntity<CommonResDto> getCommentList(@RequestBody LikeComCountReqDto reqDto, Pageable pageable) {
         CommonResDto resDto = mainService.getCommentDetail(reqDto, pageable);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -169,7 +171,7 @@ public class MainController {
      * @return
      */
     @GetMapping("/reply/list/{id}")
-    public ResponseEntity<?> getReplyList(@PathVariable(name = "id") Long commentId) {
+    public ResponseEntity<CommonResDto> getReplyList(@PathVariable(name = "id") Long commentId) {
         CommonResDto resDto = mainService.getCommentReplies(commentId);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -185,7 +187,7 @@ public class MainController {
      * @return
      */
     @GetMapping("/comment/mypage")
-    public ResponseEntity<?> getMyComment(
+    public ResponseEntity<CommonResDto> getMyComment(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -203,8 +205,9 @@ public class MainController {
      * @param pageable  --> ?page=2&size=10&sort=createTime
      * @return
      */
+    @Operation(hidden = true)
     @GetMapping("/reply/mypage")
-    public ResponseEntity<?> getMyReply(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
+    public ResponseEntity<CommonResDto> getMyReply(@AuthenticationPrincipal TokenUserInfo userInfo, Pageable pageable) {
         CommonResDto resDto = mainService.getMyReply(userInfo.getUserId(), pageable);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -218,21 +221,11 @@ public class MainController {
      * @return
      */
     @PostMapping("/comment/hidden")
-    public ResponseEntity<?> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<Boolean> getCommentHidden(@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @RequestBody @Valid SeeHideComReqDto reqDto) {
         boolean canSee = mainService.canSeeHideComment(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(canSee, HttpStatus.OK);
-    }
-
-    /**
-     * 메인 화면에서 소개 게시물의 인기 게시물 3개를 리턴해주는 메소드 입니다
-     *
-     * @return
-     */
-    @GetMapping("/introduction")
-    public List<LikeComCountResDto> getMainIntroduction() {
-        return mainService.getMainIntroduction();
     }
 
     /**  게시물 상세에서 로그인한 사용자의 좋아요 클릭 여부를 확인시켜주는 메소드
@@ -241,13 +234,25 @@ public class MainController {
      * @param reqDto  --> category, contentId, contentType
      * @return
      */
-
     @PostMapping("/liked")
-    public ResponseEntity<?> getUserLiked(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                          @RequestBody @Valid MainLikeReqDto reqDto) {
+    public ResponseEntity<CommonResDto> getUserLiked(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                                     @RequestBody @Valid MainLikeReqDto reqDto) {
         CommonResDto resDto = mainService.getUserLiked(userInfo.getUserId(), reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    /**
+     * 메인 화면에서 소개 게시물의 인기 게시물 3개를 리턴해주는 메소드 입니다
+     *
+     * feign 요청을 받는 메소드
+     * 
+     * @return
+     */
+    @Operation(hidden = true)
+    @GetMapping("/introduction")
+    public List<LikeComCountResDto> getMainIntroduction() {
+        return mainService.getMainIntroduction();
     }
 
 
@@ -260,6 +265,7 @@ public class MainController {
      * @param profileImage
      * @return
      */
+    @Operation(hidden = true)
     @PutMapping("/modifyProfileImage/{id}/{profileImage}")
         ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
                                      @PathVariable("profileImage") String profileImage) {
@@ -276,6 +282,7 @@ public class MainController {
      * @param userId
      * @return
      */
+    @Operation(hidden = true)
     @DeleteMapping("/deleteUser/{id}")
     ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
         CommonResDto resDto = mainService.deleteUserAll(userId);
@@ -290,6 +297,7 @@ public class MainController {
      * @param nickname
      * @return
      */
+    @Operation(hidden = true)
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId, @PathVariable("nickname") String nickname) {
         CommonResDto resDto = mainService.changeUserNickname(userId, nickname);
@@ -304,6 +312,7 @@ public class MainController {
      * @param contentList --> List<contentId, category>
      * @return  List<LikeComCountResDto>  --> category, contentId, commentCount(대댓글까지 포함), likeCount
      */
+    @Operation(hidden = true)
     @PostMapping("/list")
     public List<LikeComCountResDto> getListLikeCommentCount(@RequestBody List<LikeComCountReqDto> contentList) {
         return mainService.getLikeCommentCount(contentList);

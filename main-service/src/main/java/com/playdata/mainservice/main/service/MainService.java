@@ -487,11 +487,11 @@ public class MainService {
         // 열람할 비공개 댓글이 존재하지 않거나, 삭제되었거나, 비공개 댓글이 아닌 경우
         if(!foundComment.isPresent() || !foundComment.get().isHidden()
                 || !foundComment.get().isActive()) {
-            throw new EntityNotFoundException("열람할 비공개 댓글이 없습니다.");
+            throw new CommonException(ErrorCode.NOT_FOUND, "해당 댓글이 없습니다.");
         }
         // 열람 요청자가 댓글 작성자가 아닌 경우
         if(foundComment.get().getUserId() != userId) {
-            throw new IllegalArgumentException("비공개 댓글을 열람할 권한이 없습니다.");
+            throw new CommonException(ErrorCode.NO_DELETE_PERMISSION, "열람 권한이 없습니다.");
         }
         return true;
     }
@@ -534,7 +534,12 @@ public class MainService {
     public CommonResDto getUserLiked(Long userId, MainLikeReqDto reqDto) {
 
         Optional<Like> liked = likeImpl.findUserLiked(userId, reqDto);
-        return new CommonResDto(HttpStatus.OK, "사용자의 좋아요 찾음", liked.isPresent());
+        if(!liked.isPresent() || !liked.get().isActive()) {
+            return new CommonResDto(HttpStatus.OK ,"해당 게시물에 사용자의 좋아요 정보", false);
+        }
+        else {
+            return new CommonResDto(HttpStatus.OK ,"해당 게시물에 사용자의 좋아요 정보", true);
+        }
     }
 
     /**
@@ -601,7 +606,7 @@ public class MainService {
         Optional<Reply> foundReply = replyRepository.findById(replyId);
         // 삭제할 대댓글이 존재하지 않는 경우
         if(!foundReply.isPresent() || !foundReply.get().isActive()) {
-            throw new CommonException(ErrorCode.NOT_FOUND, "삭제하려는 댓글이 존재하지 않습니다.");
+            throw new CommonException(ErrorCode.NOT_FOUND, "삭제하려는 대댓글이 존재하지 않습니다.");
         }
         // 삭제를 요청한 사용자가 대댓글 작성자가 아닌 경우
         if(!foundReply.get().getUserId().equals(userId)) {

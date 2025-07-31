@@ -47,7 +47,7 @@ spring:
         - id: main-service
           uri: lb://MAIN-SERVICE
           predicates:
-            - Path=/main-service/**
+            - Path=/main-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
             - RemoveRequestHeader=Cookie
             - RewritePath=/main-service/(?<segment>.*), /${segment}
