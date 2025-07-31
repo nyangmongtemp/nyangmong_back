@@ -43,7 +43,7 @@ public interface TermsControllerDocs {
             @ApiResponse(
                     responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
             ))
     })
     ResponseEntity<CommonResDto> getTermsList(
@@ -66,12 +66,12 @@ public interface TermsControllerDocs {
             @ApiResponse(
                     responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
             )),
             @ApiResponse(
                     responseCode = "404", description = "없는 데이터", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_DETAIL_EXCEPTION)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
             ))
     })
     ResponseEntity<CommonResDto> getTerms(
@@ -95,7 +95,7 @@ public interface TermsControllerDocs {
                     responseCode = "400", description = "잘못된 요청",
                     content = @Content(mediaType = "application/json",
                         schema = @Schema(implementation = CommonException.class),
-                        examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                        examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
                     )
             )
     })
@@ -121,13 +121,13 @@ public interface TermsControllerDocs {
                     responseCode = "400", description = "잘못된 요청",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommonException.class),
-                            examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                            examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
                     )
             ),
             @ApiResponse(
                     responseCode = "404", description = "없는 데이터", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_DETAIL_EXCEPTION)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
             ))
     })
     ResponseEntity<CommonResDto> updateTerms(
@@ -153,13 +153,13 @@ public interface TermsControllerDocs {
                     responseCode = "400", description = "잘못된 요청",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommonException.class),
-                            examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                            examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
                     )
             ),
             @ApiResponse(
                     responseCode = "404", description = "없는 데이터", content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = CommonException.class),
-                    examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_DETAIL_EXCEPTION)
+                    examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_DETAIL_EXCEPTION)
             ))
     })
     ResponseEntity<CommonResDto> deleteTerms(
@@ -188,7 +188,7 @@ public interface TermsControllerDocs {
                     responseCode = "400", description = "잘못된 요청",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommonException.class),
-                            examples = @ExampleObject(value = SwaggerExampleConstants.TERMS_BAD_REQUEST)
+                            examples = @ExampleObject(value = SwaggerExampleConstants.COMMON_BAD_REQUEST)
                     )
             )
     })
