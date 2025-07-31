@@ -1,7 +1,7 @@
 package com.playdata.animalboardservice.repository.custom;
 
 import com.playdata.animalboardservice.dto.SearchDto;
-import com.playdata.animalboardservice.entity.Animal;
+import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,5 +13,5 @@ public interface AnimalRepositoryCustom {
      * @param pageable
      * @return
      */
-    Page<Animal> findList(SearchDto searchDto, Pageable pageable);
+    Page<AnimalListResDto> findList(SearchDto searchDto, Pageable pageable);
 }

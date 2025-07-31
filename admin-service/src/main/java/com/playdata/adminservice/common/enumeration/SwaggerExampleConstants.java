@@ -93,40 +93,6 @@ public class SwaggerExampleConstants {
     """;
 
     /**
-     * [약관 / 방침 / QNA] 생성 요청 Request Json 예시
-     */
-    public static final String TERMS_CREATE_REQUEST = """
-    {
-      "title": "2살 믹스견 분양합니다",
-      "content": "우리강아지 분양합니다",
-      "petCategory": "강아지",
-      "petKind": "믹스견",
-      "age": "2살",
-      "vaccine": "1차접종 완료, 2차접종 준비중",
-      "sexCode": "M",
-      "neuterYn": "N",
-      "address": "서울시 서초구",
-      "fee": 20000
-    }""";
-
-    /**
-     * [약관 / 방침 / QNA] 수정 요청 Request Json 예시
-     */
-    public static final String TERMS_UPDATE_REQUEST = """
-    {
-        "title":"2살 믹스견 분양합니다 수정",
-        "content":"우리강아지 분양합니다 수정",
-        "petCategory":"강아지",
-        "petKind":"믹스견",
-        "age":"2살",
-        "vaccine":"1차접종 완료, 2차접종 완료중",
-        "sexCode":"F",
-        "neuterYn":"Y",
-        "address":"서울시 서초구 1-1",
-        "fee":10000
-    }""";
-
-    /**
      * [공통] 잘못된 요청 Exception Response Json
      */
     public static final String TERMS_BAD_REQUEST = """
@@ -165,7 +131,7 @@ public class SwaggerExampleConstants {
     }""";
 
     /**
-     * [공통] 등록 완료 Response Json
+     * [공통] 수정 완료 Response Json
      */
     public static final String UPDATE_TERMS_SUCCESS = """
     {

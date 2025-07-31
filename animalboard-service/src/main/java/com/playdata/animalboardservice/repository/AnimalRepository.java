@@ -1,5 +1,6 @@
 package com.playdata.animalboardservice.repository;
 
+import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.repository.custom.AnimalRepositoryCustom;
 import java.util.List;
@@ -30,5 +31,5 @@ public interface AnimalRepository extends JpaRepository<Animal, Long>, AnimalRep
 
     // 마이페이지 용 페이징 조회 메소드 made by 이은혁
     @Query("SELECT a FROM Animal a WHERE a.userId = :userId AND a.active = true")
-    Page<Animal> findMyPost(@Param("userId") Long userId, Pageable pageable);
+    Page<AnimalListResDto> findMyPost(@Param("userId") Long userId, Pageable pageable);
 }
