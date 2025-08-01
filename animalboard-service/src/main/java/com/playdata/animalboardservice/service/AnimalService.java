@@ -2,6 +2,7 @@ package com.playdata.animalboardservice.service;
 
 import com.playdata.animalboardservice.client.MainServiceClient;
 import com.playdata.animalboardservice.common.auth.TokenUserInfo;
+import com.playdata.animalboardservice.common.config.AwsS3Config;
 import com.playdata.animalboardservice.common.dto.CommonResDto;
 import com.playdata.animalboardservice.common.enumeration.ErrorCode;
 import com.playdata.animalboardservice.common.exception.CommonException;
@@ -51,9 +52,7 @@ public class AnimalService {
     private final HtmlSanitizer htmlPolicy;
     private final HtmlSanitizer plainTextPolicy;
 
-    // application.yml에서 설정한 이미지 저장 경로를 주입받음
-    @Value("${imagePath.url}")
-    private String imageSaveUrl;
+    private final AwsS3Config s3Config;
 
     private static final String BOARD_TYPE = "animal"; // 게시판 구분용 상수 (조회수 Redis 키 구분에 사용)
 
@@ -381,6 +380,10 @@ public class AnimalService {
                 // UUID + 원본 파일명으로 저장 (중복 방지)
                 String fileName = UUID.randomUUID() + "_" + originalFilename;
 
+                // s3 버킷에 이미지 저장하고 저장된 경로를 받아오기
+                profileImagePath = s3Config.uploadToS3Bucket(imageFile.getBytes(), fileName);
+
+                /*
                 // 저장 경로 확인 후 디렉토리 생성
                 File dir = new File(imageSaveUrl);
                 if (!dir.exists()) dir.mkdirs();
@@ -391,6 +394,7 @@ public class AnimalService {
 
                 // 저장된 상대 파일명 반환 (DB 저장용)
                 profileImagePath = fileName;
+                */
             } catch (IOException e) {
                 log.error("이미지 저장 중 오류 발생", e);
                 throw new CommonException(ErrorCode.FILE_SERVER_ERROR);
