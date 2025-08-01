@@ -3,9 +3,10 @@ package com.playdata.animalboardservice.repository.custom.Impl;
 import static com.playdata.animalboardservice.entity.QAnimal.animal;
 
 import com.playdata.animalboardservice.dto.SearchDto;
-import com.playdata.animalboardservice.entity.Animal;
+import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.repository.custom.AnimalRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,29 +27,42 @@ public class AnimalRepositoryImpl implements AnimalRepositoryCustom {
      * @return
      */
     @Override
-    public Page<Animal> findList(SearchDto searchDto, Pageable pageable) {
+    public Page<AnimalListResDto> findList(SearchDto searchDto, Pageable pageable) {
         // 조건에 맞는 유기동물 데이터 조회 (페이징 적용)
-        List<Animal> list = jpaQueryFactory.select(animal)
+        List<AnimalListResDto> list = jpaQueryFactory.select(
+                Projections.constructor(AnimalListResDto.class,
+                        animal.postId,
+                        animal.userId,
+                        animal.thumbnailImage,
+                        animal.title,
+                        animal.content,
+                        animal.viewCount,
+                        animal.petCategory,
+                        animal.petKind,
+                        animal.age,
+                        animal.vaccine,
+                        animal.sexCode,
+                        animal.neuterYn,
+                        animal.address,
+                        animal.fee,
+                        animal.active
+                ))
                 .from(animal)
-                .where(builderCondition(searchDto))
-                .where(animal.active.eq(true))
+                .where(builderCondition(searchDto), animal.active.eq(true))
                 .orderBy(animal.createAt.desc())
                 .offset(pageable.getOffset())       // 페이지 번호 기반 오프셋 적용
                 .limit(pageable.getPageSize())      // 한 페이지 크기 제한
                 .fetch();
 
         // 전체 데이터 개수 조회 (페이징을 위해 필요)
-        Long count = 0L;
-        if (!CollectionUtils.isEmpty(list)) {
-            count = jpaQueryFactory.select(animal.count().coalesce(0L).as("cnt"))
-                    .from(animal)
-                    .where(builderCondition(searchDto))
-                    .where(animal.active.eq(true))
-                    .fetchOne();
-        }
+        Long count = jpaQueryFactory
+                .select(animal.count())
+                .from(animal)
+                .where(builderCondition(searchDto), animal.active.eq(true))
+                .fetchOne();
 
         // Page 객체로 변환하여 반환
-        return new PageImpl<>(list, pageable, count);
+        return new PageImpl<>(list, pageable, count == null ? 0L : count);
     }
 
     // 검색 조건(QueryDSL)을 구성하는 메서드

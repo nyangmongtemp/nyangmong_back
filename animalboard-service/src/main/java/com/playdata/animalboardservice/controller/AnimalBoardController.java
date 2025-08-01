@@ -7,11 +7,9 @@ import com.playdata.animalboardservice.dto.SearchDto;
 import com.playdata.animalboardservice.dto.req.AnimalInsertRequestDto;
 import com.playdata.animalboardservice.dto.req.AnimalUpdateRequestDto;
 import com.playdata.animalboardservice.dto.req.ReservationReqDto;
-import com.playdata.animalboardservice.dto.res.AnimalDetailResDto;
 import com.playdata.animalboardservice.dto.res.AnimalListResDto;
 import com.playdata.animalboardservice.entity.Animal;
 import com.playdata.animalboardservice.service.AnimalService;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -19,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -40,10 +39,10 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @return 페이징된 동물 목록 데이터 (AnimalListResDto)
      */
     @GetMapping("/list")
-    public ResponseEntity<Page<AnimalListResDto>> getAnimalList(SearchDto searchDto, Pageable pageable) {
-        // 검색 조건과 페이지 정보를 바탕으로 목록 조회
-        Page<AnimalListResDto> resDto = animalService.findStrayAnimalList(searchDto, pageable);
-        return ResponseEntity.ok().body(resDto);
+    public ResponseEntity<CommonResDto> getAnimalList(SearchDto searchDto, Pageable pageable) {
+        Page<AnimalListResDto> result = animalService.findStrayAnimalList(searchDto, pageable);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "목록 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -54,7 +53,7 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @return Animal 상세 정보
      */
     @GetMapping("/public/{postId}")
-    public ResponseEntity<AnimalDetailResDto> getAnimal(@PathVariable Long postId,
+    public ResponseEntity<CommonResDto> getAnimal(@PathVariable Long postId,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             HttpServletRequest request) {
 
@@ -67,13 +66,13 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
                 email = jwtTokenProvider.extractEmail(token);
             } catch (Exception e) {
                 // JWT 파싱 실패 시 로그 기록 (비로그인 사용자로 처리)
-                log.error("e: ", e);
             }
         }
 
         // 서비스 로직 호출 → 게시물 조회 및 조회수 증가 처리
-        Animal animal = animalService.findByAnimal(postId, email, request);
-        return ResponseEntity.ok().body(new AnimalDetailResDto(animal));
+        Animal result = animalService.findByAnimal(postId, email, request);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "상세 조회", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -83,13 +82,14 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
-    @PostMapping("")
-    public ResponseEntity<AnimalInsertRequestDto> createAnimal(
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CommonResDto> createAnimal(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalInsertRequestDto animalRequestDto,
             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-        animalService.insertAnimal(userInfo, animalRequestDto, thumbnailImage);
-        return ResponseEntity.ok().build();
+        Animal result = animalService.insertAnimal(userInfo, animalRequestDto, thumbnailImage);
+        CommonResDto resDto = new CommonResDto(HttpStatus.CREATED, "등록 완료", result);
+        return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
     /**
@@ -99,13 +99,14 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @param thumbnailImage 저장할 썸네일 이미지
      * @return
      */
-    @PatchMapping("/{postId}")
-    public ResponseEntity<Void> updateAnimal(@PathVariable Long postId,
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CommonResDto> updateAnimal(@PathVariable Long postId,
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestPart("animalRequest") @Valid AnimalUpdateRequestDto animalRequestDto,
             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
-        animalService.updateAnimal(postId, animalRequestDto, thumbnailImage, userInfo);
-        return ResponseEntity.ok().build();
+        Animal result = animalService.updateAnimal(postId, animalRequestDto, thumbnailImage, userInfo);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "수정 완료", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -115,9 +116,10 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @return
      */
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deleteAnimal(@PathVariable Long postId, @AuthenticationPrincipal TokenUserInfo userInfo) {
-        animalService.deleteAnimal(postId, userInfo);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<CommonResDto> deleteAnimal(@PathVariable Long postId, @AuthenticationPrincipal TokenUserInfo userInfo) {
+        Animal result = animalService.deleteAnimal(postId, userInfo);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "삭제 완료", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     /**
@@ -127,11 +129,12 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
      * @return
      */
     @PatchMapping("/reservation/{postId}")
-    public ResponseEntity<?> reservationStatusAnimal(@PathVariable Long postId,
+    public ResponseEntity<CommonResDto> reservationStatusAnimal(@PathVariable Long postId,
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody @Valid ReservationReqDto reservationReqDto) {
-        animalService.reservationStatusAnimal(postId, userInfo, reservationReqDto);
-        return ResponseEntity.ok().build();
+        Animal result = animalService.reservationStatusAnimal(postId, userInfo, reservationReqDto);
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "분양동물 예약상태 변경", result);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
     // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
@@ -151,16 +154,18 @@ public class AnimalBoardController implements AnimalBoardControllerDocs{
     }
 
     // 마이페이지에서 보여줄 게시물 목록 조회 메소드 입니다. made by 이은혁
+    @Operation(hidden = true)
     @GetMapping("/mypage")
-    ResponseEntity<?> getMyAdopt(@AuthenticationPrincipal TokenUserInfo userInfo,
-                                 @RequestParam(value = "page", defaultValue = "0") int page,
-                                 @RequestParam(value = "size", defaultValue = "10") int size) {
-        // pageable 객체 생성
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
-        PageImpl<AnimalListResDto> resDto = animalService.findMyAdoptPost(userInfo.getUserId(), pageable);
+    public ResponseEntity<CommonResDto> getMyAdopt(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
+        Page<AnimalListResDto> result = animalService.findMyAdoptPost(userInfo.getUserId(), pageable);
+
+        CommonResDto resDto = new CommonResDto(HttpStatus.OK, "내 분양 게시글 조회 완료", result);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
-
 
 }
