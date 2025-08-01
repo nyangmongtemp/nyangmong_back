@@ -493,4 +493,85 @@ public class SwaggerExampleConstants {
         }
     }""";
 
+    /**
+     * [문의] 목록 조회 Response Json
+     */
+    public static final String INFORM_LIST_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "목록 조회",
+        "result": {
+        "content": [
+            {
+                "informId": 1,
+                "title": "문의문의문의문의",
+                "answered": true,
+                "createAt": "2025-08-01T09:47:01.20162",
+                "userName": "테스터2",
+                "userEmail": "test2@test.com"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": [],
+            "offset": 0,
+            "unpaged": false,
+            "paged": true
+        },
+            "totalPages": 1,
+            "totalElements": 1,
+            "last": true,
+            "size": 10,
+            "number": 0,
+            "sort": [],
+            "numberOfElements": 1,
+            "first": true,
+            "empty": false
+        }
+    }""";
+
+    /**
+     * [문의] 상세 조회 Response Json
+     */
+    public static final String INFORM_DETAIL_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "상세 조회",
+        "result": {
+            "title": "문의문의문의문의",
+            "content": "내용내용내용내용내용내용",
+            "reply": "asfadfsdfasdfadfadsfadf",
+            "answered": true,
+            "createAt": "2025-08-01T09:47:01.20162",
+            "userName": "테스터2",
+            "userEmail": "test2@test.com",
+            "updateAt": "2025-08-01T11:19:38.897368",
+            "adminName": "총관리자"
+        }
+    }""";
+
+    /**
+     * [문의] 답변 성공 Response Json
+     */
+    public static final String INFORM_REPLY_RESPONSE = """
+    {
+        "statusCode": 200,
+        "statusMessage": "답변 등록",
+        "result": {
+            "createAt": "2025-08-01T09:47:01.20162",
+            "updateAt": "2025-08-01T12:45:02.64143",
+            "informId": 1,
+            "userId": 2,
+            "adminId": 1,
+            "title": "문의문의문의문의",
+            "content": "내용내용내용내용내용내용",
+            "active": true,
+            "answered": true,
+            "reply": "3131",
+            "userName": null,
+            "userEmail": null,
+            "adminName": null
+        }
+    }""";
 }
