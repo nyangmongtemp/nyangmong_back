@@ -1,5 +1,6 @@
 package com.playdata.adminservice.admin.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -22,9 +23,12 @@ public class AdSearchDto {
     private Boolean active;
 
     // 광고 시작일 이후의 광고 검색 (포함)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
 
     // 광고 종료일 이전의 광고 검색 (포함)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
+    private String sort;
 }
