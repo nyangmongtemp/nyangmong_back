@@ -27,4 +27,5 @@ public interface BoardRepository extends JpaRepository<Board,Long>, BoardReposit
                                       @Param("category") Category targetCategory, Pageable pageable);
 
 
+    Optional<Board> findByPostIdAndActiveIsTrue( Long postId);
 }

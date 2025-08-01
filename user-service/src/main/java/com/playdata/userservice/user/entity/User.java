@@ -87,7 +87,7 @@ public class User extends BaseTimeEntity {
 
     // 인증이 필요한 이메일 정보를 변경하는 메소드
     public void modifyEmail(String newEmail, HtmlSanitizer plainTextPolicy) {
-        this.email = plainTextPolicy.sanitizeText(newEmail);
+        this.email = newEmail;
     }
 
     // 인증이 필요한 비밀번호를 변경하는 메소드
