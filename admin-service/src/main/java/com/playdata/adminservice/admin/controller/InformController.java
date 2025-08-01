@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
-public class InformController {
+public class InformController implements InformControllerDocs{
 
     private final InformService informService;
 
