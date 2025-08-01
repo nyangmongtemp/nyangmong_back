@@ -17,6 +17,7 @@ public class BoardSaveReqDto {
     @Schema(description = "카테고리", example = "FREE")
     private Category category;
 
+    @Schema(hidden = true)
     private String thumbnailImage;
 
     @Schema(description = "게시물 내용", example = "게시물 내용")

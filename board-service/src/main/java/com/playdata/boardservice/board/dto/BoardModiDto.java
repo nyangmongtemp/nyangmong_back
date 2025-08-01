@@ -13,6 +13,7 @@ public class BoardModiDto {
     @Schema(description = "수정될 제목", example = "수정될 게시물 제목")
     private String title;
 
+    @Schema(hidden = true)
     private String thumbnailImage;
 
     @Schema(description = "수정될 게시물 내용", example = "수정될 게시물 내용")

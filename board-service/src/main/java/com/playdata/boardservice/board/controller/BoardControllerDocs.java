@@ -79,7 +79,7 @@ public interface BoardControllerDocs {
                                                              @Content(mediaType = "image/webp")
                                                      }
                                              )
-                                             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage);
+                                             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
 
 
@@ -138,7 +138,7 @@ public interface BoardControllerDocs {
                                                              @Content(mediaType = "image/webp")
                                                      }
                                              )
-                                             @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage);
+                                             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
 
     @Operation(summary = "게시물 삭제",
