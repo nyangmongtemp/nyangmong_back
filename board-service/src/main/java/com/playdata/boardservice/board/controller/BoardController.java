@@ -34,7 +34,7 @@ import java.util.List;
 @RequestMapping("/board")
 @RequiredArgsConstructor
 @Slf4j
-public class BoardController {
+public class BoardController implements BoardControllerDocs {
 
     private final BoardService boardService;
     private final JwtTokenProvider jwtTokenProvider;
