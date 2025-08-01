@@ -4,6 +4,7 @@ import com.playdata.adminservice.admin.dto.req.AdSearchDto;
 import com.playdata.adminservice.admin.entity.Advertisement;
 import com.playdata.adminservice.admin.entity.QAdvertisement;
 import com.playdata.adminservice.admin.repository.custom.AdvertisementRepositoryCustom;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -58,7 +59,7 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                         betweenStartDate(searchDto.getStartDate()),
                         betweenEndDate(searchDto.getEndDate())
                 )
-                .orderBy(ad.id.asc())               // id 기준 정렬
+                .orderBy(getSortOrder(searchDto.getSort()))
                 .offset(pageable.getOffset())       // 페이지 시작 위치
                 .limit(pageable.getPageSize())      // 한 페이지당 항목 수
                 .fetch();
@@ -77,6 +78,20 @@ public class AdvertisementRepositoryImpl implements AdvertisementRepositoryCusto
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private OrderSpecifier<?> getSortOrder(String sort) {
+        QAdvertisement ad = QAdvertisement.advertisement;
+
+        if (sort == null) return ad.createAt.desc(); // 기본 정렬
+
+        return switch (sort) {
+            case "createAt_desc" -> ad.createAt.desc();
+            case "createAt_asc" -> ad.createAt.asc();
+            case "id_desc" -> ad.id.desc();
+            case "id_asc" -> ad.id.asc();
+            default -> ad.id.asc(); // fallback
+        };
     }
 
     /**
