@@ -3,6 +3,7 @@ package com.playdata.festivalservice.controller;
 import com.playdata.festivalservice.dto.FestivalResponseDto;
 import com.playdata.festivalservice.dto.FestivalSearchDto;
 import com.playdata.festivalservice.service.FestivalService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +17,7 @@ import java.util.List;
 @RestController // REST API 컨트롤러
 @RequestMapping("/api") // 공통 URL prefix
 @RequiredArgsConstructor // final 필드 자동 생성자 주입
-public class FestivalController {
+public class FestivalController implements FestivalControllerDocs {
 
     private final FestivalService festivalService; // 서비스 레이어 주입
 
@@ -35,6 +36,7 @@ public class FestivalController {
         return ResponseEntity.ok(resDto); // 200 OK 응답
     }
 
+    @Operation(hidden = true)
     @GetMapping("/all")
     public ResponseEntity<?> getAllFestivalList() {
         List<FestivalResponseDto> resDto = festivalService.findAllFestivals();

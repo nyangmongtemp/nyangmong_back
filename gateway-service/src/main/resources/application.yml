@@ -56,7 +56,7 @@ spring:
         - id: festival-service
           uri: lb://FESTIVAL-SERVICE
           predicates:
-            - Path=/festival-service/**
+            - Path=/festival-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
             - RewritePath=/festival-service/(?<segment>.*), /${segment}
             - AuthorizationHeaderFilter
