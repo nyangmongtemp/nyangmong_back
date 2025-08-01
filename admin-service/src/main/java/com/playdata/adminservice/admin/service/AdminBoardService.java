@@ -5,7 +5,6 @@ import com.playdata.adminservice.admin.dto.board.BoardSearchDto;
 import com.playdata.adminservice.admin.dto.board.res.AnimalListResDto;
 import com.playdata.adminservice.admin.dto.board.res.BoardListResDto;
 import com.playdata.adminservice.admin.dto.board.res.BoardResDto;
-import com.playdata.adminservice.admin.dto.req.SearchDto;
 import com.playdata.adminservice.admin.entity.Animal;
 import com.playdata.adminservice.admin.entity.Board;
 import com.playdata.adminservice.admin.entity.Category;
@@ -16,19 +15,15 @@ import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -94,14 +89,15 @@ public class AdminBoardService {
     /**
      *
      * @param postId
-     * @param categoryEnum
+     * @param category
      * @param adminInfo
      */
     // 삭제
-    public void deleteBoard(Long postId, Category categoryEnum, TokenAdminInfo adminInfo) {
+    @Transactional
+    public void deleteBoard(Long postId, Category category, TokenAdminInfo adminInfo) {
 
         // 카테고리가 ANIMAL 일때
-        if (categoryEnum == Category.ANIMAL) {
+        if (category == Category.ANIMAL) {
             // 게시글 존재 여부
             Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
 
@@ -112,7 +108,7 @@ public class AdminBoardService {
 
             animal.boardDelete();
         } else { // 카테고리가 ANIMAL을 제외한 다른 카테고리 일 때
-            Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, categoryEnum);
+            Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, category);
 
             if (board == null) {
                 throw new CommonException(ErrorCode.DATA_NOT_FOUND);

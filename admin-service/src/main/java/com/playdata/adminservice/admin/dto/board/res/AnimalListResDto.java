@@ -6,6 +6,8 @@ import com.playdata.adminservice.admin.entity.SexCode;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class AnimalListResDto {
 
@@ -25,12 +27,14 @@ public class AnimalListResDto {
     private Integer fee; // 책임비
     private boolean active; // 게시물 활성화
     private ReservationStatus reservationStatus; // 예약
+    private LocalDateTime createAt; // 작성일자
+    private String nickname;
 
     @Builder
     public AnimalListResDto(Long postId, Long userId, String thumbnailImage, String title,
             String content, int viewCount, String petCategory, String petKind,
             String age, String vaccine, SexCode sexCode, NeuterYn neuterYn,
-            String address, Integer fee, boolean active, ReservationStatus reservationStatus) {
+            String address, Integer fee, boolean active, ReservationStatus reservationStatus, LocalDateTime createAt, String nickname) {
         this.postId = postId;
         this.userId = userId;
         this.thumbnailImage = thumbnailImage;
@@ -47,6 +51,8 @@ public class AnimalListResDto {
         this.fee = fee;
         this.active = active;
         this.reservationStatus = reservationStatus;
+        this.createAt = createAt;
+        this.nickname = nickname;
     }
 
     public AnimalListResDto(AnimalListResDto animal, Long likeCount, Long commentCount) {

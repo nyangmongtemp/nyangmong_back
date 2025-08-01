@@ -158,7 +158,7 @@ public class AdminBoardController {
      * URL 경로 변수로 들어온 문자열 category를 Category Enum 으로 변환한다.
      * 변환에 실패하면 BAD_REQUEST 예외를 발생시킨다.
      *
-     * @param category 문자열 카테고리 (예: "FREE", "INTRODUCTION", "QUESTION", "REVIEW")
+     * @param category 문자열 카테고리 (예: "FREE", "INTRODUCTION", "QUESTION", "REVIEW", "ANIMAL")
      * @return 변환된 Category Enum
      * @throws CommonException 변환 실패 시 발생 (BAD_REQUEST)
      */
