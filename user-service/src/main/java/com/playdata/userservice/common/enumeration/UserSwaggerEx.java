@@ -429,6 +429,7 @@ public class UserSwaggerEx {
 
 
 
+
     public static final String DUPLICATED_DATA = """
             {
                 "code": "PARAM-006",

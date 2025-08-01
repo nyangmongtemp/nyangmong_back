@@ -34,7 +34,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers("/board/list/{category}", "/board/information/main", "/board/main","/board/popular",
-                            "/board/detail/{category}/{id}", "/board/deleteUser/{id}", "/board/modifyNickname/{id}/{nickname}").permitAll()
+                            "/board/detail/{category}/{id}", "/board/deleteUser/{id}", "/board/modifyNickname/{id}/{nickname}",
+                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                     .anyRequest().authenticated();
         });
 

@@ -13,6 +13,7 @@ import com.playdata.boardservice.common.dto.CommonResDto;
 import com.playdata.boardservice.common.enumeration.ErrorCode;
 import com.playdata.boardservice.common.exception.CommonException;
 import com.playdata.boardservice.common.util.HtmlSanitizer;
+import com.playdata.boardservice.common.util.ImageValidation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -403,6 +404,8 @@ public class BoardService {
         // 썸네일 이미지가 있다면 저장
         if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
             try {
+                // 이미지 검증
+                ImageValidation.validateImageFile(thumbnailImage);
                 // 원래 업로드된 파일명
                 String originalName = thumbnailImage.getOriginalFilename();
 
