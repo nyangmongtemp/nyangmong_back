@@ -10,6 +10,8 @@ import com.playdata.boardservice.common.auth.TokenUserInfo;
 import com.playdata.boardservice.common.dto.CommonResDto;
 import com.playdata.boardservice.common.enumeration.ErrorCode;
 import com.playdata.boardservice.common.exception.CommonException;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +34,7 @@ import java.util.List;
 @RequestMapping("/board")
 @RequiredArgsConstructor
 @Slf4j
-public class BoardController {
+public class BoardController implements BoardControllerDocs {
 
     private final BoardService boardService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -46,7 +48,7 @@ public class BoardController {
      */
     // 게시물 생성
     @PostMapping(value = "/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> createBoard(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> createBoard(@AuthenticationPrincipal TokenUserInfo userInfo,
                                     @RequestPart("context") @Valid BoardSaveReqDto boardSaveReqDto,
                                     @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
 
@@ -71,8 +73,8 @@ public class BoardController {
      * @return
      */
     // 게시물 수정
-    @PutMapping("/{category}/modify/{postId}")
-    public ResponseEntity<?> modifyBoard(@PathVariable String category,
+    @PutMapping(value = "/{category}/modify/{postId}", consumes = "multipart/form-data")
+    public ResponseEntity<CommonResDto> modifyBoard(@PathVariable String category,
                                          @PathVariable Long postId,
                                          @AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestPart("context") @Valid BoardModiDto boardModiDto,
@@ -95,7 +97,7 @@ public class BoardController {
      */
     // 게시물 삭제
     @DeleteMapping("/{category}/delete/{postId}")
-    public ResponseEntity<?> deleteBoard(@PathVariable String category,
+    public ResponseEntity<CommonResDto> deleteBoard(@PathVariable String category,
                                          @PathVariable Long postId,
                                          @AuthenticationPrincipal TokenUserInfo userInfo) {
 
@@ -118,7 +120,7 @@ public class BoardController {
      */
     // 게시판 게시물 목록 조회
     @GetMapping("/list/{category}")
-    public ResponseEntity<Page<?>> getBoardList(BoardSearchDto boardSearchDto,
+    public ResponseEntity<Page<LikeComResDto>> getBoardList(BoardSearchDto boardSearchDto,
                                                            @PathVariable String category,
                                                            Pageable pageable) {
 
@@ -139,7 +141,7 @@ public class BoardController {
      */
     // 게시물 상세 조회
     @GetMapping("/detail/{category}/{id}")
-    public ResponseEntity<?> getBoardDetail(@PathVariable String category,
+    public ResponseEntity<CommonResDto> getBoardDetail(@PathVariable String category,
                                             @PathVariable(name = "id") Long postId,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader,
                                             HttpServletRequest request) {
@@ -171,7 +173,7 @@ public class BoardController {
      */
     // 정보 게시판 메인 최근 게시물 조회
     @GetMapping("/information/main")
-    public ResponseEntity<?> findInformationMainList() {
+    public ResponseEntity<List<BoardListResDto>> findInformationMainList() {
         // 정보 게시판의 게시물 조회
         List<BoardListResDto> resDto = boardService.findInformationMainList();
         return ResponseEntity.ok().body(resDto);
@@ -183,7 +185,7 @@ public class BoardController {
      */
     // 소개 게시판 메인 인기 게시물 조회
     @GetMapping("/main")
-    public ResponseEntity<?> findIntroductionMainList() {
+    public ResponseEntity<List<IntroductionMainListResDto>> findIntroductionMainList() {
         // 소개 게시판의 게시물 조회
         List<IntroductionMainListResDto> resDto = boardService.findIntroductionMainList();
         return ResponseEntity.ok().body(resDto);
@@ -195,7 +197,7 @@ public class BoardController {
      */
     // 정보 게시판 메인 인기 게시물 조회
     @GetMapping("/popular")
-    public ResponseEntity<?> findPopularInformationBoard() {
+    public ResponseEntity<List<BoardListResDto>> findPopularInformationBoard() {
         // 정보 게시판의 인기 게시물 조회
         List<BoardListResDto> resDto = boardService.findPopularInformationBoard();
         return ResponseEntity.ok().body(resDto);
@@ -207,6 +209,7 @@ public class BoardController {
      * @return
      */
     // 회원 탈퇴 시, 회원의 id를 줌 --> 회원의 모든 게시물 삭제 처리 (active = false)
+    @Operation(hidden = true)
     @DeleteMapping("/deleteUser/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable("id") Long userId) {
 
@@ -223,6 +226,7 @@ public class BoardController {
      * @return
      */
     // 회원이 닉네임 변경 시 --> 회원의 모든 게시물의 nickname값 변경
+    @Operation(hidden = true)
     @PutMapping("/modifyNickname/{id}/{nickname}")
     ResponseEntity<?> modifyNickname(@PathVariable("id") Long userId,
                                      @PathVariable("nickname") String nickname) {
@@ -247,13 +251,13 @@ public class BoardController {
      */
     // 마이페이지에서 token을 통한, 내 게시물 조회
     @GetMapping("/mypage/{category}")
-    public ResponseEntity<?> myPost(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> myPost(@AuthenticationPrincipal TokenUserInfo userInfo,
                                     @PathVariable(name = "category") String category,
                                     @RequestParam(value = "page", defaultValue = "0") int page,
                                     @RequestParam(value = "size", defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("postId")));
-        CommonResDto resDto = boardService.findMyPost(userInfo.getUserId(), Category.valueOf(category), pageable);
+        CommonResDto resDto = boardService.findMyPost(userInfo.getUserId(), parseCategory(category), pageable);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }

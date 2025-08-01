@@ -14,6 +14,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ex.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage()));
+                // 기존 코드 -> errorCode.getMessage() 라서 커스텀 메시지 사용이 불가능해서 수정함.
+                .body(new ErrorResponse(errorCode.getCode(), ex.getMessage()));
     }
 }

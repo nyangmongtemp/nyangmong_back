@@ -197,7 +197,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.FILE_INVALID_ERROR)
             ))
     })
-    ResponseEntity<Boolean> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
+    ResponseEntity<Boolean> modifyUserInfo(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestPart("user") @Valid UserInfoModiReqDto modiDto,
                                            // 프로필 이미지는 필수가 아님
                                            @Parameter(
@@ -239,7 +239,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.MAIL_SERVER_ERROR)
             )),
     })
-    ResponseEntity<CommonResDto> modifyUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> modifyUserEmail(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                  @RequestParam String newEmail);
 
 
@@ -272,7 +272,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.INVALID_AUTH_CODE)
             ))
     })
-    ResponseEntity<CommonResDto> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> verifyNewEmail(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                 @RequestBody @Valid UserEmailAuthResDto authResDto);
 
 
@@ -296,7 +296,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.MAIL_SERVER_ERROR)
             )),
     })
-    ResponseEntity<CommonResDto> newPasswordReq(@AuthenticationPrincipal TokenUserInfo userInfo);
+    ResponseEntity<CommonResDto> newPasswordReq(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo);
 
 
 
@@ -330,7 +330,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.INVALID_AUTH_CODE)
             ))
     })
-    ResponseEntity<CommonResDto> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+    ResponseEntity<CommonResDto> verifyNewPassword(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo
             , @RequestBody UserPwAuthReqDto authResDto);
 
 
@@ -355,7 +355,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.ACCOUNT_DISABLED)
             ))
     })
-    ResponseEntity<CommonResDto> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+    ResponseEntity<CommonResDto> modifyPassword(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody UserPasswordModiReqDto reqDto);
 
 
@@ -429,7 +429,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.ACCOUNT_DISABLED)
             ))
     })
-    ResponseEntity<CommonResDto> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo);
+    ResponseEntity<CommonResDto> userMyPage(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo);
 
 
 
@@ -453,7 +453,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.INTERNAL_SERVER_ERROR)
             ))
     })
-    ResponseEntity<CommonResDto> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo);
+    ResponseEntity<CommonResDto> resignUser(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo);
 
 
 
@@ -472,7 +472,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.SEARCH)
             ))
     })
-    ResponseEntity<CommonResDto> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> searchUser(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                             @PathVariable String keyword);
 
 
@@ -498,7 +498,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.FIRST_CHAT)
             )),
     })
-    ResponseEntity<CommonResDto> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo);
+    ResponseEntity<CommonResDto> getMyMessageList (@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo);
 
 
 
@@ -524,7 +524,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.NOT_FOUND)
             )),
     })
-    ResponseEntity<CommonResDto> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> clearUserChat(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                @PathVariable(name = "chatId") Long chatId);
 
 
@@ -551,7 +551,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.NOT_FOUND)
             )),
     })
-    ResponseEntity<CommonResDto> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> getMyChatList (@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                 @PathVariable(name = "id") Long chatId);
 
 
@@ -584,7 +584,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> sendUserMessage(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                  @RequestBody @Valid UserMessageReqDto reqDto);
     
 
@@ -609,7 +609,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> createInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> createInform(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                               @RequestBody @Valid InformReqDto reqDto);
 
 
@@ -635,7 +635,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> modifyInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> modifyInform(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                               @RequestBody @Valid InformModiReqDto reqDto);
 
 
@@ -662,7 +662,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> deleteInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> deleteInform(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "id") Long informId);
 
 
@@ -688,7 +688,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> getMyInformList (@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                   @PathVariable(name = "answered") String answered,
                                                   @RequestParam(value = "page", defaultValue = "0") int page,
                                                   @RequestParam(value = "size", defaultValue = "5") int size,
@@ -718,7 +718,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> getMyInformDetail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> getMyInformDetail(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                                    @PathVariable(name = "id") Long informId);
 
 
@@ -744,7 +744,7 @@ public interface UserControllerDocs {
                     examples = @ExampleObject(value = UserSwaggerEx.BAD_REQUEST)
             )),
     })
-    ResponseEntity<CommonResDto> createReport(@AuthenticationPrincipal TokenUserInfo userInfo,
+    ResponseEntity<CommonResDto> createReport(@Parameter(hidden = true) @AuthenticationPrincipal TokenUserInfo userInfo,
                                               @RequestBody @Valid ReportSaveReqDto reqDto);
 
 
