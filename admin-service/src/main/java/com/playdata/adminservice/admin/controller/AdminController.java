@@ -214,6 +214,20 @@ public class AdminController {
      * @param adminInfo
      * @return
      */
+    // 마이페이지 정보 조회
+    @GetMapping("/mypage")
+    public ResponseEntity<?> getMyPage(@AuthenticationPrincipal TokenAdminInfo adminInfo){
+
+        CommonResDto resDto = adminService.getMyPage(adminInfo);
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
+
+    /**
+     *
+     * @param adminInfo
+     * @return
+     */
     // 토큰 검증
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenAdminInfo adminInfo){

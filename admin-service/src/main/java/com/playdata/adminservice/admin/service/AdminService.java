@@ -5,6 +5,7 @@ import com.playdata.adminservice.admin.dto.req.*;
 import com.playdata.adminservice.admin.dto.res.AdminEmailAuthResDto;
 import com.playdata.adminservice.admin.dto.res.AdminListResDto;
 import com.playdata.adminservice.admin.dto.res.AdminLoginResDto;
+import com.playdata.adminservice.admin.dto.res.AdminMyPageResDto;
 import com.playdata.adminservice.admin.entity.Admin;
 import com.playdata.adminservice.admin.repository.AdminRepository;
 import com.playdata.adminservice.common.auth.JwtTokenProvider;
@@ -415,6 +416,29 @@ public class AdminService {
 
 
         return new CommonResDto(HttpStatus.OK, "권한/활성화 상태가 수정되었습니다.", true);
+    }
+
+    /**
+     *
+     * @param userInfo
+     * @return
+     */
+    // 마이페이지 정보 조회
+    public CommonResDto getMyPage(TokenAdminInfo adminInfo) {
+
+        Optional<Admin> findAdmin = adminRepository.findById(adminInfo.getAdminId());
+
+        // 관리자 정보가 없거나 활성화 상태가 아닌지 검증
+        if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND, "회원 정보가 없습니다.");
+        }
+
+        Admin admin = findAdmin.get();
+
+        // entity 에서 정보를 담은 메소드 호출
+        AdminMyPageResDto myAdmin = admin.toAdminMyPageResDto();
+
+        return new CommonResDto(HttpStatus.OK, "마이페이지 정보 응답", myAdmin);
     }
 
     /**
