@@ -228,7 +228,7 @@ public class BoardService {
     public CommonResDto boardDetail(Category category, Long postId, String email, HttpServletRequest request) {
 
             // 게시물 조회 (null 방지)
-            Board board = boardRepository.findById(postId)
+            Board board = boardRepository.findByPostIdAndActiveIsTrue(postId)
                     .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND, "찾고있는 게시물이 없습니다."));
 
             // 사용자 식별 정보 생성

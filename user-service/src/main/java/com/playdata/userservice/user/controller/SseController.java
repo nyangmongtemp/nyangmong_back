@@ -6,6 +6,7 @@ import com.playdata.userservice.common.exception.CommonException;
 import com.playdata.userservice.user.dto.noti.MessageNotiDto;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/user/sse")
 @RequiredArgsConstructor
 @Slf4j
+@Hidden
 public class SseController {
 
     // 사용자별 Emitter를 저장할 Map

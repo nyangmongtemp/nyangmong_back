@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonResDto;
+import com.playdata.userservice.user.controller.swagger.UserControllerDocs;
 import com.playdata.userservice.user.dto.inform.req.InformModiReqDto;
 import com.playdata.userservice.user.dto.inform.req.InformReqDto;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
@@ -13,6 +14,7 @@ import com.playdata.userservice.user.dto.report.req.ReportSaveReqDto;
 import com.playdata.userservice.user.dto.req.*;
 import com.playdata.userservice.user.dto.res.UserEmailAuthResDto;
 import com.playdata.userservice.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +37,9 @@ import java.util.Map;
 @RequestMapping("/user")
 @Slf4j
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserControllerDocs {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /** 회원가입
      *
@@ -48,7 +49,7 @@ public class UserController {
      * @throws JsonProcessingException
      */
     @PostMapping(value = "/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> userCreate(
+    public ResponseEntity<CommonResDto> userCreate(
             @RequestPart("user") @Valid UserSaveReqDto userSaveReqDto,
             // 프로필 이미지는 필수가 아님
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
@@ -68,7 +69,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginReqDto userLoginReqDto){
+    public ResponseEntity<CommonResDto> userLogin(@RequestBody @Valid UserLoginReqDto userLoginReqDto) {
         CommonResDto resDto = userService.login(userLoginReqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -81,7 +82,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/verify-email")
-    public ResponseEntity<?> sendVerifyEmail(@RequestParam("email") String email){
+    public ResponseEntity<CommonResDto> sendVerifyEmail(@RequestParam("email") String email) {
 
         CommonResDto resDto = userService.sendVerifyEmailCode(email);
 
@@ -95,7 +96,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/verify-code")
-    public ResponseEntity<?> verifyUserEmailCode(@RequestBody @Valid UserEmailAuthResDto authResDto){
+    public ResponseEntity<CommonResDto> verifyUserEmailCode(@RequestBody @Valid UserEmailAuthResDto authResDto) {
         CommonResDto resDto = userService.verifyEmailCode(authResDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -112,10 +113,10 @@ public class UserController {
      * @throws JsonProcessingException
      */
     @PatchMapping(value = "/modify-userinfo", consumes = "multipart/form-data")
-    public ResponseEntity<?> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<Boolean> modifyUserInfo(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestPart("user") @Valid UserInfoModiReqDto modiDto,
             // 프로필 이미지 변경은 필수가 아님
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage){
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         boolean result = userService.modiUserCommonInfo(userInfo, modiDto, profileImage);
 
@@ -131,7 +132,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/modify-email")
-    public ResponseEntity<?> modifyUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> modifyUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
                                              @RequestParam String newEmail) {
         CommonResDto resDto = userService.modiUserEmail(newEmail, userInfo);
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -148,7 +149,7 @@ public class UserController {
      * @return
      */
     @PatchMapping("/verify-new-email")
-    public ResponseEntity<?> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> verifyNewEmail(@AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody @Valid UserEmailAuthResDto authResDto){
 
         CommonResDto resDto = userService.verifyUserNewEmail(authResDto, userInfo);
@@ -164,7 +165,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/new-password-req")
-    public ResponseEntity<?> newPasswordReq(@AuthenticationPrincipal TokenUserInfo userInfo){
+    public ResponseEntity<CommonResDto> newPasswordReq(@AuthenticationPrincipal TokenUserInfo userInfo){
 
         CommonResDto resDto = userService.sendEmailAuthCodeNewPw(userInfo.getEmail());
 
@@ -180,7 +181,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/verify-new-password")
-    public ResponseEntity<?> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<CommonResDto> verifyNewPassword(@AuthenticationPrincipal TokenUserInfo userInfo
             , @RequestBody UserPwAuthReqDto authResDto){
 
         // 최대한 기존 서비스 로직을 그대로 사용하기 위한 코드
@@ -203,7 +204,7 @@ public class UserController {
      * @return
      */
     @PatchMapping("/modify-password")
-    public ResponseEntity<?> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
+    public ResponseEntity<CommonResDto> modifyPassword(@AuthenticationPrincipal TokenUserInfo userInfo
             ,@RequestBody UserPasswordModiReqDto reqDto) {
 
         CommonResDto resDto = userService.modifyNewPassword(userInfo.getUserId(), reqDto);
@@ -218,7 +219,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/forget/{email}")
-    public ResponseEntity<?> forgetPasswordReq(@PathVariable String email){
+    public ResponseEntity<CommonResDto> forgetPasswordReq(@PathVariable String email){
         CommonResDto resDto = userService.forgetPasswordReq(email);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -231,7 +232,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/forget/auth")
-    public ResponseEntity<?> forgetAuth(@RequestBody @Valid UserEmailAuthResDto reqDto){
+    public ResponseEntity<CommonResDto> forgetAuth(@RequestBody @Valid UserEmailAuthResDto reqDto){
         CommonResDto resDto = userService.authCodeAndRePw(reqDto);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -244,7 +245,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/mypage")
-    public ResponseEntity<?> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo){
+    public ResponseEntity<CommonResDto> userMyPage(@AuthenticationPrincipal TokenUserInfo userInfo){
 
         CommonResDto myPage = userService.getMyPage(userInfo.getUserId());
 
@@ -258,7 +259,7 @@ public class UserController {
      * @return
      */
     @DeleteMapping("/resign")
-    public ResponseEntity<?> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
+    public ResponseEntity<CommonResDto> resignUser(@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.resignUser(userInfo.getUserId());
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -266,6 +267,7 @@ public class UserController {
 
 /////////////// 카카오 소셜 로그인 관련 로직들입니다.
     // 카카오 콜백 요청 처리
+    @Operation(hidden = true)
     @GetMapping("/kakao")
     public void kakaoCallback(@RequestParam String code , HttpServletResponse response) throws IOException {
         log.info("카카오 콜백 처리 시작! code: {}", code);
@@ -316,7 +318,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/search/{keyword}")
-    public ResponseEntity<?> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> searchUser(@AuthenticationPrincipal TokenUserInfo userInfo,
                                         @PathVariable String keyword){
         CommonResDto resDto = userService.searchUser(keyword);
 
@@ -330,7 +332,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/chat")
-    public ResponseEntity<?> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo){
+    public ResponseEntity<CommonResDto> getMyMessageList (@AuthenticationPrincipal TokenUserInfo userInfo){
         CommonResDto resDto = userService.findMyActiveChat(userInfo.getUserId(), userInfo.getNickname());
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
@@ -343,7 +345,7 @@ public class UserController {
      * @return
      */
     @DeleteMapping("/clear/{chatId}")
-    public ResponseEntity<?> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> clearUserChat(@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "chatId") Long chatId) {
         CommonResDto resDto = userService.clearChat(userInfo.getUserId(), chatId);
 
@@ -359,7 +361,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/chat/list/{id}")
-    public ResponseEntity<?> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> getMyChatList (@AuthenticationPrincipal TokenUserInfo userInfo,
                                             @PathVariable(name = "id") Long chatId){
         CommonResDto resDto
                 = userService.getMyChatMessages(userInfo.getUserId(), userInfo.getNickname(), chatId);
@@ -375,7 +377,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/send")
-    public ResponseEntity<?> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> sendUserMessage(@AuthenticationPrincipal TokenUserInfo userInfo,
                                              @RequestBody @Valid UserMessageReqDto reqDto){
         CommonResDto resDto = userService.sendMessage(userInfo.getUserId(), userInfo.getNickname(), reqDto);
 
@@ -385,11 +387,14 @@ public class UserController {
     /**
      * 이메일은 통한 userId 리턴
      *
+     * 사용자가 요청을 보내는 메소드가 아님
+     * 
      * @param userInfo
      * @return
      */
+    @Operation(hidden = true)
     @GetMapping("/findId")
-    ResponseEntity<?> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
+    public ResponseEntity<Long> findUserEmail(@AuthenticationPrincipal TokenUserInfo userInfo) {
         Long foundUserId = userService.findByEmail(userInfo.getEmail());
 
         return ResponseEntity.ok(foundUserId);
@@ -405,7 +410,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/inform/create")
-    public ResponseEntity<?> createInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> createInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                         @RequestBody @Valid InformReqDto reqDto) {
         CommonResDto resDto
                 = userService.createInform(userInfo.getUserId(), userInfo.getNickname(), reqDto);
@@ -421,7 +426,7 @@ public class UserController {
      * @return
      */
     @PatchMapping("/inform/modify")
-    public ResponseEntity<?> modifyInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> modifyInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @RequestBody @Valid InformModiReqDto reqDto) {
         CommonResDto resDto
                 = userService.modifyInform(userInfo.getUserId(), userInfo.getNickname(), reqDto);
@@ -437,7 +442,7 @@ public class UserController {
      * @return
      */
     @DeleteMapping("/inform/{id}")
-    public ResponseEntity<?> deleteInform(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> deleteInform(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @PathVariable(name = "id") Long informId) {
         CommonResDto resDto = userService.deleteInform(userInfo.getUserId(), informId);
 
@@ -457,7 +462,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/inform/list/{answered}")
-    public ResponseEntity<?> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> getMyInformList (@AuthenticationPrincipal TokenUserInfo userInfo,
                                               @PathVariable(name = "answered") String answered,
                                               @RequestParam(value = "page", defaultValue = "0") int page,
                                               @RequestParam(value = "size", defaultValue = "5") int size,
@@ -479,7 +484,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/inform/detail/{id}")
-    public ResponseEntity<?> getMyInformDetail(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> getMyInformDetail(@AuthenticationPrincipal TokenUserInfo userInfo,
                                                @PathVariable(name = "id") Long informId) {
         CommonResDto resDto
                 = userService.findMyInformDetail(userInfo.getUserId(), userInfo.getNickname(), informId);
@@ -494,7 +499,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/report")
-    public ResponseEntity<?> createReport(@AuthenticationPrincipal TokenUserInfo userInfo,
+    public ResponseEntity<CommonResDto> createReport(@AuthenticationPrincipal TokenUserInfo userInfo,
                                           @RequestBody @Valid ReportSaveReqDto reqDto) {
         CommonResDto resDto
                 = userService.createReport(userInfo.getUserId(), reqDto);
@@ -513,10 +518,9 @@ public class UserController {
      * @param userEmail
      * @return
      */
+    @Operation(hidden = true)
     @PostMapping("/refresh")
-    public ResponseEntity<?> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
-        log.error("refresh 발급 로직 발동!!!");
-        log.error( "userEmail: {}",userEmail.get("email"));
+    public ResponseEntity<CommonResDto> reProvideAccessToken(@RequestBody Map<String, String> userEmail) {
         CommonResDto resDto = userService.reProvideToken(userEmail.get("email"));
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
@@ -532,6 +536,7 @@ public class UserController {
      * @param userId
      * @return
      */
+    @Operation(hidden = true)
     @GetMapping("/profileImage/{id}")
     ResponseEntity<String> getUserProfileImage(@PathVariable(name = "id") Long userId) {
         String profileImage = userService.getProfileImage(userId);
@@ -547,6 +552,7 @@ public class UserController {
      * @return
      */
     // 토큰 검증용 메소드 --> 추후 삭제 예정
+    @Operation(hidden = true)
     @GetMapping("/temp22")
     public ResponseEntity<?> temp22(@AuthenticationPrincipal TokenUserInfo userInfo){
         log.info(userInfo.toString());
