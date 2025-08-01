@@ -1,98 +1,141 @@
 package com.playdata.adminservice.admin.service;
 
-import com.playdata.adminservice.admin.dto.req.AdminBoardReqDto;
-import com.playdata.adminservice.admin.dto.res.AdminBoardResDto;
+import com.playdata.adminservice.admin.dto.board.AnimalSearchDto;
+import com.playdata.adminservice.admin.dto.board.BoardSearchDto;
+import com.playdata.adminservice.admin.dto.board.res.AnimalListResDto;
+import com.playdata.adminservice.admin.dto.board.res.BoardListResDto;
+import com.playdata.adminservice.admin.dto.board.res.BoardResDto;
+import com.playdata.adminservice.admin.dto.req.SearchDto;
+import com.playdata.adminservice.admin.entity.Animal;
+import com.playdata.adminservice.admin.entity.Board;
 import com.playdata.adminservice.admin.entity.Category;
-import com.playdata.adminservice.admin.repository.AdminBoardRepository;
 import com.playdata.adminservice.admin.repository.AnimalRepository;
-import com.playdata.adminservice.admin.repository.InformationBoardRepository;
-import com.playdata.adminservice.admin.repository.IntroductionBoardRepository;
+import com.playdata.adminservice.admin.repository.BoardRepository;
+import com.playdata.adminservice.common.auth.TokenAdminInfo;
 import com.playdata.adminservice.common.dto.CommonResDto;
-import jakarta.transaction.Transactional;
+import com.playdata.adminservice.common.enumeration.ErrorCode;
+import com.playdata.adminservice.common.exception.CommonException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-/**
- * AdminBoardService
- * - 관리자용 통합 게시판 서비스 클래스
- * - 정보/소개/유기동물 게시판을 통합 조회, 상세, 삭제 처리
- */
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AdminBoardService {
 
-    private final AdminBoardRepository adminBoardRepository;
-    private final InformationBoardRepository informationBoardRepository;
-    private final IntroductionBoardRepository introductionBoardRepository;
     private final AnimalRepository animalRepository;
+    private final BoardRepository boardRepository;
 
     /**
-     * 게시글 목록 조회 (검색 조건 + 페이징 처리)
      *
-     * @param cond     검색 조건 DTO (카테고리, 제목, 작성자, 날짜, 정렬기준 등)
-     * @param pageable 페이징 및 정렬 정보
-     * @return CommonResDto<Page<AdminBoardResDto>> 게시글 목록 응답
+     * @param boardSearchDto
+     * @param category
+     * @param pageable
+     * @return
      */
-    public CommonResDto getBoards(AdminBoardReqDto cond, Pageable pageable) {
-        Page<AdminBoardResDto> boards = adminBoardRepository.search(cond, pageable);
-        return new CommonResDto(HttpStatus.OK, "게시글 목록 조회 완료", boards);
+    // 게시판 게시물 목록 조회
+    public Page<BoardListResDto> findInformationBoardList(BoardSearchDto boardSearchDto,
+                                                          Category category,
+                                                          Pageable pageable) {
+
+        return boardRepository.findByList(boardSearchDto, category, pageable);
     }
 
     /**
-     * 게시글 상세 조회
+     * 분양 게시물 목록 조회 (검색 및 페이징 포함)
      *
-     * @param category 게시판 카테고리 (INFORMATION, INTRODUCTION, ANIMAL)
-     * @param postId   게시글 ID
-     * @return CommonResDto<AdminBoardResDto> 게시글 상세 정보 응답
+     * @param searchDto 검색 필터 조건
+     * @param pageable 페이징 조건 (페이지 번호, 사이즈, 정렬 등)
+     * @return AnimalListResDto로 매핑된 Page 객체 반환
      */
-    @Transactional
-    public CommonResDto getBoardDetail(String category, Long postId) {
-        AdminBoardResDto detail = adminBoardRepository.findBoardDetailById(category, postId);
-        return new CommonResDto(HttpStatus.OK, "게시글 상세 조회 완료", detail);
+    public Page<AnimalListResDto> findStrayAnimalList(AnimalSearchDto searchDto, Pageable pageable) {
+
+        return animalRepository.findList(searchDto, pageable);
     }
 
-    /**
-     * 게시글 삭제 처리 (soft delete)
-     * - active 필드를 false로 설정하여 비활성화
-     * - 존재하지 않는 게시글이나 잘못된 카테고리 처리 시 예외 발생
-     *
-     * @param category 게시판 카테고리 (INFORMATION, INTRODUCTION, ANIMAL)
-     * @param postId   게시글 ID
-     * @return CommonResDto<Void> 삭제 완료 메시지
-     */
-    @Transactional
-    public CommonResDto deleteBoard(String category, Long postId) {
-        // 문자열 category를 enum으로 변환
-        Category enumCategory = Category.from(category);
-        String tableCategory = enumCategory.getTableCategory();
 
-        // 카테고리별 분기 처리
-        switch (tableCategory) {
-            case "INFORMATION" -> {
-                informationBoardRepository.findById(postId).ifPresentOrElse(
-                        board -> board.setActive(false), // soft delete 처리
-                        () -> { throw new IllegalArgumentException("게시글을 찾을 수 없습니다."); }
-                );
-            }
-            case "INTRODUCTION" -> {
-                introductionBoardRepository.findById(postId).ifPresentOrElse(
-                        board -> board.setActive(false),
-                        () -> { throw new IllegalArgumentException("게시글을 찾을 수 없습니다."); }
-                );
-            }
-            case "ANIMAL" -> {
-                animalRepository.findById(postId).ifPresentOrElse(
-                        animal -> animal.setActive(false),
-                        () -> { throw new IllegalArgumentException("게시글을 찾을 수 없습니다."); }
-                );
-            }
-            default -> throw new IllegalArgumentException("지원하지 않는 카테고리입니다.");
+
+    /**
+     *
+     * @param category
+     * @param postId
+     * @param email
+     * @param request
+     * @return
+     */
+    // 게시판 게시물 상세 조회
+    public CommonResDto boardDetail(Category category, Long postId, String email, HttpServletRequest request) {
+
+        // 게시물 조회 (null 방지)
+        Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, category);
+
+        if (board == null) {
+            throw new CommonException(ErrorCode.DATA_NOT_FOUND);
         }
 
-        return new CommonResDto(HttpStatus.OK, "게시글 삭제 완료", null);
+        // 화면단으로 보낼 DTO로 변환
+        BoardResDto resDto = board.fromEntity(board);
+
+        return new CommonResDto(HttpStatus.OK, "소개 게시물 조회 성공", resDto);
+    }
+
+    /**
+     *
+     * @param postId
+     * @param categoryEnum
+     * @param adminInfo
+     */
+    // 삭제
+    public void deleteBoard(Long postId, Category categoryEnum, TokenAdminInfo adminInfo) {
+
+        // 카테고리가 ANIMAL 일때
+        if (categoryEnum == Category.ANIMAL) {
+            // 게시글 존재 여부
+            Animal animal = animalRepository.findByPostIdAndActiveTrue(postId);
+
+            // 게시글이 없으면 에러
+            if (animal == null) {
+                throw new CommonException(ErrorCode.DATA_NOT_FOUND);
+            }
+
+            animal.boardDelete();
+        } else { // 카테고리가 ANIMAL을 제외한 다른 카테고리 일 때
+            Board board = boardRepository.findByPostIdAndCategoryAndActiveTrue(postId, categoryEnum);
+
+            if (board == null) {
+                throw new CommonException(ErrorCode.DATA_NOT_FOUND);
+            }
+
+            board.boardDelete();
+        }
+    }
+
+    /**
+     * 분양 게시물 상세 조회 (조회수 중복 방지 및 증가 포함)
+     *
+     * @param postId 게시물 ID
+     * @param email 로그인 사용자 이메일 (null 가능)
+     * @param request 사용자 요청 정보 (IP, User-Agent 추출용)
+     * @return 조회된 Animal Entity
+     */
+    public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
+        // 게시물 존재 여부 확인 (예외 처리 포함)
+        Animal animal = Optional.ofNullable(animalRepository.findByPostIdAndActiveTrue(postId))
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        return animal;
     }
 
 }

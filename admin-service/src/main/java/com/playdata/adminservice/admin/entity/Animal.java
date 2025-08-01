@@ -71,6 +71,11 @@ public class Animal extends BaseTimeEntity {
     @Column(name = "reservation_status")
     private ReservationStatus reservationStatus; // 예약
 
+    // 삭제
+    public void boardDelete() {
+        this.active = false;
+    }
+
     public void setActive(boolean active) {
         this.active = active;
     }
