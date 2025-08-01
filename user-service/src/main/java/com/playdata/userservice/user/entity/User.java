@@ -1,6 +1,7 @@
 package com.playdata.userservice.user.entity;
 
 import com.playdata.userservice.common.entity.BaseTimeEntity;
+import com.playdata.userservice.common.util.HtmlSanitizer;
 import com.playdata.userservice.user.dto.kakao.KakaoUserDto;
 import com.playdata.userservice.user.dto.kakao.res.KakaoLoginResDto;
 import com.playdata.userservice.user.dto.message.res.UserInfoResDto;
@@ -63,13 +64,13 @@ public class User extends BaseTimeEntity {
     private LocalDateTime releaseAt;
 
     // 인증이 필요하지 않은 사용자 정보를 수정하는 메소드
-    public void modifyCommonUserInfo(UserInfoModiReqDto modiDto, String newProfileImage){
+    public void modifyCommonUserInfo(UserInfoModiReqDto modiDto, String newProfileImage, HtmlSanitizer plainTextPolicy) {
         // 프로필 사진을 변경한 경우에만 업데이트
         if(newProfileImage != null) {
             this.profileImage = newProfileImage;
         }
         if(modiDto.getNickname() != null) {
-            this.nickname = modiDto.getNickname();
+            this.nickname = plainTextPolicy.sanitizeText(modiDto.getNickname());
         }
     }
 
@@ -85,8 +86,8 @@ public class User extends BaseTimeEntity {
     }
 
     // 인증이 필요한 이메일 정보를 변경하는 메소드
-    public void modifyEmail(String newEmail){
-        this.email = newEmail;
+    public void modifyEmail(String newEmail, HtmlSanitizer plainTextPolicy) {
+        this.email = plainTextPolicy.sanitizeText(newEmail);
     }
 
     // 인증이 필요한 비밀번호를 변경하는 메소드

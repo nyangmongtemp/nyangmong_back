@@ -151,7 +151,7 @@ public class UserService {
         // DB에 저장을 위해 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(password);
         // 부가적인 정보를 담아서 User를 DB에 저장
-        User createdUser = userSaveReqDto.toEntity(encodedPassword, profileImagePath);
+        User createdUser = userSaveReqDto.toEntity(encodedPassword, profileImagePath, plainTextPolicy);
         // DB에 저장
         userRepository.save(createdUser);
 
@@ -364,7 +364,7 @@ public class UserService {
         }
         
         // DB로 변경된 값을 저장
-        foundUser.modifyCommonUserInfo(modiDto, newProfileImage);
+        foundUser.modifyCommonUserInfo(modiDto, newProfileImage, plainTextPolicy);
         userRepository.save(foundUser);
         return true;
     }
@@ -415,7 +415,7 @@ public class UserService {
 
         // 이메일 변경 요청 사용자의 유효성 확인 후
         // 해당 사용자의 이메일 변경 및 저장
-        user.modifyEmail(authResDto.getEmail());
+        user.modifyEmail(authResDto.getEmail(), plainTextPolicy);
         userRepository.save(user);
 
         return resDto;
@@ -906,7 +906,7 @@ public class UserService {
         // 유저의 유효성 확인
         findValidUser(userId);
         // 고객 문의 생성
-        Inform inform = new Inform(userId, reqDto.getTitle(), reqDto.getContent());
+        Inform inform = new Inform(userId, reqDto.getTitle(), reqDto.getContent(), plainTextPolicy);
         // DB저장 및 화면단 전달용 고객 문의 세부 정보 dto 변환
         InformResDto resDto = informRepository.save(inform).toDetailDto(nickname);
 
@@ -931,7 +931,7 @@ public class UserService {
             throw new CommonException(ErrorCode.BAD_REQUEST, "수정 권한이 없음");
         }
         // 제목, 내용 수정
-        foundInform.modifyInform(reqDto.getTitle(), reqDto.getContent());
+        foundInform.modifyInform(reqDto.getTitle(), reqDto.getContent(), plainTextPolicy);
         // DB에 저장 및 화면 전달용 dto로 변환
         InformResDto resDto = informRepository.save(foundInform).toDetailDto(nickname);
 
@@ -1019,7 +1019,7 @@ public class UserService {
         
         // 새로운 신고 객체 생성
         Report newReport 
-                = new Report(accused.getUserId(), reqDto.getContent(), reporter.getUserId(), category);
+                = new Report(accused.getUserId(), reqDto.getContent(), reporter.getUserId(), category, plainTextPolicy);
 
 
         reportRepository.save(newReport);
