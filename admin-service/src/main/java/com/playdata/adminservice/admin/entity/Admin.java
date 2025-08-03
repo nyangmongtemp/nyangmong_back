@@ -1,6 +1,7 @@
 package com.playdata.adminservice.admin.entity;
 
 import com.playdata.adminservice.admin.dto.req.AdminModifyReqDto;
+import com.playdata.adminservice.admin.dto.res.AdminMyPageResDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,6 +50,19 @@ public class Admin extends BaseTimeEntity {
     protected void onCreate() {
         this.active = true;
         this.isFirst = true;
+    }
+
+    // 관리자 마이페이지 정보
+    public AdminMyPageResDto toAdminMyPageResDto(){
+        return AdminMyPageResDto.builder()
+                .email(this.email)
+                .phone(this.phone)
+                .name(this.name)
+                .createAt(this.getCreateAt())
+                .updateAt(this.getUpdateAt())
+                .role(this.role)
+                .adminId(this.adminId)
+                .build();
     }
 
     public void modifyEmail(String newEmail){
