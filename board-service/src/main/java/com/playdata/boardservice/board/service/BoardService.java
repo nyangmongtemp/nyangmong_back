@@ -9,6 +9,7 @@ import com.playdata.boardservice.board.entity.Category;
 import com.playdata.boardservice.board.repository.BoardRepository;
 import com.playdata.boardservice.client.MainServiceClient;
 import com.playdata.boardservice.common.auth.TokenUserInfo;
+import com.playdata.boardservice.common.configs.AwsS3Config;
 import com.playdata.boardservice.common.dto.CommonResDto;
 import com.playdata.boardservice.common.enumeration.ErrorCode;
 import com.playdata.boardservice.common.exception.CommonException;
@@ -56,6 +57,8 @@ public class BoardService {
     // 이미지 저장 경로
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
+
+    private AwsS3Config s3Config;
 
     private List<Category> categoryList = List.of(Category.FREE, INTRODUCTION, Category.QUESTION, Category.REVIEW);
 
@@ -406,21 +409,14 @@ public class BoardService {
             try {
                 // 이미지 검증
                 ImageValidation.validateImageFile(thumbnailImage);
-                // 원래 업로드된 파일명
-                String originalName = thumbnailImage.getOriginalFilename();
 
-                //고유한 파일명을 만드기 위해 UUID 사용
-                String fileName = UUID.randomUUID() + "_" + originalName;
+                String originalFilename = thumbnailImage.getOriginalFilename();
 
-                // 카테고리별 폴더 구성
-                File dir = new File(thumbnailImagePath);
-                if (!dir.exists()) dir.mkdirs();
+                // UUID + 원본 파일명으로 저장 (중복 방지)
+                String fileName = UUID.randomUUID() + "_" + originalFilename;
 
-                // 최종 저장 경로
-                File dest = new File(thumbnailImagePath, fileName);
-                thumbnailImage.transferTo(dest);
-
-                savePath = fileName;
+                // s3 버킷에 이미지 저장하고 저장된 경로를 받아오기
+                savePath = s3Config.uploadToS3Bucket(thumbnailImage.getBytes(), fileName);
             } catch (IOException e) {
                 // 예외 발생 시 에러 로그 남기고 실패 응답
                 log.error("썸네일 저장 실패: {}", e.getMessage());
