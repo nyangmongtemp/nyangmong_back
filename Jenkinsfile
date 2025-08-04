@@ -18,7 +18,15 @@ pipeline {
             // 각 작업 단위를 스테이지로 나누어서 작성 가능.
             stage('Pull Codes from Github') { // 스테이지 제목 (맘대로 써도 됨)
                 steps {
-                    checkout scm // 젠킨스와 연결된 소스 컨트롤 매니저(git 등)에서 코드를 가져오는 명령어
+                    // main 브랜치인 경우에는 아래의 코드를 사용해도 무관하지만, 지금은 특정 브랜치에서 가져오는 방식으로 구현
+                    // checkout scm // 젠킨스와 연결된 소스 컨트롤 매니저(git 등)에서 코드를 가져오는 명령어
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: '*/eunhyeok_04']],  // 특정 브랜치만 클론
+                                userRemoteConfigs: [[
+                                    url: 'https://github.com/nyangmongtemp/nyangmong_back.git'
+                                    // public repo이므로 credentials 생략 가능
+                                ]]
+                            ])
                 }
             }
 
