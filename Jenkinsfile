@@ -11,8 +11,7 @@ pipeline {
         SERVICE_DIRS="config-service,gateway-service,user-service,admin-service,animalboard-service,board-service,festival-service,main-service,map-service"
         ECR_URL="816008167575.dkr.ecr.ap-northeast-2.amazonaws.com/nyangmong"
         REGION="ap-northeast-2"
-        // 자바 17 인식 오류
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+        JAVA_HOME = '/opt/java/openjdk'
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
     }
     stages {
