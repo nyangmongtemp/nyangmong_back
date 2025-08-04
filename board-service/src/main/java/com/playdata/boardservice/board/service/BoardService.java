@@ -58,7 +58,7 @@ public class BoardService {
     @Value("${imagePath.thumbnail.url}")
     private String thumbnailImagePath;
 
-    private AwsS3Config s3Config;
+    private final AwsS3Config s3Config;
 
     private List<Category> categoryList = List.of(Category.FREE, INTRODUCTION, Category.QUESTION, Category.REVIEW);
 
