@@ -87,6 +87,22 @@ public class AdminBoardService {
     }
 
     /**
+     * 분양 게시물 상세 조회 (조회수 중복 방지 및 증가 포함)
+     *
+     * @param postId 게시물 ID
+     * @param email 로그인 사용자 이메일 (null 가능)
+     * @param request 사용자 요청 정보 (IP, User-Agent 추출용)
+     * @return 조회된 Animal Entity
+     */
+    public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
+        // 게시물 존재 여부 확인 (예외 처리 포함)
+        Animal animal = Optional.ofNullable(animalRepository.findByPostIdAndActiveTrue(postId))
+                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
+
+        return animal;
+    }
+
+    /**
      *
      * @param postId
      * @param category
@@ -118,20 +134,5 @@ public class AdminBoardService {
         }
     }
 
-    /**
-     * 분양 게시물 상세 조회 (조회수 중복 방지 및 증가 포함)
-     *
-     * @param postId 게시물 ID
-     * @param email 로그인 사용자 이메일 (null 가능)
-     * @param request 사용자 요청 정보 (IP, User-Agent 추출용)
-     * @return 조회된 Animal Entity
-     */
-    public Animal findByAnimal(Long postId, String email, HttpServletRequest request) {
-        // 게시물 존재 여부 확인 (예외 처리 포함)
-        Animal animal = Optional.ofNullable(animalRepository.findByPostIdAndActiveTrue(postId))
-                .orElseThrow(() -> new CommonException(ErrorCode.DATA_NOT_FOUND));
-
-        return animal;
-    }
 
 }
