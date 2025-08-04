@@ -71,7 +71,7 @@ public class TemsController {
     @GetMapping("/lastPost")
     public ResponseEntity<CommonResDto> getLastPostTerms(@PathVariable String category) {
         TermsCategory termsCategory = parseCategory(category);
-        if (termsCategory != TermsCategory.TERMS) {
+        if (termsCategory != TermsCategory.TERMS && termsCategory != TermsCategory.POLICY) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
         TermsLastPostResDto result = termsService.getLastPostTerms(termsCategory);
