@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasAnyRole('BOSS', 'CUSTOMER')")
-public class AdminBoardController {
+public class AdminBoardController implements AdminBoardControllerDocs{
 
     private final AdminBoardService adminBoardService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -76,7 +76,7 @@ public class AdminBoardController {
      */
     // 게시물 상세 조회
     @GetMapping("/detail/{category}/{id}")
-    public ResponseEntity<?> getBoardDetail(@PathVariable String category,
+    public ResponseEntity<CommonResDto> getBoardDetail(@PathVariable String category,
                                             @PathVariable(name = "id") Long postId,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader,
                                             HttpServletRequest request) {
@@ -142,7 +142,7 @@ public class AdminBoardController {
      */
     // 삭제
     @DeleteMapping("/{category}/delete/{postId}")
-    public ResponseEntity<?> deleteBoard(@PathVariable String category,
+    public ResponseEntity<CommonResDto> deleteBoard(@PathVariable String category,
                                          @PathVariable Long postId,
                                          @AuthenticationPrincipal TokenAdminInfo adminInfo) {
 
