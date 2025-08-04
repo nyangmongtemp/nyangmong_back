@@ -266,9 +266,9 @@ public class MainController implements MainControllerDocs {
      * @return
      */
     @Operation(hidden = true)
-    @PutMapping("/modifyProfileImage/{id}/{profileImage}")
-        ResponseEntity<?> modifyProfileImage(@PathVariable("id") Long userId,
-                                     @PathVariable("profileImage") String profileImage) {
+    @PutMapping("/modifyProfileImage")
+        ResponseEntity<?> modifyProfileImage(@RequestParam( value = "id") Long userId,
+                                     @RequestParam(value = "profileImage") String profileImage) {
         CommonResDto resDto = mainService.changeUserProfile(userId, profileImage);
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
