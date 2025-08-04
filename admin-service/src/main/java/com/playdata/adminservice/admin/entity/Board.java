@@ -1,19 +1,20 @@
 package com.playdata.adminservice.admin.entity;
 
 
+import com.playdata.adminservice.admin.dto.board.res.BoardResDto;
 import com.playdata.adminservice.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 
 @Getter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "tbl_board")
 @EntityListeners(AuditingEntityListener.class) // 서버 어플리케이션에 @EnableJpaAuditing를 불러올 수 있는 어노테이션
-public class InformationBoard extends BaseTimeEntity {
+public class Board extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,9 +44,33 @@ public class InformationBoard extends BaseTimeEntity {
     private String nickname; // 사용자 닉네임
 
     @Column(nullable = false)
-    private String title; // 게시글 제목\
+    private String title; // 게시글 제목
 
-    public void setActive(boolean active) {
-        this.active = active;
+    // 디폴트 값 설정
+    @PrePersist
+    protected void onCreate() {
+        this.active = true;
+        this.viewCount = 0;
+    }
+
+    // 삭제
+    public void boardDelete() {
+        this.active = false;
+    }
+
+    public BoardResDto fromEntity(Board Board) {
+        return BoardResDto.builder()
+                .postid(postId)
+                .category(category)
+                .userid(userId)
+                .thumbnailimage(thumbnailImage)
+                .content(content)
+                .createdat(getCreateAt())
+                .updatedat(getUpdateAt())
+                .viewcount(viewCount)
+                .nickname(nickname)
+                .title(title)
+                .build();
+
     }
 }

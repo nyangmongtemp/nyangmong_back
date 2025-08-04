@@ -40,5 +40,20 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * 토큰에서 이메일(subject)을 추출
+     * @param token JWT 토큰
+     * @return 이메일
+     */
+    public String extractEmail(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
+    }
+
 
 }
