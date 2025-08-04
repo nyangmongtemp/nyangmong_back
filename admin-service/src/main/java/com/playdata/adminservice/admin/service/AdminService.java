@@ -95,7 +95,7 @@ public class AdminService {
 
         // 이메일 중복 검증
         if (findAdmin.isPresent()) {
-            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일 입니다.");
+            throw new CommonException(ErrorCode.DUPLICATED_DATA);
         }
 
         // 부가적인 정보를 담아서 Admin을 던짐
@@ -148,46 +148,6 @@ public class AdminService {
             }
         }
     }
-  
-    /**
-     *
-     * @param email
-     * @return
-     */
-    // 로그인 이메일의 유효성을 확인하기 위해 인증번호를 발송하는 로직
-    // 이메일 인증번호 발송 로직
-    public CommonResDto sendVerifyEmailCode(String email) {
-
-        // 차단 상태 확인
-        // 이메일 인증번호 발송을 3회 이상한 경우
-        if(isBlocked(email)){
-            throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
-        }
-        Optional<Admin> foundEmail =
-                adminRepository.findByEmail(email);
-        // 이미 존재하는 이메일인 경우 -> 회원가입 불가
-        if (foundEmail.isEmpty()) {
-            // 이미 존재하는 이메일이라는 에러를 발생 -> controller가 이 에러를 처리
-            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
-        }
-
-        // 이메일로 인증번호 발송
-        String authNum = null;
-        try {
-            authNum = mailSenderService.loginMain(email);
-            // 인증 코드를 redis에 저장하자
-            String key = VERIFICATION_CODE_KEY + email;
-            // 인증코드의 유효 시간은 5분으로 지정
-            redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
-        } catch (MessagingException e) {
-            throw new CommonException(ErrorCode.MAIL_SERVER_ERROR);
-        }
-
-        // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
-        // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
-        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 이메일로 발송되었습니다.", authNum);
-
-    }
 
     /**
      *
@@ -200,12 +160,14 @@ public class AdminService {
         // 이메일 검증 로직 호출
         CommonResDto resDto = verifyEmailCode(authResDto);
 
+        // 검증 로직 결과 false
         if (!(boolean) resDto.getResult()) {
-            throw new CommonException(ErrorCode.INVALID_PASSWORD);
+            throw new CommonException(ErrorCode.INVALID_PARAMETER);
         }
 
         // admin 정보 가져오기
-        Admin admin = adminRepository.findByEmail(authResDto.getEmail()).orElseThrow(() -> new CommonException(ErrorCode.BAD_REQUEST));
+        Admin admin = adminRepository.findByEmail(authResDto.getEmail()).orElseThrow(()
+                -> new CommonException(ErrorCode.BAD_REQUEST));
 
         // 토큰 생성
         String token = jwtTokenProvider.createToken(admin.getEmail(), admin.getRole(), admin.getAdminId());
@@ -229,7 +191,7 @@ public class AdminService {
 
         // 변경한 이메일이 사용 중인 이메일인지 검증
         if (findAdmin.isPresent()) {
-            throw new CommonException(ErrorCode.DUPLICATED_DATA, "이미 존재하는 이메일 입니다.");
+            throw new CommonException(ErrorCode.DUPLICATED_DATA);
         }
         String authCode = sendEmailAuthCode(newEmail, "MODIFY");
 
@@ -331,7 +293,7 @@ public class AdminService {
 
         // 계정이 존재하고 활성화 상태인지 조회
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
-            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND, "회원이 존재하지 않습니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
 
         Admin admin = findAdmin.get();
@@ -358,7 +320,7 @@ public class AdminService {
 
         // 관리자가 존재하는지, 활성화 상태인지 검증
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
-            throw new CommonException(ErrorCode.UNKNOWN_HOST, "회원정보가 없습니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
 
         Admin admin = findAdmin.get();
@@ -402,7 +364,7 @@ public class AdminService {
     public CommonResDto roleModify(AdminRoleModifyReqDto adminRoleModifyReqDto) {
 
         Admin findAdmin = adminRepository.findById(adminRoleModifyReqDto.getAdminId())
-                .orElseThrow(() -> new CommonException(ErrorCode.UNKNOWN_HOST, "변경할 관리자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CommonException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         // 권한 변경
         findAdmin.changeRole(adminRoleModifyReqDto.getRole());
@@ -412,15 +374,12 @@ public class AdminService {
 
         adminRepository.save(findAdmin);
 
-
-
-
         return new CommonResDto(HttpStatus.OK, "권한/활성화 상태가 수정되었습니다.", true);
     }
 
     /**
      *
-     * @param userInfo
+     * @param adminInfo
      * @return
      */
     // 마이페이지 정보 조회
@@ -430,7 +389,7 @@ public class AdminService {
 
         // 관리자 정보가 없거나 활성화 상태가 아닌지 검증
         if (!findAdmin.isPresent() || !findAdmin.get().isActive()) {
-            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND, "회원 정보가 없습니다.");
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
 
         Admin admin = findAdmin.get();
@@ -439,6 +398,46 @@ public class AdminService {
         AdminMyPageResDto myAdmin = admin.toAdminMyPageResDto();
 
         return new CommonResDto(HttpStatus.OK, "마이페이지 정보 응답", myAdmin);
+    }
+
+    /**
+     *
+     * @param email
+     * @return
+     */
+    // 로그인 이메일의 유효성을 확인하기 위해 인증번호를 발송하는 로직
+    // 이메일 인증번호 발송 로직
+    private CommonResDto sendVerifyEmailCode(String email) {
+
+        // 차단 상태 확인
+        // 이메일 인증번호 발송을 3회 이상한 경우
+        if(isBlocked(email)){
+            throw new CommonException(ErrorCode.ACCOUNT_LOCKED, "현재 인증 이메일 발송이 차단된 이메일입니다.");
+        }
+        Optional<Admin> foundEmail =
+                adminRepository.findByEmail(email);
+        // 이미 존재하는 이메일인 경우 -> 회원가입 불가
+        if (foundEmail.isEmpty()) {
+            // 이미 존재하는 이메일이라는 에러를 발생 -> controller가 이 에러를 처리
+            throw new CommonException(ErrorCode.ACCOUNT_NOT_FOUND);
+        }
+
+        // 이메일로 인증번호 발송
+        String authNum = null;
+        try {
+            authNum = mailSenderService.loginMain(email);
+            // 인증 코드를 redis에 저장하자
+            String key = VERIFICATION_CODE_KEY + email;
+            // 인증코드의 유효 시간은 5분으로 지정
+            redisTemplate.opsForValue().set(key, authNum, Duration.ofMinutes(5));
+        } catch (MessagingException e) {
+            throw new CommonException(ErrorCode.MAIL_SERVER_ERROR);
+        }
+
+        // 나중에 더미데이터를 편하게 넣기 위해서 인증번호를 로그로 남기기 위함
+        // 실제 서비스에서는 아래의 return문에 authNum을 삭제해야함.
+        return new CommonResDto(HttpStatus.OK, "회원가입 인증코드가 이메일로 발송되었습니다.", authNum);
+
     }
 
     /**
