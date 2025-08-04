@@ -127,7 +127,7 @@ pipeline {
                             changedServices.each { service ->
                                 // 여기서 원하는 버전을 정하거나, 커밋 태그 등을 붙여서 이미지를 만들자!
                                 def newTag = COMMIT_TAG // 추후에 숫자로 바꾸자!
-                                def repositoryPath = "${projectName}/${service}"
+                                def repositoryPath = "${service}"
 
 
                                 sh """
