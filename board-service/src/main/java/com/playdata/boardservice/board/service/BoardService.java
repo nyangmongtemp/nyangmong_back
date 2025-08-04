@@ -328,10 +328,11 @@ public class BoardService {
                 ));
 
         // 4. DB 에서 postId로 게시글 조회
-        List<Board> introductionBoards = boardRepository.findAllById(postIds);
+        List<Board> introductionBoards = boardRepository.findPopularIntro(postIds);
 
         // 5. 게시글 + 좋아요/댓글 정보 조합 후 DTO 변환
         return introductionBoards.stream()
+                .limit(3)
                 .map(board -> {
                     LikeComCountResDto likeDto = likeCountMap.get(board.getPostId());
                     return IntroductionMainListResDto.builder()
