@@ -114,14 +114,16 @@ pipeline {
             }
 
             stage('Build Docker Image & Push to AWS ECR') {
-                when {
+                /* when {
                     expression { env.CHANGED_SERVICES != "" }
-                }
+                } */
                 steps {
                     script {
                         // jenkins에 저장된 credentials를 사용하여 AWS 자격증명을 설정.
                         withAWS(region: "${REGION}", credentials: "aws-key") {
-                            def changedServices = env.CHANGED_SERVICES.split(",")
+                            // 초기는 전부 다 빌드해서 push 하자
+                            //def changedServices = env.CHANGED_SERVICES.split(",")
+                            def changedServices = env.SERVICE_DIRS.split(",")
                             changedServices.each { service ->
                                 // 여기서 원하는 버전을 정하거나, 커밋 태그 등을 붙여서 이미지를 만들자!
                                 def newTag = COMMIT_TAG // 추후에 숫자로 바꾸자!
