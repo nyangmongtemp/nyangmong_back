@@ -3,6 +3,7 @@ package com.playdata.userservice.user.controller;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
+import com.playdata.userservice.user.controller.swagger.TermsControllerDocs;
 import com.playdata.userservice.user.dto.req.SearchDto;
 import com.playdata.userservice.user.dto.res.TermsDetailResDto;
 import com.playdata.userservice.user.dto.res.TermsLastPostResDto;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/user/terms/{category}")
 @RequiredArgsConstructor
 @Slf4j
-public class TemsController {
+public class TemsController implements TermsControllerDocs {
 
     private final TermsService termsService;
 
@@ -71,7 +72,7 @@ public class TemsController {
     @GetMapping("/lastPost")
     public ResponseEntity<CommonResDto> getLastPostTerms(@PathVariable String category) {
         TermsCategory termsCategory = parseCategory(category);
-        if (termsCategory != TermsCategory.TERMS) {
+        if (termsCategory != TermsCategory.TERMS && termsCategory != TermsCategory.POLICY) {
             throw new CommonException(ErrorCode.BAD_REQUEST);
         }
         TermsLastPostResDto result = termsService.getLastPostTerms(termsCategory);

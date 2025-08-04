@@ -50,7 +50,6 @@ public class LikeRepositoryImpl implements LikeRepositoryCustom {
                 )
                 .groupBy(like.contentId)
                 .orderBy(like.count().desc())
-                .limit(3)
                 .fetch();
     }
 

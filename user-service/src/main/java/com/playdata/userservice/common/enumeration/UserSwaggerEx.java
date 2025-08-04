@@ -87,7 +87,7 @@ public class UserSwaggerEx {
                     "userName": "문동주",
                     "nickname": "왕자",
                     "createAt": "2025-07-30T11:02:08.051328",
-                    "profileImage": "3fe0d921-2a68-4199-8b1d-5ddd8dd5c163_profile.jpg"
+                    "profileImage": "profile.jpg"
                 }
             }
             """;

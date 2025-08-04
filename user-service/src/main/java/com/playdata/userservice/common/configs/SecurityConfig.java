@@ -45,6 +45,7 @@ SecurityConfig {
                             "/user/login", "/user/create", "/user/templogin", "/user/temp",
                             "/user/verify-email", "/user/verify-code", "/user/profileImage/**",
                             "/user/refresh", "/user/forget/*", "/user/forget/auth", "/user/kakao",
+                            "/user/terms/**",
                             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();

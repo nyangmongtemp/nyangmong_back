@@ -5,6 +5,7 @@ import com.playdata.userservice.client.BoardServiceClient;
 import com.playdata.userservice.client.MainServiceClient;
 import com.playdata.userservice.common.auth.JwtTokenProvider;
 import com.playdata.userservice.common.auth.TokenUserInfo;
+import com.playdata.userservice.common.configs.AwsS3Config;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.common.enumeration.ErrorCode;
 import com.playdata.userservice.common.exception.CommonException;
@@ -105,8 +106,7 @@ public class UserService {
     private static final String LOGIN_BLOCK_KEY = "login:block:";
     
     // 이미지 저장 경로 --> 추후에 yml에 있는 주소를 s3 주소로 바꿀 것
-    @Value("${imagePath.url}")
-    private String profileImageSaveUrl;
+    private final AwsS3Config s3Config;
 
     // 카카오 로그인 관련 값
     @Value("${oauth2.kakao.client-id}")
@@ -1042,17 +1042,14 @@ public class UserService {
         // profile image 저장 경로
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                // 로컬 저장 경로 (예: C:/uploads/profile 또는 /home/user/images/profile)
                 String originalFilename = imageFile.getOriginalFilename();
+
+                // UUID + 원본 파일명으로 저장 (중복 방지)
                 String fileName = UUID.randomUUID() + "_" + originalFilename;
 
-                File dir = new File(profileImageSaveUrl);
-                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
+                // s3 버킷에 이미지 저장하고 저장된 경로를 받아오기
+                profileImagePath = s3Config.uploadToS3Bucket(imageFile.getBytes(), fileName);
 
-                File dest = new File(profileImageSaveUrl, fileName);
-                imageFile.transferTo(dest);
-
-                profileImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
             } catch (IOException e) {
                 // 저장 실패 처리
                 e.printStackTrace();

@@ -30,6 +30,14 @@ public interface AnimalRepository extends JpaRepository<Animal, Long>, AnimalRep
     Optional<List<Animal>> findByUserId(Long userId);
 
     // 마이페이지 용 페이징 조회 메소드 made by 이은혁
-    @Query("SELECT a FROM Animal a WHERE a.userId = :userId AND a.active = true")
+    @Query("""
+    SELECT new com.playdata.animalboardservice.dto.res.AnimalListResDto(
+        a.postId, a.userId, a.thumbnailImage, a.title, a.content, a.viewCount,
+        a.petCategory, a.petKind, a.age, a.vaccine, a.sexCode, a.neuterYn,
+        a.address, a.fee, a.active, a.reservationStatus
+    )
+    FROM Animal a
+    WHERE a.userId = :userId AND a.active = true
+""")
     Page<AnimalListResDto> findMyPost(@Param("userId") Long userId, Pageable pageable);
 }

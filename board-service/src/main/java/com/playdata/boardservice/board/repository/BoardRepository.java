@@ -26,6 +26,12 @@ public interface BoardRepository extends JpaRepository<Board,Long>, BoardReposit
     Page<Board> findMyPost(@Param("userId") Long userId,
                                       @Param("category") Category targetCategory, Pageable pageable);
 
+    @Query("SELECT b FROM Board b " +
+            "WHERE b.active = true " +
+            "AND b.postId IN :ids " +
+            "AND b.category = com.playdata.boardservice.board.entity.Category.INTRODUCTION ")
+    List<Board> findPopularIntro(@Param("ids") List<Long> postIds);
+
 
     Optional<Board> findByPostIdAndActiveIsTrue( Long postId);
 }
