@@ -23,15 +23,19 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@Tag(name = "관리자 게시판 관리", description = "관리자 게시판 관련 API")
+@Tag(name = "관리자 게시판 관리", description = """
+        관리자가 게시판 관리하는 API
+        
+        ## 인증
+            - 로그인 해야 조회 가능합니다.
+            - BOSS, CUSTOMER 권한만 조회가 가능합니다.
+        """)
 public interface AdminBoardControllerDocs {
 
     @Operation(summary = "게시글 목록 조회",
             description = """
                 게시글 목록 조회를 진행합니다.
             
-                ## 인증
-                - BOSS/CUSTOMER 권한을 가진 사람만 가능합니다.
             """)
     @ApiResponses(value = {
             @ApiResponse(
@@ -53,8 +57,6 @@ public interface AdminBoardControllerDocs {
             description = """
                 분양 게시글 목록 조회를 진행합니다.
             
-                ## 인증
-                - BOSS/CUSTOMER 권한을 가진 사람만 가능합니다.
             """)
     @ApiResponses(value = {
             @ApiResponse(
@@ -74,8 +76,6 @@ public interface AdminBoardControllerDocs {
             description = """
                 게시글 상세 조회를 진행합니다.
             
-                ## 인증
-                - BOSS/CUSTOMER 권한을 가진 사람만 가능합니다.
             """)
     @ApiResponses(value = {
             @ApiResponse(
@@ -103,8 +103,6 @@ public interface AdminBoardControllerDocs {
             description = """
                 분양 게시글 상세 조회를 진행합니다.
             
-                ## 인증
-                - BOSS/CUSTOMER 권한을 가진 사람만 가능합니다.
             """)
     @ApiResponses(value = {
             @ApiResponse(
@@ -131,8 +129,6 @@ public interface AdminBoardControllerDocs {
             description = """
                 게시글 삭제를 진행합니다.
             
-                ## 인증
-                - BOSS/CUSTOMER 권한을 가진 사람만 가능합니다.
             """)
     @ApiResponses(value = {
             @ApiResponse(
