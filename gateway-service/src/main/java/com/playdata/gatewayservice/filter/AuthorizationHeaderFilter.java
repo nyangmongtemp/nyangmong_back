@@ -33,7 +33,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private final List<String> allowUrl = Arrays.asList(
             // 사용자 관련
             "/user/login", "/user/create", "/user/temp", "/user/verify-code", "/user/verify-email",
-            "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao",
+            "/user/forget/*", "/user/forget/auth", "/user/refresh", "/user/kakao", "/user/terms/**",
 
             // 메인 페이지 및 댓글
             "/main/list", "/main/detail", "/main/introduction", "/main/comment/list", "/main/reply/list/*",
