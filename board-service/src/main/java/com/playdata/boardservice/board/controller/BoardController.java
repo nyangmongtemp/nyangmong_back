@@ -39,6 +39,8 @@ public class BoardController implements BoardControllerDocs {
     private final BoardService boardService;
     private final JwtTokenProvider jwtTokenProvider;
 
+
+
     /**
      *
      * @param userInfo

@@ -54,7 +54,8 @@ public class AnimalService {
 
     private final AwsS3Config s3Config;
 
-    private static final String BOARD_TYPE = "animal"; // 게시판 구분용 상수 (조회수 Redis 키 구분에 사용)
+    // 게시판 구분용 상수 (조회수 Redis 키 구분에 사용) + s3 경로 지정경로 로 사용
+    private static final String BOARD_TYPE = "animal";
 
     /**
      * 분양 게시물 목록 조회 (검색 및 페이징 포함)
@@ -381,7 +382,7 @@ public class AnimalService {
                 String fileName = UUID.randomUUID() + "_" + originalFilename;
 
                 // s3 버킷에 이미지 저장하고 저장된 경로를 받아오기
-                profileImagePath = s3Config.uploadToS3Bucket(imageFile.getBytes(), fileName);
+                profileImagePath = s3Config.uploadToS3Bucket(imageFile.getBytes(), BOARD_TYPE+"/"+fileName);
 
                 /*
                 // 저장 경로 확인 후 디렉토리 생성

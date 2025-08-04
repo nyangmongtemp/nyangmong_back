@@ -84,6 +84,8 @@ public class AdvertisementService {
 
         ad.update(dto, thumbnailImage);
 
+        adRepository.save(ad);
+
         return new CommonResDto(HttpStatus.OK, "광고 수정 완료", ad);
     }
 
