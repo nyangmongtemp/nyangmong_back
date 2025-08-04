@@ -9,6 +9,7 @@ import com.playdata.adminservice.admin.entity.Banner;
 import com.playdata.adminservice.admin.entity.BannerCount;
 import com.playdata.adminservice.admin.repository.BannerCountRepository;
 import com.playdata.adminservice.admin.repository.BannerRepository;
+import com.playdata.adminservice.common.configs.AwsS3Config;
 import com.playdata.adminservice.common.dto.CommonResDto;
 import com.playdata.adminservice.common.enumeration.ErrorCode;
 import com.playdata.adminservice.common.exception.CommonException;
@@ -38,16 +39,15 @@ public class BannerService {
 
     private final BannerRepository bannerRepository;
     private final BannerCountRepository bannerCountRepository;
-    
-    // 이미지 저장 경로
-    @Value("${imagePath.url}")
-    private String thumbnailImageSaveUrl;
+
     // 기본 배너 이미지 1
     @Value("${imagePath.banner.default1}")
     private String defaultBannerImage1;
     // 기본 배너 이미지 2
     @Value("${imagePath.banner.default2}")
     private String defaultBannerImage2;
+
+    private final AwsS3Config s3Config;
 
     // 초기 배너 노출 개수 -> 임의로 정한 값임. table이 처음 생성될 때만 이용됨.
     private final int bannerCount = 4;
@@ -282,19 +282,13 @@ public class BannerService {
             ImageValidation.validateImageFile(imageFile);
 
             try {
-                // 로컬 저장 경로 (예: C:/uploads/profile 또는 /home/user/images/profile)
                 String originalFilename = imageFile.getOriginalFilename();
+
+                // UUID + 원본 파일명으로 저장 (중복 방지)
                 String fileName = UUID.randomUUID() + "_" + originalFilename;
 
-                String saveUrl = thumbnailImageSaveUrl + "/banner";
-
-                File dir = new File(saveUrl);
-                if (!dir.exists()) dir.mkdirs(); // 디렉토리 없으면 생성
-
-                File dest = new File(saveUrl, fileName);
-                imageFile.transferTo(dest);
-
-                thumbnailImagePath = fileName; // 저장된 상대 경로만(UUID + 원 파일 이름) DB에 넣음
+                // s3 버킷에 이미지 저장하고 저장된 경로를 받아오기
+                thumbnailImagePath = s3Config.uploadToS3Bucket(imageFile.getBytes(), fileName);
             } catch (IOException e) {
                 // 저장 실패 처리
                 e.printStackTrace();
