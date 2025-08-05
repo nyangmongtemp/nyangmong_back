@@ -67,6 +67,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
 
     // json web token 라이브러리
     implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
