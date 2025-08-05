@@ -52,7 +52,7 @@ dependencies {
 
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     // 유레가 클라이언트
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    // implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     // 오픈페인
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     // sse 연동을 위한 RabbitMQ

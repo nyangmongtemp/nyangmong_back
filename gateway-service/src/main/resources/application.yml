@@ -11,7 +11,7 @@ spring:
         cors-configurations:
           "[/**]":
             allowed-origins:
-              - "http://localhost:8000"
+              - "https://nyangmong.com"
               - "http://localhost:5173"
             allowed-methods:
               - GET
@@ -28,7 +28,7 @@ spring:
 
       routes:
         - id: user-service
-          uri: lb://USER-SERVICE
+          uri: http://user-service.default.svc.cluster.local:8086
           predicates:
             - Path=/user-service/**
           filters:
@@ -45,7 +45,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: main-service
-          uri: lb://MAIN-SERVICE
+          uri: http://main-service.default.svc.cluster.local:8084
           predicates:
             - Path=/main-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
@@ -54,7 +54,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: festival-service
-          uri: lb://FESTIVAL-SERVICE
+          uri: http://festival-service.default.svc.cluster.local:8083
           predicates:
             - Path=/festival-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
@@ -62,7 +62,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: animalboard-service
-          uri: lb://ANIMALBOARD-SERVICE
+          uri: http://animalboard-service.default.svc.cluster.local:8081
           predicates:
             - Path=/animalboard-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
@@ -71,7 +71,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: board-service
-          uri: lb://BOARD-SERVICE
+          uri: http://board-service.default.svc.cluster.local:8082
           predicates:
             - Path=/board-service/**
           filters:
@@ -80,7 +80,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: admin-service
-          uri: lb://ADMIN-SERVICE
+          uri: http://admin-service.default.svc.cluster.local:8080
           predicates:
             - Path=/admin-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
@@ -89,7 +89,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: map-service
-          uri: lb://MAP-SERVICE
+          uri: http://map-service.default.svc.cluster.local:8085
           predicates:
             - Path=/map-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:

@@ -291,10 +291,10 @@ public class UserController implements UserControllerDocs {
                                     nickname: '%s',
                                     profileImage: '%s',
                                     provider: 'KAKAO'
-                                }, 'http://localhost:5173');
+                                }, 'https://nyangmong.com');
                                 window.close();
                             } else {
-                                window.location.href = 'http://localhost:5173';
+                                window.location.href = 'https://nyangmong.com';
                             }
                         </script>
                         <p>카카오 로그인 처리 중...</p>

@@ -3,5 +3,5 @@ spring:
     name: admin-service
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: http://config-service.default.svc.cluster.local:8888
       profile: local
