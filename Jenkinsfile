@@ -155,10 +155,10 @@ pipeline {
             }
             //////////
 
-           /*  stage('Update k8s Repo') {
-                when {
+             stage('Update k8s Repo') {
+                /* when {
                     expression { env.CHANGED_SERVICES != "" }  // 변경된 서비스가 있을 때만 실행
-                }
+                } */
 
                 steps {
 
@@ -167,7 +167,7 @@ pipeline {
 
                                              def workspaceDir = env.WORKSPACE
                                              def parentDir = "${workspaceDir}/.."
-                                             def k8sDir = "${parentDir}/msa-project-k8s"
+                                             def k8sDir = "${parentDir}/k8s-chart"
 
                                              // 1. 기존 클론된 폴더가 있다면 삭제
                                              sh """
@@ -179,11 +179,12 @@ pipeline {
                                              // 2. 새로 클론
                                              sh """
                                                  echo "Cloning k8s repository..."
-                                                 git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/EunHyeokLee123/msa-project-k8s.git ${k8sDir}
+                                                 git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/nyangmongtemp/k8s-chart.git ${k8sDir}
                                              """
 
                                              // 3. 변경된 서비스에 대해 image 태그 업데이트
-                                             def changedServices = env.CHANGED_SERVICES.split(",")
+                                             //def changedServices = env.CHANGED_SERVICES.split(",")
+                                             def changedServices = env.SERVICE_DIRS.split(",")
                                              changedServices.each { service ->
                                                  def newTag = COMMIT_TAG
                                                  def repositoryPath = "${projectName}/${service}"
@@ -219,7 +220,7 @@ pipeline {
 
                 }
 
-            } */
+            }
 
             //////////
         }
