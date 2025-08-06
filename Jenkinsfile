@@ -186,7 +186,7 @@ pipeline {
                                              //def changedServices = env.SERVICE_DIRS.split(",")
                                              changedServices.each { service ->
                                                  def newTag = COMMIT_TAG
-                                                 def repositoryPath = "${projectName}/${service}"
+                                                 def repositoryPath = "${service}"
                                                  def valuesYamlPath = "${k8sDir}/msa-chart/charts/${service}/values.yaml"
 
                                                  sh """
