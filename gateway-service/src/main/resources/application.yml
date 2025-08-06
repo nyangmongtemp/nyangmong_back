@@ -10,9 +10,9 @@ spring:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowedOrigins:
+            allowed-origins:
               - "https://nyangmong.com"
-            allowedMethods:
+            allowed-methods:
               - GET
               - POST
               - DELETE
