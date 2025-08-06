@@ -92,13 +92,12 @@ pipeline {
             stage('Build Changed Services') {
                 // 이 스테이지는 빌드되어야 할 서비스가 존재한다면 실행되는 스테이지.
                 // 이전 스테이지에서 세팅한 CHANGED_SERVICES라는 환경변수가 비어있지 않아야만 실행.
-                /* when {
+                when {
                     expression { env.CHANGED_SERVICES != "" }
-                } */
+                }
                 steps {
                     script {
-                       //def changedServices = env.CHANGED_SERVICES.split(",")
-                       def changedServices = env.SERVICE_DIRS.split(",")
+                       def changedServices = env.CHANGED_SERVICES.split(",")
                        changedServices.each { service ->
                             sh """
                             echo "Building ${service}..."
@@ -114,16 +113,16 @@ pipeline {
             }
 
             stage('Build Docker Image & Push to AWS ECR') {
-                /* when {
+                when {
                     expression { env.CHANGED_SERVICES != "" }
-                } */
+                }
                 steps {
                     script {
                         // jenkins에 저장된 credentials를 사용하여 AWS 자격증명을 설정.
                         withAWS(region: "${REGION}", credentials: "aws-key") {
                             // 초기는 전부 다 빌드해서 push 하자
                             //def changedServices = env.CHANGED_SERVICES.split(",")
-                            def changedServices = env.SERVICE_DIRS.split(",")
+                            def changedServices = env.CHANGED_SERVICES.split(",")
                             changedServices.each { service ->
                                 // 여기서 원하는 버전을 정하거나, 커밋 태그 등을 붙여서 이미지를 만들자!
                                 def newTag = COMMIT_TAG // 추후에 숫자로 바꾸자!
@@ -156,9 +155,9 @@ pipeline {
             //////////
 
              stage('Update k8s Repo') {
-                /* when {
+                 when {
                     expression { env.CHANGED_SERVICES != "" }  // 변경된 서비스가 있을 때만 실행
-                } */
+                }
 
                 steps {
 
@@ -183,8 +182,8 @@ pipeline {
                                              """
 
                                              // 3. 변경된 서비스에 대해 image 태그 업데이트
-                                             //def changedServices = env.CHANGED_SERVICES.split(",")
-                                             def changedServices = env.SERVICE_DIRS.split(",")
+                                             def changedServices = env.CHANGED_SERVICES.split(",")
+                                             //def changedServices = env.SERVICE_DIRS.split(",")
                                              changedServices.each { service ->
                                                  def newTag = COMMIT_TAG
                                                  def repositoryPath = "${projectName}/${service}"
