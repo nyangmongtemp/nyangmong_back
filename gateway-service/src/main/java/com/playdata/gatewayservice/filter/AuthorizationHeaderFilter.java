@@ -91,7 +91,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 return chain.filter(exchange);
             }
 
-            //  인증이 필요한 요청 처리
+            //  인증이 필요한 요청 처리함.
             String authorizationHeader = exchange.getRequest()
                     .getHeaders().getFirst("Authorization");
             log.info("authorizationHeader: {}", authorizationHeader);
