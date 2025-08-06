@@ -12,6 +12,7 @@ spring:
         cors-configurations:
           "[/**]":
             allowed-origins:
+              - "http://localhost:8000"
               - "https://nyangmong.com"
             allowed-methods:
               - GET
