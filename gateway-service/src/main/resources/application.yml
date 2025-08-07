@@ -6,23 +6,6 @@ spring:
     gateway:
       globalcors:
         add-to-simple-url-handler-mapping: true
-        cors-configurations:
-          "[/**]":
-            allowed-origins:
-              - "http://localhost:5173"
-              - "https://nyangmong.com"
-            allowed-methods:
-              - GET
-              - POST
-              - DELETE
-              - PATCH
-              - PUT
-              - OPTIONS
-            allowed-headers:
-              - Content-Type
-              - Authorization
-              - X-Requested-With
-            allow-credentials: true
 
       routes:
         - id: user-service
