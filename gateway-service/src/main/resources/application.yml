@@ -42,7 +42,7 @@ spring:
             - AuthorizationHeaderFilter
 
         - id: main-service
-          uri: http://main-service.default.svc.cluster.local:8004
+          uri: http://main-service.default.svc.cluster.local:8084
           predicates:
             - Path=/main-service/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /swagger-resources/**
           filters:
