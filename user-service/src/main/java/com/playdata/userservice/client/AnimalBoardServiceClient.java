@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
-@FeignClient(name = "animalboard-service", url = "http://animalboard-service.default.svc.cluster.local:8081")
+@FeignClient(name = "animalboard-service", url = "http://animalboard-service.default.svc.cluster.local:8000")
 public interface AnimalBoardServiceClient {
 
     @DeleteMapping("/animal-board/deleteUser/{id}")
