@@ -1,3 +1,4 @@
+/*
 package com.playdata.gatewayservice;
 
 import org.springframework.context.annotation.Bean;
@@ -26,3 +27,4 @@ public class CorsConfig {
     }
 
 }
+*/
