@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "main-service", url = "http://main-service.default.svc.cluster.local:8000")
+@FeignClient(name = "main-service", url = "http://main-service.default.svc.cluster.local:8084")
 public interface MainServiceClient {
 
     @DeleteMapping("/main/deleteUser/{id}")
