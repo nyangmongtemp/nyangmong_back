@@ -33,7 +33,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers(
-                            "/stray-animal-board/**",
+                            "/stray-animal-board/**","/stray-animal-board/proxy-image/**",
                             "/animal-board/list", "/animal-board/public/{postId}",
                             "/animal-board/deleteUser/{id}", "/animal-board/modifyNickname/{id}/{nickname}",
                             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
