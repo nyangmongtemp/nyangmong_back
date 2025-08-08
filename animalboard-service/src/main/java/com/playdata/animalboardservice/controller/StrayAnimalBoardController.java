@@ -80,7 +80,8 @@ public class StrayAnimalBoardController implements StrayAnimalBoardControllerDoc
             byte[] imageBytes = is.readAllBytes();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_JPEG); // 또는 PNG, GIF 등
+            String contentType = conn.getContentType(); // 예: "image/png", "image/jpeg"
+            headers.setContentType(MediaType.parseMediaType(contentType));
 
             return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
         } catch (Exception e) {
