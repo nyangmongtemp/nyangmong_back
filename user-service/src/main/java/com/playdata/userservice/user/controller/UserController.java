@@ -311,7 +311,7 @@ public class UserController implements UserControllerDocs {
     /**
      * 쪽지를 보내기 위한, 사용자 검색 -> email, nickname으로 검색
      * 마이페이지에서 요청을 보내는 것이기에, token의 정보는 쓰지 않더라도 token이 필요로 하게 함.
-     * 비로그인 상태의 사용자는 사용하지 못하게 할 것 임.
+     * 비로그인 상태의 사용자는 사용하지 못하게 할 것 임...
      *
      * @param userInfo
      * @param keyword
