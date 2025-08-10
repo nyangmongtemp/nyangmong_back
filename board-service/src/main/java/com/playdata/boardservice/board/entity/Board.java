@@ -61,7 +61,9 @@ public class Board extends BaseTimeEntity {
 
     // 수정
     public void boardModify(BoardModiDto boardModiDto, String newThumbnailImage, HtmlSanitizer htmlPolicy, HtmlSanitizer plainTextSanitizer) {
-        this.thumbnailImage = newThumbnailImage;
+        if(newThumbnailImage != null) {
+            this.thumbnailImage = newThumbnailImage;
+        }
         this.content = htmlPolicy.sanitizeHtml(boardModiDto.getContent());
         this.title = plainTextSanitizer.sanitizeText(boardModiDto.getTitle());
     }

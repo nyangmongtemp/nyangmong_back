@@ -80,7 +80,7 @@ public class BoardController implements BoardControllerDocs {
                                          @PathVariable Long postId,
                                          @AuthenticationPrincipal TokenUserInfo userInfo,
                                          @RequestPart("context") @Valid BoardModiDto boardModiDto,
-                                         @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
+                                         @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
 
         // 대소문자 구분 없이 enum 변환
         Category categoryEnum = parseCategory(category);

@@ -126,11 +126,6 @@ public class BoardService {
 
         if (category == INTRODUCTION) {
 
-            // 썸네일은 필수이므로 없으면 예외
-            if (savedPath == null) {
-                throw new CommonException(ErrorCode.EMPTY_FILE, "썸네일 이미지를 첨부해주세요.");
-            }
-
             // 정보 게시판의 카테고리를 설정
         } else if (category == Category.QUESTION || category == Category.REVIEW || category == Category.FREE) {
 
