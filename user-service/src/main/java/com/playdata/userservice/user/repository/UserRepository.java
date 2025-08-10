@@ -14,7 +14,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     // 이메일, 또는 닉네임으로 회원 목록 조회
-    @Query("SELECT u FROM User u WHERE u.active = true AND u.email = :keyword OR u.nickname = :keyword")
+    @Query("""
+    SELECT u 
+    FROM User u 
+    WHERE u.active = true 
+      AND (u.email LIKE CONCAT('%', :keyword, '%') 
+           OR u.nickname LIKE CONCAT('%', :keyword, '%'))
+""")
     Optional<List<User>> findByKeyword(String keyword);
 
     // 기존에 소셜 로그인한 사용자가 있는 지 확인
