@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
                 )
         ),
         servers = {
-                @Server(url = "http://localhost:8000/board-service", description = "로컬 개발 서버"),
+                @Server(url = "https://api.nyangmong.com/board-service", description = "로컬 개발 서버"),
 //                @Server(url = "https://api.playdatashop9201.store", description = "운영 서버")
         },
         security = @SecurityRequirement(name = "bearerAuth")

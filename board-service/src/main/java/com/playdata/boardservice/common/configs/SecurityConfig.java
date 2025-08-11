@@ -35,7 +35,8 @@ public class SecurityConfig {
             auth
                     .requestMatchers("/board/list/{category}", "/board/information/main", "/board/main","/board/popular",
                             "/board/detail/{category}/{id}", "/board/deleteUser/{id}", "/board/modifyNickname/{id}/{nickname}",
-                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                            "/swagger-ui-cvnlaksdkaweivkjnalsdknl4589dsfnml1234.html",
+                            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                     .anyRequest().authenticated();
         });
 

@@ -36,7 +36,8 @@ public class SecurityConfig {
                             "/stray-animal-board/**","/stray-animal-board/proxy-image/**",
                             "/animal-board/list", "/animal-board/public/{postId}",
                             "/animal-board/deleteUser/{id}", "/animal-board/modifyNickname/{id}/{nickname}",
-                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
+                            "/swagger-ui-cvnlaksdkaweivkjnalsdknl4589dsfnml1234.html",
+                            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
                     ).permitAll()
                     .anyRequest().authenticated();
         });

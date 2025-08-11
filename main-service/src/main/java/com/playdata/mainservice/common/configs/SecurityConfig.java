@@ -43,7 +43,8 @@ public class SecurityConfig {
                             "/main/deleteUser/**", "/main/modifyNickname/**", "/main/modifyProfileImage/**",
                             "/main/list", "/main/comment/list", "/main/detail", "/main/introduction"
                             , "/main/reply/list/*", "/editor/upload-image", "/main/screen/banner/list",
-                            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
+                            "/swagger-ui-cvnlaksdkaweivkjnalsdknl4589dsfnml1234.html",
+                            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
                     ).permitAll()   // 추후에 token이 필요하지 않은 요청 url 들은 여기에 추가해야함.
                     .anyRequest().authenticated();
         });

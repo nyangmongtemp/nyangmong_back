@@ -29,7 +29,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/festivals/**", "/festival-service/api/festivals/**", "/api/all",
-                                    "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                                    "/swagger-ui-cvnlaksdkaweivkjnalsdknl4589dsfnml1234.html",
+                                    "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                             .anyRequest().authenticated();
                 });
         return http.build();
