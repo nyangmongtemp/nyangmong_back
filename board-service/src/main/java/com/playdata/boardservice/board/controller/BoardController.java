@@ -52,7 +52,7 @@ public class BoardController implements BoardControllerDocs {
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<CommonResDto> createBoard(@AuthenticationPrincipal TokenUserInfo userInfo,
                                     @RequestPart("context") @Valid BoardSaveReqDto boardSaveReqDto,
-                                    @RequestPart(value = "thumbnailImage") MultipartFile thumbnailImage) {
+                                    @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
 
         // 카테고리 값 검증 및 대문자 변환
         Category categoryEnum = parseCategory(String.valueOf(boardSaveReqDto.getCategory()));

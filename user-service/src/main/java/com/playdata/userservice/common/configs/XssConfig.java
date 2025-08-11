@@ -37,7 +37,7 @@ public class XssConfig {
                         "ul","li","ol", // 목록 관련 태그
                         // 추후 제거 해야함
                         // 가능하면 label/input 제거 권장 : 공격자가 임의로 UI에 입력폼 자체를 만들어서 값을 집어 넣을 수 있음
-                        "label","input","span",
+                        "span",
                         "br","pre","code", // 줄바꿈 / 코드 블록
                         "table","thead","tbody","tfoot","tr","th","td" // 표 관련 태그
                 )
