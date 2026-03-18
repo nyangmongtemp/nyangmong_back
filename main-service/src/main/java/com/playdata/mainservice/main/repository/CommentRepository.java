@@ -22,8 +22,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                                                           @Param("contentId") Long contentId);
 
     // 특정 게시물의 활성화된 모든 댓글 조회  --> 게시물 상세 조회 시 댓글 상세 조회용
-    @Query("SELECT c FROM Comment c WHERE c.category = :category AND c.contentId = :contentId AND c.active = true")
-    List<Comment> findActiveByCategoryAndContentId(@Param("category") Category category,
+    @Query("SELECT c.commentId FROM Comment c WHERE c.category = :category AND c.contentId = :contentId AND c.active = true")
+    List<Long> findActiveByCategoryAndContentId(@Param("category") Category category,
                                                    @Param("contentId") Long contentId);
 
     // 특정 게시물의 활성화된 모든 댓글 페이징 조회

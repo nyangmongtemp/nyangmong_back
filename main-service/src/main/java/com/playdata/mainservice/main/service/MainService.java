@@ -382,15 +382,14 @@ public class MainService {
                 category, req.getContentId());
 
         // 검색 대상 게시물들의 모든 댓글의 id를 리턴 --> 대댓글 검색용
-        List<Comment> foundComment
+        List<Long> foundComment
                 = commentRepository.findActiveByCategoryAndContentId(category, req.getContentId());
 
         // 조회된 댓글의 개수 합산
         long totalCount = foundComment.size();
 
         // 조회된 댓글들의 모든 대댓글 개수 리턴
-        Long replyCount = replyRepository.countAllActiveRepliesByCommentIds(
-                foundComment.stream().map(Comment::getCommentId).collect(Collectors.toList()));
+        Long replyCount = replyRepository.countAllActiveRepliesByCommentIds(foundComment);
 
         // 댓글 개수에 대댓글 합산
         totalCount += replyCount;
